@@ -1,0 +1,13 @@
+{
+  "name": "teambee-website",
+  "version": "1.0.0",
+  "description": "Teambee website built with FastHTML and TailwindCSS",
+  "scripts": {
+    "dev": "tailwindcss -i ./src/app.css -o ./public/app.css --watch",
+    "build": "tailwindcss -i ./src/app.css -o ./public/app.css --minify"
+  },
+  "dependencies": {
+    "tailwindcss": "^4.0.15",
+    "@tailwindcss/postcss": "^4.0.15"
+  }
+}

@@ -31,5 +31,5 @@ ENV HOST=0.0.0.0
 # Expose the port
 EXPOSE 8000
 
-# Run the FastAPI app with uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"] 
+# Run the FastHTML app
+CMD ["python", "main.py"] 

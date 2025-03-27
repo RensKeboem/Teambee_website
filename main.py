@@ -96,7 +96,7 @@ class TeambeeApp:
             Div(
                 Div(
                     A(
-                        Img(src="/assets/Teambee logo donker.svg", alt="Teambee Logo", cls="h-10 w-auto"),
+                        Img(src="/assets/Teambee logo donker.png", alt="Teambee Logo", cls="h-10 w-auto"),
                         href="#",
                         title="Back to top",
                         aria_label="Back to top of page",
@@ -447,7 +447,7 @@ class TeambeeApp:
                     Div(
                         Div(
                             Img(
-                                src="/assets/Teambee logo wit.svg",
+                                src="/assets/Teambee logo wit.png",
                                 alt="Teambee Logo",
                                 cls="h-8 w-auto"
                             ),

@@ -12,7 +12,7 @@ A modern dashboard application built with FastHTML, TailwindCSS, and DaisyUI.
 1. Install Python dependencies:
 
 ```bash
-pip install fasthtml
+pip install python_fasthtml
 ```
 
 2. Install Node.js dependencies:

@@ -1,6 +1,7 @@
 from fasthtml.common import *
 from login_form import LoginForm
 from datetime import datetime
+import os
 
 class TeambeeApp:
     """Main application class for the Teambee website."""
@@ -551,4 +552,4 @@ app = teambee.get_app()
 
 if __name__ == "__main__":
     # Start the FastHTML server
-    serve() 
+    serve(host="0.0.0.0", port=int(os.environ.get("PORT", 8000))) 

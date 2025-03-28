@@ -35,4 +35,7 @@ env/
 # Misc
 .DS_Store
 node_modules/
-.cache/ 
+.cache/
+
+# Generated CSS
+public/app.css

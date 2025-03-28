@@ -1,6 +1,6 @@
-# FastHTML with TailwindCSS and DaisyUI
+# Teambee Website
 
-A modern dashboard application built with FastHTML, TailwindCSS, and DaisyUI.
+A modern, responsive website for Teambee built with FastHTML and TailwindCSS. The website helps premium fitness clubs transform members into loyal ambassadors through personalized attention.
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@ A modern dashboard application built with FastHTML, TailwindCSS, and DaisyUI.
 1. Install Python dependencies:
 
 ```bash
-pip install python_fasthtml
+pip install -r requirements.txt
 ```
 
 2. Install Node.js dependencies:
@@ -45,15 +45,19 @@ python main.py
 
 ## Features
 
-- Modern UI with TailwindCSS utility classes
-- Beautiful components with DaisyUI
-- Responsive design
-- Class-based architecture for better organization
+- Modern, responsive UI with TailwindCSS
+- Interactive elements with hover effects
+- Optimized for performance with versioned static assets
+- Class-based architecture with modular components
+- Accessibility-focused design with proper ARIA attributes
 
 ## Project Structure
 
-- `main.py` - The main FastHTML application
+- `main.py` - The main Teambee application class with website components
+- `login_form.py` - Login form component
 - `src/app.css` - Source CSS file for Tailwind
 - `public/app.css` - Generated CSS file (after running the build)
 - `tailwind.config.js` - Tailwind CSS configuration
-- `package.json` - Node.js dependencies and scripts 
+- `package.json` - Node.js dependencies and scripts
+- `public/static/assets` - Images and SVG icons
+- `public/static/js` - JavaScript files for interactive features 

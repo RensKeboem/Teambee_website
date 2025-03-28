@@ -574,7 +574,7 @@ class TeambeeApp:
                         cls="flex items-center justify-end"
                     ),
                     
-                    cls="border-t border-white/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center"
+                    cls="border-t border-white/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-6"
                 ),
                 
                 cls="container"

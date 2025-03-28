@@ -216,12 +216,12 @@ class TeambeeApp:
                                 href="#services",
                                 cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#3D2E7C]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
                             ),
-                            A(
-                                "Login",
-                                href="#login",
-                                cls="inline-flex h-10 items-center justify-center rounded-lg border border-[#3D2E7C] px-8 py-2 text-sm font-medium text-[#3D2E7C] shadow-sm transition-colors hover:bg-[#3D2E7C]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
-                            ),
-                            cls="flex flex-col sm:flex-row gap-4"
+                            # A(
+                            #     "Login",
+                            #     href="#login",
+                            #     cls="inline-flex h-10 items-center justify-center rounded-lg border border-[#3D2E7C] px-8 py-2 text-sm font-medium text-[#3D2E7C] shadow-sm transition-colors hover:bg-[#3D2E7C]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
+                            # ),
+                            # cls="flex flex-col sm:flex-row gap-4"
                         ),
                         cls="space-y-6"
                     ),

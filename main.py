@@ -3,7 +3,6 @@ from login_form import LoginForm
 from datetime import datetime
 import os
 import time
-import hashlib
 from starlette.staticfiles import StaticFiles
 
 class TeambeeApp:
@@ -13,7 +12,6 @@ class TeambeeApp:
         """Initialize the Teambee application with TailwindCSS."""
         # Generate a global version string for cache busting
         self.version = str(int(time.time()))
-        # Cache for file versions to avoid recalculating for the same file
         self.file_versions = {}
         
         self.app = FastHTML(
@@ -159,7 +157,7 @@ class TeambeeApp:
                             cls="text-4xl md:text-5xl font-bold italic text-[#3D2E7C] leading-tight"
                         ),
                         P(
-                            "Teambee helps premium high-end fitness clubs transform members into loyal ambassadors through personalized attention at scale.",
+                            "Teambee helpt premium fitnessclubs en wellnesscentra bij het omzetten van leden in loyale ambassadeurs. Door middel van gepersonaliseerde aandacht en op maat gemaakte customer journeys in de MyWellness CRM zorgen we voor langdurige betrokkenheid, tevreden leden en duurzame groei.",
                             cls="text-lg text-gray-600 max-w-md"
                         ),
                         Div(
@@ -204,7 +202,7 @@ class TeambeeApp:
                         cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
                     ),
                     P(
-                        "We create synergy between fitness clubs and their members through data-driven, personalized attention at scale.",
+                        "Wij geloven in de kracht van teamwork. Door datagedreven, gepersonaliseerde aandacht op schaal creëren we synergie tussen fitnessclubs en hun leden, wat zorgt voor een sterke, langdurige groei.",
                         cls="text-lg text-gray-600 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-12"
@@ -222,11 +220,11 @@ class TeambeeApp:
                             cls="w-12 h-12 bg-[#E8973A]/20 rounded-full flex items-center justify-center mb-4"
                         ),
                         H3(
-                            "Synergie",
+                            "Teamwork makes the dream work",
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "We believe in the power of teamwork. Creating synergy between fitness clubs and their members.",
+                            "Bij Teambee draait alles om samenwerking. We creëren sterke, op maat gemaakte verbindingen tussen fitnessclubs en leden, wat resulteert in wederzijds succes en langdurige relaties.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -243,11 +241,11 @@ class TeambeeApp:
                             cls="w-12 h-12 bg-[#3D2E7C]/20 rounded-full flex items-center justify-center mb-4"
                         ),
                         H3(
-                            "Resultaatgericht",
+                            "Results that matter",
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "We focus on measurable results: higher retention, satisfied members, and increased sales.",
+                            "Onze focus ligt op het behalen van meetbare resultaten: hogere ledenretentie, tevreden leden en de omzet die daarmee stijgt.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -264,11 +262,11 @@ class TeambeeApp:
                             cls="w-12 h-12 bg-[#94C46F]/20 rounded-full flex items-center justify-center mb-4"
                         ),
                         H3(
-                            "Duurzaam",
+                            "Sustainable growth, lasting relationships",
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "We always focus on long-term relationships and sustainable growth for fitness clubs and their members.",
+                            "We bouwen duurzame, langdurige relaties die zorgen voor stabiele groei op de lange termijn.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -293,7 +291,7 @@ class TeambeeApp:
                         cls="text-3xl md:text-4xl font-bold italic mb-4"
                     ),
                     P(
-                        "Our services help premium fitness clubs create exceptional member experiences.",
+                        "Onze bewezen 5-stappen aanpak zorgt voor strategische, datagedreven groei voor jouw fitnessclub:",
                         cls="text-lg text-white/80 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-12"
@@ -303,36 +301,21 @@ class TeambeeApp:
                     # Personalized Member Journeys
                     Div(
                         H3(
-                            "Personalized Member Journeys",
+                            "XXXXXXX",
                             cls="text-xl font-semibold mb-4"
                         ),
                         Ul(
-                            self._create_check_list_item("Custom onboarding experiences for new members"),
-                            self._create_check_list_item("Automated check-ins and progress tracking"),
-                            self._create_check_list_item("Personalized workout recommendations"),
-                            self._create_check_list_item("Milestone celebrations and rewards"),
+                            self._create_check_list_item("Strategie – Samen ontwikkelen we een gepersonaliseerde aanpak die perfect past bij jouw club en leden."),
+                            self._create_check_list_item("Design – We ontwerpen Customer Journeys die leden écht raken en langdurig betrokken houden."),
+                            self._create_check_list_item("Implementatie – Naadloze integratie met MyWellness CRM en geautomatiseerde workflows voor maximale efficiëntie."),
+                            self._create_check_list_item("Educatie – Training en begeleiding van jouw team op locatie voor een succesvolle uitvoering van de strategie."),
+                            self._create_check_list_item("Data support – Doorlopende monitoring en optimalisatie van de resultaten voor constante groei."),
                             cls="space-y-3"
                         ),
                         cls="bg-[#1B1947] p-6 rounded-lg"
                     ),
                     
-                    # Data-Driven Retention Strategies
-                    Div(
-                        H3(
-                            "Data-Driven Retention Strategies",
-                            cls="text-xl font-semibold mb-4"
-                        ),
-                        Ul(
-                            self._create_check_list_item("Member engagement analytics"),
-                            self._create_check_list_item("Predictive churn modeling"),
-                            self._create_check_list_item("Targeted re-engagement campaigns"),
-                            self._create_check_list_item("Performance benchmarking"),
-                            cls="space-y-3"
-                        ),
-                        cls="bg-[#1B1947] p-6 rounded-lg"
-                    ),
-                    
-                    cls="grid md:grid-cols-2 gap-8"
+                    cls="grid md:grid-cols-1 gap-8"
                 ),
                 
                 cls="container"
@@ -363,7 +346,7 @@ class TeambeeApp:
                         cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
                     ),
                     P(
-                        "See how Teambee transforms member experiences and drives sustainable growth.",
+                        "Ontdek hoe Teambee de ledenervaring transformeert en duurzame groei stimuleert.",
                         cls="text-lg text-gray-600 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-12"
@@ -487,56 +470,8 @@ class TeambeeApp:
                             cls="mb-4"
                         ),
                         P(
-                            "Teambee helps premium high-end clubs transform members into loyal ambassadors.",
+                            "Wij helpen premium fitnessclubs leden om te zetten in loyale ambassadeurs, met duurzame groei als resultaat. Teambee werkt internationaal samen met premium fitnessclubs en wellnesscentra in de Benelux, Malta, de Verenigde Arabische Emiraten en Ierland. Dankzij slimme technologie en een persoonlijke aanpak helpen we fitnesscentra wereldwijd om leden te binden en de retentie te verhogen.",
                             cls="text-white/70 text-sm"
-                        ),
-                        Div(
-                            Div(
-                                A(
-                                    Img(
-                                        src=self.versioned_url("/static/assets/instagram-167-svgrepo-com.svg"),
-                                        alt="Instagram",
-                                        cls="w-6 h-6"
-                                    ),
-                                    href="https://www.instagram.com/keboemmastersinretention/",
-                                    target="_blank",
-                                    rel="noopener noreferrer",
-                                    aria_label="Follow us on Instagram",
-                                    cls="hover:opacity-75 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1947] rounded-lg"
-                                ),
-                                cls="px-3 transform transition-transform duration-300"
-                            ),
-                            Div(
-                                A(
-                                    Img(
-                                        src=self.versioned_url("/static/assets/linkedin-svgrepo-com.svg"),
-                                        alt="LinkedIn",
-                                        cls="w-6 h-6"
-                                    ),
-                                    href="https://linkedin.com/company/keboem",
-                                    target="_blank",
-                                    rel="noopener noreferrer",
-                                    aria_label="Connect with us on LinkedIn",
-                                    cls="hover:opacity-75 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1947] rounded-lg"
-                                ),
-                                cls="px-3 transform transition-transform duration-300"
-                            ),
-                            Div(
-                                A(
-                                    Img(
-                                        src=self.versioned_url("/static/assets/facebook-svgrepo-com.svg"),
-                                        alt="Facebook",
-                                        cls="w-6 h-6"
-                                    ),
-                                    href="https://www.facebook.com/keboem",
-                                    target="_blank",
-                                    rel="noopener noreferrer",
-                                    aria_label="Visit our Facebook page",
-                                    cls="hover:opacity-75 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1947] rounded-lg"
-                                ),
-                                cls="px-3 transform transition-transform duration-300"
-                            ),
-                            cls="mt-8 flex items-center"
                         ),
                         cls=""
                     ),
@@ -547,9 +482,32 @@ class TeambeeApp:
                             cls="font-semibold text-lg mb-4"
                         ),
                         Ul(
-                            Li("info@teambee.com", cls="text-white/70"),
-                            Li("+31 (0)20 123 4567", cls="text-white/70"),
-                            Li("Amsterdam, The Netherlands", cls="text-white/70"),
+                            Li(
+                                A(
+                                    "Mail ons: info@teambee.nl",
+                                    href="mailto:info@teambee.nl",
+                                    cls="text-white/70 hover:text-white transition-colors"
+                                ),
+                                cls=""
+                            ),
+                            Li(
+                                A(
+                                    "Bel ons: +31 (0)20 123 4567", 
+                                    href="tel:+31201234567",
+                                    cls="text-white/70 hover:text-white transition-colors"
+                                ),
+                                cls=""
+                            ),
+                            Li(
+                                A(
+                                    "Bezoek ons: Hellingbaan 424, Amsterdam", 
+                                    href="https://www.google.com/maps/search/?api=1&query=Hellingbaan+424+Amsterdam",
+                                    target="_blank",
+                                    rel="noopener noreferrer",
+                                    cls="text-white/70 hover:text-white transition-colors"
+                                ),
+                                cls=""
+                            ),
                             cls="space-y-2"
                         ),
                         cls="md:text-right"
@@ -559,11 +517,64 @@ class TeambeeApp:
                 ),
                 
                 Div(
-                    P(
-                        f"© {datetime.now().year} Teambee. All rights reserved.",
-                        cls=""
+                    Div(
+                        P(
+                            f"© {datetime.now().year} Teambee. All rights reserved.",
+                            cls=""
+                        ),
+                        cls="text-white/50 text-sm"
                     ),
-                    cls="border-t border-white/10 mt-8 pt-8 text-center text-white/50 text-sm"
+                    
+                    Div(
+                        Div(
+                            A(
+                                Img(
+                                    src=self.versioned_url("/static/assets/instagram-167-svgrepo-com.svg"),
+                                    alt="Instagram",
+                                    cls="w-6 h-6"
+                                ),
+                                href="https://www.instagram.com/keboemmastersinretention/",
+                                target="_blank",
+                                rel="noopener noreferrer",
+                                aria_label="Follow us on Instagram",
+                                cls="hover:opacity-75 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1947] rounded-lg"
+                            ),
+                            cls="px-3 transform transition-transform duration-300"
+                        ),
+                        Div(
+                            A(
+                                Img(
+                                    src=self.versioned_url("/static/assets/linkedin-svgrepo-com.svg"),
+                                    alt="LinkedIn",
+                                    cls="w-6 h-6"
+                                ),
+                                href="https://linkedin.com/company/keboem",
+                                target="_blank",
+                                rel="noopener noreferrer",
+                                aria_label="Connect with us on LinkedIn",
+                                cls="hover:opacity-75 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1947] rounded-lg"
+                            ),
+                            cls="px-3 transform transition-transform duration-300"
+                        ),
+                        Div(
+                            A(
+                                Img(
+                                    src=self.versioned_url("/static/assets/facebook-svgrepo-com.svg"),
+                                    alt="Facebook",
+                                    cls="w-6 h-6"
+                                ),
+                                href="https://www.facebook.com/keboem",
+                                target="_blank",
+                                rel="noopener noreferrer",
+                                aria_label="Visit our Facebook page",
+                                cls="hover:opacity-75 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1B1947] rounded-lg"
+                            ),
+                            cls="px-3 transform transition-transform duration-300"
+                        ),
+                        cls="flex items-center justify-end"
+                    ),
+                    
+                    cls="border-t border-white/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center"
                 ),
                 
                 cls="container"

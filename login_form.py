@@ -44,7 +44,7 @@ class LoginForm:
                     
                     Div(
                         "Don't have an account? ",
-                        A("Contact us", href="#", aria_label="Contact us to create a new account",
+                        A("Contact us", href="mailto:info@teambee.nl", aria_label="Contact us to create a new account",
                           cls="text-[#3D2E7C] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded"),
                         cls="text-center text-sm text-gray-500 mt-3"
                     ),

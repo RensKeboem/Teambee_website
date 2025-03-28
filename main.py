@@ -2,12 +2,20 @@ from fasthtml.common import *
 from login_form import LoginForm
 from datetime import datetime
 import os
+import time
+import hashlib
+from starlette.staticfiles import StaticFiles
 
 class TeambeeApp:
     """Main application class for the Teambee website."""
     
     def __init__(self):
         """Initialize the Teambee application with TailwindCSS."""
+        # Generate a global version string for cache busting
+        self.version = str(int(time.time()))
+        # Cache for file versions to avoid recalculating for the same file
+        self.file_versions = {}
+        
         self.app = FastHTML(
             title="Teambee | Transform Members into Loyal Ambassadors",
             hdrs=[
@@ -20,28 +28,53 @@ class TeambeeApp:
                 Meta(property="og:type", content="website"),
                 Meta(property="og:url", content="https://teambee.com"),
                 # Stylesheets and scripts
-                Link(rel="stylesheet", href="app.css", type="text/css"),
-                Link(rel="icon", href="/assets/Teambee icon.png", type="image/png"),
-                Script(src="js/parallax.js")
+                Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
+                Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
+                Script(src=self.versioned_url("/static/js/parallax.js"))
             ]
         )
+        
+        # Setup routes first to ensure they take precedence over static files
         self.setup_routes()
         
+        # Mount static files after routes are defined
+        self.app.mount("/static", StaticFiles(directory="public"), name="static")
+        
+    def versioned_url(self, path):
+        """Add version parameter to URL for cache busting.
+        
+        For static files, the version is based on the file's modification time or hash.
+        For non-file paths, the global version is used.
+        """
+        if path.startswith("/static/"):
+            # Get file-specific version based on modification time or hash
+            file_path = path.replace("/static/", "public/")
+            
+            # Check the cache first
+            if file_path in self.file_versions:
+                version = self.file_versions[file_path]
+            else:
+                try:
+                    # Use last modification time for the file
+                    if os.path.exists(file_path):
+                        version = str(int(os.path.getmtime(file_path)))
+                        self.file_versions[file_path] = version
+                    else:
+                        version = self.version
+                except:
+                    # Fallback to the global version
+                    version = self.version
+                    
+            return f"{path}?v={version}"
+        else:
+            # For non-static paths, use the global version
+            return f"{path}?v={self.version}"
+    
     def setup_routes(self):
         """Set up the application routes."""
         rt = self.app.route
         
-        @rt("/{fname:path}.{ext:static}")
-        def static_files(fname: str, ext: str):
-            """Serve static files from the public directory."""
-            return FileResponse(f'public/{fname}.{ext}')
-        
-        @rt('/assets/{fname:path}.{ext:static}')
-        def asset_files(fname: str, ext: str):
-            """Serve asset files from the public/assets directory."""
-            return FileResponse(f'public/assets/{fname}.{ext}')
-        
-        @rt('/')
+        @rt("/")
         def home():
             """Render the home page."""
             return self.create_homepage()
@@ -52,7 +85,7 @@ class TeambeeApp:
             # Honeycomb pattern background
             Div(
                 Img(
-                    src="/assets/honeycomb-cropped.svg",
+                    src=self.versioned_url("/static/assets/honeycomb-cropped.svg"),
                     alt="Honeycomb Pattern",
                     cls="fixed top-16 w-[200%] h-[40vh] object-cover opacity-15 dark:opacity-10 z-0 pointer-events-none parallax"
                 ),
@@ -96,7 +129,7 @@ class TeambeeApp:
             Div(
                 Div(
                     A(
-                        Img(src="/assets/Teambee logo donker.png", alt="Teambee Logo", cls="h-10 w-auto"),
+                        Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-10 w-auto"),
                         href="#",
                         title="Back to top",
                         aria_label="Back to top of page",
@@ -147,7 +180,7 @@ class TeambeeApp:
                     ),
                     Div(
                         Img(
-                            src="/assets/Teambee icon.png",
+                            src=self.versioned_url("/static/assets/Teambee icon.png"),
                             alt="Teambee Hero",
                             cls="w-full h-full object-contain",
                             loading="lazy"
@@ -182,7 +215,7 @@ class TeambeeApp:
                     Div(
                         Div(
                             Img(
-                                src="/assets/users.svg",
+                                src=self.versioned_url("/static/assets/users.svg"),
                                 alt="Synergie Icon",
                                 cls="w-6 h-6"
                             ),
@@ -203,7 +236,7 @@ class TeambeeApp:
                     Div(
                         Div(
                             Img(
-                                src="/assets/target.svg",
+                                src=self.versioned_url("/static/assets/target.svg"),
                                 alt="Resultaatgericht Icon",
                                 cls="w-6 h-6"
                             ),
@@ -224,7 +257,7 @@ class TeambeeApp:
                     Div(
                         Div(
                             Img(
-                                src="/assets/sprout.svg",
+                                src=self.versioned_url("/static/assets/sprout.svg"),
                                 alt="Duurzaam Icon",
                                 cls="w-6 h-6"
                             ),
@@ -312,7 +345,7 @@ class TeambeeApp:
         """Create a check list item with an orange check icon."""
         return Li(
             Img(
-                src="/assets/check.svg",
+                src=self.versioned_url("/static/assets/check.svg"),
                 alt="Check",
                 cls="h-6 w-6 mr-2 mt-0.5"
             ),
@@ -427,7 +460,7 @@ class TeambeeApp:
             # Bottom honeycomb pattern
             Div(
                 Img(
-                    src="/assets/honeycomb-cropped.svg",
+                    src=self.versioned_url("/static/assets/honeycomb-cropped.svg"),
                     alt="Honeycomb Pattern",
                     cls="w-[200%] h-[40vh] object-cover opacity-15 dark:opacity-10 pointer-events-none [transform:scaleY(-1)]",
                     loading="lazy"
@@ -447,7 +480,7 @@ class TeambeeApp:
                     Div(
                         Div(
                             Img(
-                                src="/assets/Teambee logo wit.png",
+                                src=self.versioned_url("/static/assets/Teambee logo wit.png"),
                                 alt="Teambee Logo",
                                 cls="h-8 w-auto"
                             ),
@@ -461,7 +494,7 @@ class TeambeeApp:
                             Div(
                                 A(
                                     Img(
-                                        src="/assets/instagram-167-svgrepo-com.svg",
+                                        src=self.versioned_url("/static/assets/instagram-167-svgrepo-com.svg"),
                                         alt="Instagram",
                                         cls="w-6 h-6"
                                     ),
@@ -476,7 +509,7 @@ class TeambeeApp:
                             Div(
                                 A(
                                     Img(
-                                        src="/assets/linkedin-svgrepo-com.svg",
+                                        src=self.versioned_url("/static/assets/linkedin-svgrepo-com.svg"),
                                         alt="LinkedIn",
                                         cls="w-6 h-6"
                                     ),
@@ -491,7 +524,7 @@ class TeambeeApp:
                             Div(
                                 A(
                                     Img(
-                                        src="/assets/facebook-svgrepo-com.svg",
+                                        src=self.versioned_url("/static/assets/facebook-svgrepo-com.svg"),
                                         alt="Facebook",
                                         cls="w-6 h-6"
                                     ),

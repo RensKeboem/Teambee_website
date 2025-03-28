@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
 COPY . .
-RUN npm run build
+RUN npm run build:css
 
 # Build stage for Python
 FROM python:3.11-slim

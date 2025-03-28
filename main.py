@@ -61,7 +61,6 @@ class TeambeeApp:
             middleware.append(Middleware(HTTPSRedirectMiddleware))
             
         self.app = FastHTML(
-            title="Teambee | Transform Members into Loyal Ambassadors",
             hdrs=[
                 # Meta tags for SEO
                 Meta(name="description", content="Teambee helps premium high-end fitness clubs transform members into loyal ambassadors through personalized attention at scale."),
@@ -182,10 +181,13 @@ class TeambeeApp:
                     ),
                     cls="flex items-center gap-2"
                 ),
-                A(
-                    "Login",
-                    href="#login",
-                    cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"
+                # A(
+                #     "Login",
+                #     href="#login",
+                #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"
+                Div(
+                    "Login Coming Soon",
+                    cls="inline-flex h-9 items-center justify-center rounded-lg bg-gray-400 px-4 py-2 text-sm font-medium text-white shadow transition-colors cursor-not-allowed"
                 ),
                 cls="container flex h-16 items-center justify-between"
             ),
@@ -480,7 +482,29 @@ class TeambeeApp:
                         cls="text-center mb-8"
                     ),
                     
-                    login_form.render(),
+                    # Wrapper with relative positioning
+                    Div(
+                        # Login form
+                        login_form.render(),
+                        
+                        # Overlay with improved styling, extended beyond form edges
+                        Div(
+                            Div(
+                                H3(
+                                    "Coming Soon!",
+                                    cls="text-2xl font-bold text-white mb-2"
+                                ),
+                                P(
+                                    "We're currently working on this feature. Check back soon!",
+                                    cls="text-white/90"
+                                ),
+                                cls="text-center p-8 bg-[#3D2E7C] rounded-lg shadow-lg w-full max-w-sm"
+                            ),
+                            cls="absolute -inset-8 flex items-center justify-center z-10 bg-white/50 backdrop-blur-sm rounded-2xl"
+                        ),
+                        
+                        cls="relative"
+                    ),
                     
                     cls="max-w-md mx-auto"
                 ),

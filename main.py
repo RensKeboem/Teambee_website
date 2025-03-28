@@ -4,6 +4,43 @@ from datetime import datetime
 import os
 import time
 from starlette.staticfiles import StaticFiles
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Middleware to add security headers to all responses."""
+    
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        
+        # Content Security Policy
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self'; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self'; "
+            "frame-src 'self'; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self';"
+        )
+        
+        # Security Headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        
+        # HSTS (HTTP Strict Transport Security)
+        # Only in production environment to avoid issues in development
+        if os.environ.get("ENVIRONMENT", "development") == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+            
+        return response
 
 class TeambeeApp:
     """Main application class for the Teambee website."""
@@ -14,6 +51,15 @@ class TeambeeApp:
         self.version = str(int(time.time()))
         self.file_versions = {}
         
+        # Define middleware
+        middleware = [
+            Middleware(SecurityHeadersMiddleware)
+        ]
+        
+        # Only add HTTPS redirect in production
+        if os.environ.get("ENVIRONMENT", "development") == "production":
+            middleware.append(Middleware(HTTPSRedirectMiddleware))
+            
         self.app = FastHTML(
             title="Teambee | Transform Members into Loyal Ambassadors",
             hdrs=[
@@ -29,7 +75,8 @@ class TeambeeApp:
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
                 Script(src=self.versioned_url("/static/js/parallax.js"))
-            ]
+            ],
+            middleware=middleware
         )
         
         # Setup routes first to ensure they take precedence over static files

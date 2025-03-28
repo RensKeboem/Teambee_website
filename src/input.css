@@ -7,5 +7,17 @@
     --color-primary: #3D2E7C;
     --color-secondary: #E8973A;
     --color-accent: #94C46F;
+    --container-max-width: 80rem;
+    --container-padding: 2rem;
+  }
+} 
+
+@layer components {
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-inline: var(--container-padding);
+    max-width: var(--container-max-width);
   }
 } 

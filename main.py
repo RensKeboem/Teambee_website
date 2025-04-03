@@ -153,6 +153,9 @@ class TeambeeApp:
                 # Benefits Section
                 self._create_benefits_section(),
                 
+                # Reviews Section
+                self._create_reviews_section(),
+                
                 # Login Section
                 self._create_login_section(),
                 
@@ -459,6 +462,116 @@ class TeambeeApp:
             ),
             id="benefits",
             cls="py-16 md:py-24 bg-white/80 backdrop-blur-sm"
+        )
+    
+    def _create_reviews_section(self):
+        """Create the reviews section with client testimonials."""
+        return Section(
+            Div(
+                Div(
+                    H2(
+                        "What our clients say",
+                        cls="text-3xl md:text-4xl font-bold italic text-white mb-4"
+                    ),
+                    P(
+                        "Ontdek hoe Teambee clubs wereldwijd heeft veranderd",
+                        cls="text-lg text-white/80 max-w-2xl mx-auto"
+                    ),
+                    cls="text-center mb-12"
+                ),
+                
+                Div(
+                    # Review Card 1
+                    Div(
+                        Div(
+                            Img(
+                                src=self.versioned_url("/static/assets/quote.svg"),
+                                alt="Quote",
+                                cls="w-8 h-8 text-[#E8973A] mb-4"
+                            ),
+                            P(
+                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.",
+                                cls="text-gray-600 mb-4"
+                            ),
+                            Div(
+                                Div(
+                                    "John Doe",
+                                    cls="font-semibold text-[#1B1947]"
+                                ),
+                                Div(
+                                    "Fitness Club Owner",
+                                    cls="text-sm text-gray-500"
+                                ),
+                                cls=""
+                            ),
+                            cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
+                        ),
+                        cls="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
+                    ),
+                    
+                    # Review Card 2
+                    Div(
+                        Div(
+                            Img(
+                                src=self.versioned_url("/static/assets/quote.svg"),
+                                alt="Quote",
+                                cls="w-8 h-8 text-[#E8973A] mb-4"
+                            ),
+                            P(
+                                "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                                cls="text-gray-600 mb-4"
+                            ),
+                            Div(
+                                Div(
+                                    "Jane Smith",
+                                    cls="font-semibold text-[#1B1947]"
+                                ),
+                                Div(
+                                    "Wellness Center Manager",
+                                    cls="text-sm text-gray-500"
+                                ),
+                                cls=""
+                            ),
+                            cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
+                        ),
+                        cls="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
+                    ),
+                    
+                    # Review Card 3
+                    Div(
+                        Div(
+                            Img(
+                                src=self.versioned_url("/static/assets/quote.svg"),
+                                alt="Quote",
+                                cls="w-8 h-8 text-[#E8973A] mb-4"
+                            ),
+                            P(
+                                "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.",
+                                cls="text-gray-600 mb-4"
+                            ),
+                            Div(
+                                Div(
+                                    "Mike Johnson",
+                                    cls="font-semibold text-[#1B1947]"
+                                ),
+                                Div(
+                                    "Gym Director",
+                                    cls="text-sm text-gray-500"
+                                ),
+                                cls=""
+                            ),
+                            cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
+                        ),
+                        cls="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
+                    ),
+                    
+                    cls="grid md:grid-cols-3 gap-8"
+                ),
+                
+                cls="container"
+            ),
+            id="reviews",
+            cls="py-16 md:py-24 bg-[#3D2E7C]"
         )
     
     def _create_login_section(self):

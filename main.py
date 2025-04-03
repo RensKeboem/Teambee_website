@@ -206,12 +206,12 @@ class TeambeeApp:
                             cls="text-4xl md:text-5xl font-bold italic text-[#3D2E7C] leading-tight"
                         ),
                         P(
-                            "Teambee helpt premium fitnessclubs en wellnesscentra bij het omzetten van leden in loyale ambassadeurs. Door middel van gepersonaliseerde aandacht en op maat gemaakte customer journeys in de MyWellness CRM zorgen we voor langdurige betrokkenheid, tevreden leden en duurzame groei.",
+                            "Teambee helpt premium health- en wellnesscentra leden te transformeren tot loyale ambassadeurs via MyWellness CRM, met gepersonaliseerde aandacht en op maat gemaakte customer journeys voor duurzame groei.",
                             cls="text-lg text-gray-600 max-w-md"
                         ),
                         Div(
                             A(
-                                "Our Services",
+                                "Our services",
                                 Span("→", cls="ml-2"),
                                 href="#services",
                                 cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#3D2E7C]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
@@ -251,7 +251,7 @@ class TeambeeApp:
                         cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
                     ),
                     P(
-                        "Wij geloven in de kracht van teamwork. Door datagedreven, gepersonaliseerde aandacht op schaal creëren we synergie tussen fitnessclubs en hun leden, wat zorgt voor een sterke, langdurige groei.",
+                        "Teamwork is onze kracht. Met data en gepersonaliseerde aandacht creëren we synergie tussen health- en wellnesscentra en hun leden voor duurzame groei.",
                         cls="text-lg text-gray-600 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-12"
@@ -273,7 +273,7 @@ class TeambeeApp:
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Bij Teambee draait alles om samenwerking. We creëren sterke, op maat gemaakte verbindingen tussen fitnessclubs en leden, wat resulteert in wederzijds succes en langdurige relaties.",
+                            "Bij Teambee draait alles om samenwerking. We verbinden clubs en leden met op maat gemaakte oplossingen, wat leidt tot wederzijds succes en langdurige relaties.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -290,11 +290,11 @@ class TeambeeApp:
                             cls="w-12 h-12 bg-[#3D2E7C]/20 rounded-full flex items-center justify-center mb-4"
                         ),
                         H3(
-                            "Results that matter",
+                            "Resultaten die er toe doen",
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Onze focus ligt op het behalen van meetbare resultaten: hogere ledenretentie, tevreden leden en de omzet die daarmee stijgt.",
+                            "Onze focus ligt op meetbare resultaten: hogere ledenretentie, tevreden leden en een stijgende omzet voor clubs.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -311,11 +311,11 @@ class TeambeeApp:
                             cls="w-12 h-12 bg-[#94C46F]/20 rounded-full flex items-center justify-center mb-4"
                         ),
                         H3(
-                            "Sustainable growth, lasting relationships",
+                            "Duurzame groei, langdurig succes",
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "We bouwen duurzame, langdurige relaties die zorgen voor stabiele groei op de lange termijn.",
+                            "We bouwen duurzame relaties die zorgen voor stabiele groei en langdurig succes voor clubs.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -347,11 +347,10 @@ class TeambeeApp:
                 ),
                 
                 Div(
-                    # Personalized Member Journeys
                     Div(
                         H3(
-                            "XXXXXXX",
-                            cls="text-xl font-semibold mb-4"
+                            "CRM-implementatie (3 maanden)",
+                            cls="text-xl font-semibold text-[#ffffff] mb-2"
                         ),
                         Ul(
                             self._create_check_list_item("Strategie – Samen ontwikkelen we een gepersonaliseerde aanpak die perfect past bij jouw club en leden."),
@@ -405,15 +404,15 @@ class TeambeeApp:
                     # Member Retention
                     Div(
                         Div(
-                            "92%",
+                            "73%",
                             cls="text-4xl font-bold text-[#E8973A] mb-2"
                         ),
                         H3(
-                            "Member Retention",
+                            "Gemiddelde retentie",
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Our clients see an average 92% annual member retention rate, well above industry standards.",
+                            "Gemiddeld zien onze klanten een ledenretentie van 73%, ver boven de industrienormen.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
@@ -426,11 +425,11 @@ class TeambeeApp:
                             cls="text-4xl font-bold text-[#E8973A] mb-2"
                         ),
                         H3(
-                            "Member Referrals",
+                            "Meer member referrals",
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Members become ambassadors, generating 3.8x more referrals than traditional marketing.",
+                            "Leden worden ambassadeurs, die 3.8x meer aanbevelingen genereren dan traditionele marketing.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
@@ -443,11 +442,11 @@ class TeambeeApp:
                             cls="text-4xl font-bold text-[#E8973A] mb-2"
                         ),
                         H3(
-                            "Engagement Increase",
+                            "Hogere engagement",
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Members show 68% higher engagement with personalized journeys and attention.",
+                            "Leden tonen 68% meer betrokkenheid met gepersonaliseerde journeys en aandacht.",
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
@@ -476,7 +475,7 @@ class TeambeeApp:
                             cls="text-3xl font-bold italic text-[#3D2E7C] mb-2"
                         ),
                         P(
-                            "Access your personalized Teambee dashboard to manage your club's member journeys.",
+                            "Krijg toegang tot je persoonlijke Teambee dashboard om inzicht te krijgen in jouw clubprestaties",
                             cls="text-gray-600"
                         ),
                         cls="text-center mb-8"
@@ -495,7 +494,7 @@ class TeambeeApp:
                                     cls="text-2xl font-bold text-white mb-2"
                                 ),
                                 P(
-                                    "We're currently working on this feature. Check back soon!",
+                                    "We zijn momenteel bezig aan deze functie. Coming soon!",
                                     cls="text-white/90"
                                 ),
                                 cls="text-center p-8 bg-[#3D2E7C] rounded-lg shadow-lg w-full max-w-sm"
@@ -541,7 +540,7 @@ class TeambeeApp:
                             cls="mb-4"
                         ),
                         P(
-                            "Wij helpen premium fitnessclubs leden om te zetten in loyale ambassadeurs, met duurzame groei als resultaat. Teambee werkt internationaal samen met premium fitnessclubs en wellnesscentra in de Benelux, Malta, de Verenigde Arabische Emiraten en Ierland. Dankzij slimme technologie en een persoonlijke aanpak helpen we fitnesscentra wereldwijd om leden te binden en de retentie te verhogen.",
+                            "Teambee helpt fitnessclubs wereldwijd leden te binden en duurzame groei te realiseren met slimme technologie en persoonlijke aanpak.",
                             cls="text-white/70 text-sm"
                         ),
                         cls=""
@@ -555,7 +554,7 @@ class TeambeeApp:
                         Ul(
                             Li(
                                 A(
-                                    "Mail ons: info@teambee.nl",
+                                    "info@teambee.nl",
                                     href="mailto:info@teambee.nl",
                                     cls="text-white/70 hover:text-white transition-colors"
                                 ),
@@ -563,7 +562,7 @@ class TeambeeApp:
                             ),
                             Li(
                                 A(
-                                    "Bel ons: +31 (0)20 123 4567", 
+                                    "+31 (0)20 123 4567", 
                                     href="tel:+31201234567",
                                     cls="text-white/70 hover:text-white transition-colors"
                                 ),
@@ -571,7 +570,7 @@ class TeambeeApp:
                             ),
                             Li(
                                 A(
-                                    "Bezoek ons: Hellingbaan 424, Amsterdam", 
+                                    "Hellingbaan 424, Amsterdam", 
                                     href="https://www.google.com/maps/search/?api=1&query=Hellingbaan+424+Amsterdam",
                                     target="_blank",
                                     rel="noopener noreferrer",

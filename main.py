@@ -186,7 +186,7 @@ class TeambeeApp:
                 #     href="#login",
                 #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"
                 Div(
-                    "Login Coming Soon",
+                    "Login Coming soon",
                     cls="inline-flex h-9 items-center justify-center rounded-lg bg-gray-400 px-4 py-2 text-sm font-medium text-white shadow transition-colors cursor-not-allowed"
                 ),
                 cls="container flex h-16 items-center justify-between"

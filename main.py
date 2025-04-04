@@ -158,6 +158,9 @@ class TeambeeApp:
                 # Reviews Section
                 self._create_reviews_section(),
                 
+                # Partners Section
+                self._create_partners_section(),
+                
                 # Login Section
                 self._create_login_section(),
                 
@@ -557,6 +560,81 @@ class TeambeeApp:
             cls="py-8 md:py-16 bg-gray-100"
         )
     
+    def _create_partners_section(self):
+        """Create the partners section with industry leaders."""
+        partners = [
+            {"name": "TechnoGym", "logo": "TechnoGym", "url": "https://www.technogym.com"},
+            {"name": "Matrix Fitness", "logo": "Matrix Fitness", "url": "https://www.matrixfitness.com"},
+            {"name": "Life Fitness", "logo": "Life Fitness", "url": "https://www.lifefitness.com"},
+            {"name": "Precor", "logo": "Precor", "url": "https://www.precor.com"},
+            {"name": "Keiser", "logo": "Keiser", "url": "https://www.keiser.com"},
+            {"name": "Hammer Strength", "logo": "Hammer Strength", "url": "https://www.lifefitness.com/hammer-strength"}
+        ]
+        
+        return Section(
+            Div(
+                Div(
+                    H2(
+                        "Trusted by Industry Leaders",
+                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
+                    ),
+                    P(
+                        "sub tekst -----------",
+                        cls="text-lg text-gray-600 max-w-3xl mx-auto"
+                    ),
+                    cls="text-center mb-12"
+                ),
+                
+                Div(
+                    *[
+                        Div(
+                            A(
+                                Img(
+                                    src=self.versioned_url(f"/static/assets/{partner['logo']}.png"),
+                                    alt=partner["name"],
+                                    cls="h-12 w-auto object-contain transition-transform hover:scale-105"
+                                ),
+                                href=partner["url"],
+                                target="_blank",
+                                rel="noopener noreferrer",
+                                aria_label=f"Visit {partner['name']} website",
+                                cls="flex items-center justify-center h-full w-full p-6 rounded-lg border border-gray-100 bg-white hover:shadow-md transition-shadow duration-300"
+                            ),
+                            cls="flex items-center justify-center"
+                        )
+                        for partner in partners[:3]
+                    ],
+                    cls="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8"
+                ),
+                
+                Div(
+                    *[
+                        Div(
+                            A(
+                                Img(
+                                    src=self.versioned_url(f"/static/assets/{partner['logo']}.png"),
+                                    alt=partner["name"],
+                                    cls="h-12 w-auto object-contain transition-transform hover:scale-105"
+                                ),
+                                href=partner["url"],
+                                target="_blank",
+                                rel="noopener noreferrer",
+                                aria_label=f"Visit {partner['name']} website",
+                                cls="flex items-center justify-center h-full w-full p-6 rounded-lg border border-gray-100 bg-white hover:shadow-md transition-shadow duration-300"
+                            ),
+                            cls="flex items-center justify-center"
+                        )
+                        for partner in partners[3:]
+                    ],
+                    cls="grid grid-cols-1 md:grid-cols-3 gap-8"
+                ),
+                
+                cls="container"
+            ),
+            id="partners",
+            cls="pt-16 pb-8 md:pt-24 md:pb-12 bg-white"
+        )
+    
     def _create_login_section(self):
         """Create the login section."""
         login_form = LoginForm()
@@ -618,7 +696,7 @@ class TeambeeApp:
             ),
             
             id="login",
-            cls="pt-16 md:pt-24 pb-16 bg-white/90 backdrop-blur-sm relative"
+            cls="pt-8 md:pt-12 pb-16 bg-white/90 backdrop-blur-sm relative"
         )
     
     def _create_footer(self):

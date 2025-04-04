@@ -3,6 +3,7 @@ from login_form import LoginForm
 from datetime import datetime
 import os
 import time
+import json
 from starlette.staticfiles import StaticFiles
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware import Middleware
@@ -73,7 +74,8 @@ class TeambeeApp:
                 # Stylesheets and scripts
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
-                Script(src=self.versioned_url("/static/js/parallax.js"))
+                Script(src=self.versioned_url("/static/js/parallax.js")),
+                Script(src=self.versioned_url("/static/js/reviews.js"))
             ],
             middleware=middleware
         )
@@ -152,6 +154,9 @@ class TeambeeApp:
                 
                 # Benefits Section
                 self._create_benefits_section(),
+                
+                # Reviews Section
+                self._create_reviews_section(),
                 
                 # Login Section
                 self._create_login_section(),
@@ -366,7 +371,7 @@ class TeambeeApp:
                 cls="container"
             ),
             id="services",
-            cls="py-16 md:py-24 bg-[#3D2E7C] text-white"
+            cls="py-8 md:py-16 bg-[#3D2E7C] text-white"
         )
     
     def _create_check_list_item(self, text):
@@ -456,6 +461,100 @@ class TeambeeApp:
             ),
             id="benefits",
             cls="py-16 md:py-24 bg-white/80 backdrop-blur-sm"
+        )
+    
+    def _create_reviews_section(self):
+        """Create the reviews section with client testimonials."""
+        # Load reviews from JSON file
+        reviews_path = os.path.join("public", "data", "reviews.json")
+        try:
+            with open(reviews_path, 'r') as f:
+                reviews = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error loading reviews: {e}")
+            reviews = []
+        
+        # Generate review cards dynamically from the loaded data
+        review_cards = []
+        for review in reviews:
+            review_card = Div(
+                Div(
+                    Div(
+                        Img(
+                            src=self.versioned_url("/static/assets/quote.svg"),
+                            alt="Quote",
+                            cls="w-8 h-8 text-[#E8973A]"
+                        ),
+                        P(
+                            review["quote"],
+                            cls="text-gray-600 mb-4 flex-grow"
+                        ),
+                        cls="mb-4"
+                    ),
+                    Div(
+                        Div(
+                            Img(
+                                src=self.versioned_url("/static/assets/profile-placeholder.svg"),
+                                alt=review["author"],
+                                cls="w-10 h-10 rounded-full bg-gray-200 mr-3"
+                            ),
+                            Div(
+                                Div(
+                                    review["author"],
+                                    cls="font-semibold text-[#1B1947]"
+                                ),
+                                Div(
+                                    review["title"],
+                                    cls="text-sm text-gray-500"
+                                ),
+                            ),
+                        ),
+                        cls="flex items-center"
+                    ),
+                    cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-full flex flex-col justify-between w-full"
+                ),
+                cls="review-card w-full md:w-[90%] max-w-3xl flex-shrink-0 px-4 mx-auto"
+            )
+            review_cards.append(review_card)
+        
+        return Section(
+            Div(
+                Div(
+                    H2(
+                        "What our clients say",
+                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
+                    ),
+                    P(
+                        "Ontdek hoe Teambee fitnessclubs wereldwijd heeft veranderd.",
+                        cls="text-lg text-gray-600 max-w-2xl mx-auto"
+                    ),
+                    cls="text-center mb-6"
+                ),
+                
+                Div(
+                    # Container for the review cards
+                    Div(
+                        Div(
+                            *review_cards,
+                            id="reviews-container",
+                            cls="flex gap-0 transition-transform duration-500 touch-pan-x cursor-grab"
+                        ),
+                        cls="overflow-hidden w-full max-w-4xl mx-auto touch-pan-x relative"
+                    ),
+                    
+                    # Dots for navigation
+                    Div(
+                        id="review-dots",
+                        cls="flex justify-center gap-2 mt-8"
+                    ),
+                    
+                    cls="relative"
+                ),
+                
+                cls="container"
+            ),
+            id="reviews",
+            cls="py-8 md:py-16 bg-gray-100"
         )
     
     def _create_login_section(self):
@@ -663,4 +762,4 @@ app = teambee.get_app()
 
 if __name__ == "__main__":
     # Start the FastHTML server
-    serve(host="0.0.0.0", port=int(os.environ.get("PORT", 8000))) 
+    serve(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))

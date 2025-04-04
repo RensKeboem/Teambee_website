@@ -17,8 +17,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Content Security Policy
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self'; "
-            "style-src 'self'; "
+            "script-src 'self' https://unpkg.com https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "
             "font-src 'self'; "
             "connect-src 'self'; "
@@ -69,7 +69,8 @@ class TeambeeApp:
                 Meta(property="og:title", content="Teambee | Transform Members into Loyal Ambassadors"),
                 Meta(property="og:description", content="Help your fitness club members become loyal ambassadors through personalized attention at scale."),
                 Meta(property="og:type", content="website"),
-                Meta(property="og:url", content="https://teambee.com"),
+                Meta(property="og:url", content="https://teambee.fit"),
+                Title("Teambee - Transforming Members into Loyal Ambassadors"),
                 # Stylesheets and scripts
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),

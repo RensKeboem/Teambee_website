@@ -184,14 +184,11 @@ class TeambeeApp:
                 # A(
                 #     "Login",
                 #     href="#login",
-                #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"
-                Div(
-                    "Login Coming soon",
-                    cls="inline-flex h-9 items-center justify-center rounded-lg bg-gray-400 px-4 py-2 text-sm font-medium text-white shadow transition-colors cursor-not-allowed"
-                ),
+                #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"§
+                # ),
                 cls="container flex h-16 items-center justify-between"
             ),
-            cls="sticky top-0 z-50 w-full bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/65 border-b shadow-sm",
+            cls="fixed top-0 z-50 w-full bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/65 border-b shadow-sm",
             role="banner"
         )
     

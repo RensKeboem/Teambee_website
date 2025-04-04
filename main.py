@@ -70,7 +70,6 @@ class TeambeeApp:
                 Meta(property="og:description", content="Help your fitness club members become loyal ambassadors through personalized attention at scale."),
                 Meta(property="og:type", content="website"),
                 Meta(property="og:url", content="https://teambee.fit"),
-                Title("Teambee - Transforming Members into Loyal Ambassadors"),
                 # Stylesheets and scripts
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
@@ -122,7 +121,7 @@ class TeambeeApp:
         @rt("/")
         def home():
             """Render the home page."""
-            return self.create_homepage()
+            return Title("Teambee"), self.create_homepage()
     
     def create_homepage(self):
         """Create the Teambee homepage."""

@@ -474,9 +474,20 @@ class TeambeeApp:
             print(f"Error loading reviews: {e}")
             reviews = []
         
+        # Map of author names to their corresponding image files
+        author_images = {
+            "Marco & Patricia Kalfshoven": "doit_foto.jpeg",
+            "Rick Sombroek": "rick_foto.jpg",
+            "Jochem van der Linden": "xfit_foto.jpg",
+            "Jasper Appeldoorn": "xfit_foto.jpg"
+        }
+        
         # Generate review cards dynamically from the loaded data
         review_cards = []
         for review in reviews:
+            # Get the appropriate image for the author
+            image_file = author_images.get(review["author"], "profile-placeholder.svg")
+            
             review_card = Div(
                 Div(
                     Div(
@@ -494,9 +505,9 @@ class TeambeeApp:
                     Div(
                         Div(
                             Img(
-                                src=self.versioned_url("/static/assets/profile-placeholder.svg"),
+                                src=self.versioned_url(f"/static/assets/{image_file}"),
                                 alt=review["author"],
-                                cls="w-10 h-10 rounded-full bg-gray-200 mr-3"
+                                cls="w-10 h-10 rounded-full bg-gray-200 mr-3 object-cover"
                             ),
                             Div(
                                 Div(
@@ -525,7 +536,7 @@ class TeambeeApp:
                         cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
                     ),
                     P(
-                        "Ontdek hoe Teambee fitnessclubs wereldwijd heeft veranderd.",
+                        "Ontdek hoe Teambee fitnessclubs verandert.",
                         cls="text-lg text-gray-600 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-6"
@@ -586,11 +597,11 @@ class TeambeeApp:
                         Div(
                             Div(
                                 H3(
-                                    "Coming Soon!",
+                                    "Coming soon!",
                                     cls="text-2xl font-bold text-white mb-2"
                                 ),
                                 P(
-                                    "We zijn momenteel bezig aan deze functie. Coming soon!",
+                                    "We zijn druk bezig met het ontwikkelen van deze functie. Houd onze updates in de gaten – binnenkort live!",
                                     cls="text-white/90"
                                 ),
                                 cls="text-center p-8 bg-[#3D2E7C] rounded-lg shadow-lg w-full max-w-sm"

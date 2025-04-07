@@ -146,6 +146,16 @@ class TeambeeApp:
                 # Hero Section
                 self._create_hero_section(),
                 
+                # Jumping arrow between hero and about sections
+                Div(
+                    Img(
+                        src=self.versioned_url("/static/assets/arrow-sm-down.svg"),
+                        alt="Scroll down",
+                        cls="w-12 h-12 mx-auto mb-8 animate-jump opacity-50"
+                    ),
+                    cls="text-center -mt-8"
+                ),
+                
                 # About Section
                 self._create_about_section(),
                 
@@ -216,7 +226,8 @@ class TeambeeApp:
                                 "Our services",
                                 Span("→", cls="ml-2"),
                                 href="#services",
-                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#3D2E7C]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
+                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2",
+                                data_scroll_to="services"
                             ),
                             # A(
                             #     "Login",
@@ -365,6 +376,17 @@ class TeambeeApp:
                         cls="bg-[#1B1947] p-6 rounded-lg"
                     ),
                     
+                    # Add the call-to-action button outside the container but within the section
+                    Div(
+                        A(
+                            "Plan nu een gratis demo",
+                            href="#contact",
+                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
+                            data_scroll_to="contact"
+                        ),
+                        cls="text-center"
+                    ),
+                    
                     cls="grid md:grid-cols-1 gap-8"
                 ),
                 
@@ -494,7 +516,7 @@ class TeambeeApp:
                     Div(
                         Div(
                             Img(
-                                src=self.versioned_url("/static/assets/profile-placeholder.svg"),
+                                src=self.versioned_url(review.get("image", "/static/assets/profile-placeholder.svg")),
                                 alt=review["author"],
                                 cls="w-10 h-10 rounded-full bg-gray-200 mr-3"
                             ),
@@ -548,6 +570,47 @@ class TeambeeApp:
                         cls="flex justify-center gap-2 mt-8"
                     ),
                     
+                    # Success stories button
+                    Div(
+                        Button(
+                            "Zie onze klanten succes verhalen",
+                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
+                            id="show-success-stories"
+                        ),
+                        cls="text-center"
+                    ),
+                    
+                    # Success stories panel (initially hidden)
+                    Div(
+                        Div(
+                            # Close button
+                            Button(
+                                Img(
+                                    src=self.versioned_url("/static/assets/close.svg"),
+                                    alt="Close",
+                                    cls="w-6 h-6"
+                                ),
+                                cls="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors",
+                                id="close-success-stories"
+                            ),
+                            
+                            # Panel content
+                            Div(
+                                H3(
+                                    "Klanten Succes Verhalen",
+                                    cls="text-3xl md:text-4xl font-bold italic text-[#ffffff] mb-8"
+                                ),
+                                Div(
+                                    # Large review cards will be added here
+                                    cls="grid md:grid-cols-3 gap-8"
+                                ),
+                                cls="max-w-7xl mx-auto px-4 py-12"
+                            ),
+                            cls="bg-[#3D2E7C] min-h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[45] overflow-y-auto"
+                        ),
+                        id="success-stories-panel"
+                    ),
+                    
                     cls="relative"
                 ),
                 
@@ -590,7 +653,7 @@ class TeambeeApp:
                                     cls="text-2xl font-bold text-white mb-2"
                                 ),
                                 P(
-                                    "We zijn momenteel bezig aan deze functie. Coming soon!",
+                                    "We zijn druk bezig met het ontwikkelen van deze functie. Houd onze updates in de gaten – binnenkort live!",
                                     cls="text-white/90"
                                 ),
                                 cls="text-center p-8 bg-[#3D2E7C] rounded-lg shadow-lg w-full max-w-sm"
@@ -658,8 +721,8 @@ class TeambeeApp:
                             ),
                             Li(
                                 A(
-                                    "+31 (0)20 123 4567", 
-                                    href="tel:+31201234567",
+                                    "+31 (6) 24 52 79 37", 
+                                    href="tel:+31624527937",
                                     cls="text-white/70 hover:text-white transition-colors"
                                 ),
                                 cls=""
@@ -676,7 +739,7 @@ class TeambeeApp:
                             ),
                             cls="space-y-2"
                         ),
-                        cls="md:text-right"
+                        cls="md:text-right contact-info"
                     ),
                     
                     cls="grid gap-8 md:grid-cols-2"
@@ -746,7 +809,8 @@ class TeambeeApp:
                 cls="container"
             ),
             cls="bg-[#1B1947] text-white py-12 relative z-10",
-            role="contentinfo"
+            role="contentinfo",
+            id="contact"
         )
     
     def get_app(self):

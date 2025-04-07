@@ -288,4 +288,130 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initialize the carousel with default options
   new ReviewCarousel();
+});
+
+// Smooth scroll to contact section with highlighting animation
+document.addEventListener('DOMContentLoaded', function() {
+    const scrollButtons = document.querySelectorAll('[data-scroll-to]');
+    const contactSection = document.getElementById('contact');
+    let isButtonScroll = false;
+    
+    // Create an Intersection Observer
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && isButtonScroll) {
+                // When contact section is fully in view and scroll was initiated by button
+                const contactInfo = entry.target.querySelector('.contact-info');
+                if (contactInfo) {
+                    // Add animation to all elements within contact-info
+                    const contactElements = contactInfo.querySelectorAll('*');
+                    contactElements.forEach(element => {
+                        element.classList.add('scale-contact');
+                        setTimeout(() => {
+                            element.classList.remove('scale-contact');
+                        }, 2000);
+                    });
+                }
+                // Reset the flag after animation
+                setTimeout(() => {
+                    isButtonScroll = false;
+                }, 2000);
+            }
+        });
+    }, {
+        threshold: 0.8 // Trigger when 80% of the section is visible
+    });
+    
+    // Start observing the contact section
+    if (contactSection) {
+        observer.observe(contactSection);
+    }
+    
+    scrollButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('data-scroll-to');
+            const targetElement = document.getElementById(targetId);
+            
+            if (targetElement) {
+                // Set flag to indicate button-initiated scroll
+                isButtonScroll = true;
+                targetElement.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+
+    // Success stories panel functionality
+    const showStoriesBtn = document.getElementById('show-success-stories');
+    const closeStoriesBtn = document.getElementById('close-success-stories');
+    const storiesPanel = document.getElementById('success-stories-panel');
+
+    if (showStoriesBtn && closeStoriesBtn && storiesPanel) {
+        // Show panel
+        showStoriesBtn.addEventListener('click', () => {
+            storiesPanel.querySelector('.transform').classList.remove('translate-x-full');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        });
+
+        // Close panel
+        closeStoriesBtn.addEventListener('click', () => {
+            storiesPanel.querySelector('.transform').classList.add('translate-x-full');
+            document.body.style.overflow = ''; // Restore scrolling
+        });
+
+        // Close panel when clicking outside
+        storiesPanel.addEventListener('click', (e) => {
+            if (e.target === storiesPanel) {
+                storiesPanel.querySelector('.transform').classList.add('translate-x-full');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Load and populate success stories
+        fetch('/static/data/success_stories.json')
+            .then(response => response.json())
+            .then(successStories => {
+                const largeReviewsContainer = storiesPanel.querySelector('.grid');
+                
+                if (largeReviewsContainer) {
+                    // Clear existing content
+                    largeReviewsContainer.innerHTML = '';
+                    
+                    // Create cards for each success story
+                    successStories.forEach(story => {
+                        const metricsHtml = Object.entries(story.metrics)
+                            .map(([key, value]) => `
+                                <div class="text-white/80">
+                                    <span class="text-[#94C46F] font-bold text-xl">${value}</span>
+                                    <span class="ml-2">${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                </div>
+                            `).join('');
+
+                        const largeCard = document.createElement('div');
+                        largeCard.className = 'bg-white/10 backdrop-blur-sm p-8 rounded-lg shadow-lg';
+                        largeCard.innerHTML = `
+                            <div class="mb-6">
+                                <img src="/static/assets/quote.svg" alt="Quote" class="w-12 h-12 text-[#E8973A] mb-4">
+                                <p class="text-white/90 text-lg mb-6 whitespace-pre-line">${story.quote}</p>
+                            </div>
+                            <div class="space-y-6">
+                                <div class="flex items-center">
+                                    <img src="${story.image}" alt="${story.author}" class="w-16 h-16 rounded-full bg-white/20 mr-4 object-cover">
+                                    <div>
+                                        <div class="font-semibold text-white text-xl">${story.author}</div>
+                                        <div class="text-white/70">${story.title}</div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 pt-4 border-t border-white/10">
+                                    ${metricsHtml}
+                                </div>
+                            </div>
+                        `;
+                        largeReviewsContainer.appendChild(largeCard);
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading success stories:', error));
+    }
 }); 

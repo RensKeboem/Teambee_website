@@ -1,0 +1,35 @@
+[
+    {
+        "quote": "\"Keboem has helped 't Gymlokaal strengthen its structure, enhancing work efficiency within our team. Our customers feel seen and valued. Thanks to Keboem's reports, we stay sharp and know where our focus should be. We now have a better grip on our overall business, with specific action points for individual and team guidance. A valuable partnership for 't Gymlokaal.\n\nDoor de implementatie van MyWellness CRM hebben we onze ledenretentie met 35% zien stijgen en is de betrokkenheid van onze leden significant verbeterd. De gepersonaliseerde aanpak heeft echt het verschil gemaakt.\"",
+        "author": "Rick Sombroek",
+        "title": "Founder, 't Gymlokaal'",
+        "image": "/static/assets/reviews/@Rick.jpg",
+        "metrics": {
+            "retention_increase": "35%",
+            "member_satisfaction": "92%",
+            "engagement_rate": "78%"
+        }
+    },
+    {
+        "quote": "\"Bij Basic-Fit Amsterdam hebben we dankzij Teambee een complete transformatie doorgemaakt in hoe we met onze leden communiceren. De geautomatiseerde, maar persoonlijke aanpak zorgt ervoor dat elk lid zich speciaal voelt, zonder dat dit extra druk legt op ons team. We zien niet alleen betere retentiecijfers, maar ook meer referrals van bestaande leden.\n\nDe implementatie was soepel en het team van Teambee stond altijd klaar om ons te ondersteunen. Een echte game-changer voor onze club.\"",
+        "author": "Mark van der Berg",
+        "title": "Club Manager, Basic-Fit Amsterdam",
+        "image": "/static/assets/reviews/mark.jpg",
+        "metrics": {
+            "retention_increase": "42%",
+            "referral_growth": "185%",
+            "member_satisfaction": "94%"
+        }
+    },
+    {
+        "quote": "\"De samenwerking met Teambee heeft ons hele perspectief op ledenbehoud veranderd. Door de data-gedreven aanpak kunnen we nu proactief handelen in plaats van reactief. We zien patronen in ledenbetrokkenheid voordat problemen ontstaan en kunnen direct actie ondernemen.\n\nDe ROI was al binnen 6 maanden zichtbaar, niet alleen in cijfers maar ook in de positieve feedback van onze leden. Het heeft onze club echt naar een hoger niveau getild.\"",
+        "author": "Sophie Jansen",
+        "title": "Owner, Sportclub Sophie",
+        "image": "/static/assets/reviews/sophie.jpg",
+        "metrics": {
+            "roi_period": "6 months",
+            "retention_increase": "45%",
+            "revenue_growth": "28%"
+        }
+    }
+] 

@@ -4,8 +4,8 @@ buildCommand = "npm install && npm run build:css"
 
 [deploy]
 startCommand = "python main.py"
-healthcheckPath = "/"
-healthcheckTimeout = 100
+healthcheckPath = null
+healthcheckTimeout = null
 restartPolicyType = "ON_FAILURE"
 
 [nixpacks]

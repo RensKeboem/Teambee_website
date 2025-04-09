@@ -158,9 +158,6 @@ class TeambeeApp:
                 # Reviews Section
                 self._create_reviews_section(),
                 
-                # Partners Section
-                self._create_partners_section(),
-                
                 # Login Section
                 self._create_login_section(),
                 
@@ -391,6 +388,13 @@ class TeambeeApp:
     
     def _create_benefits_section(self):
         """Create the benefits section."""
+        partners = [
+            {"name": "TechnoGym", "logo": "TechnoGym", "url": "https://www.technogym.com/"},
+            {"name": "Sportivity", "logo": "Sportivity", "url": "https://sportivity.nl/"},
+            {"name": "Clickables", "logo": "Clickables", "url": "https://clickables.nl/"},
+            {"name": "Unlock", "logo": "Unlock", "url": "https://unlock.nl/"}
+        ]
+        
         return Section(
             Div(
                 Div(
@@ -457,13 +461,53 @@ class TeambeeApp:
                         cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
                     ),
                     
-                    cls="grid md:grid-cols-3 gap-8"
+                    cls="grid md:grid-cols-3 gap-8 mb-16"
+                ),
+                
+                # Subtle line separator
+                Div(
+                    cls="border-t border-gray-100 w-full mb-8"
+                ),
+                
+                # Partners section
+                Div(
+                    Div(
+                        H3(
+                            "Our partners:",
+                            cls="text-lg font-medium text-gray-500 mb-8"
+                        ),
+                        cls="text-center"
+                    ),
+                    
+                    Div(
+                        *[
+                            Div(
+                                A(
+                                    Img(
+                                        src=self.versioned_url(f"/static/assets/{partner['logo']}.png"),
+                                        alt=partner["name"],
+                                        cls="md:h-8 w-auto object-contain transition-all duration-300 hover:scale-110 hover:opacity-90"
+                                    ),
+                                    href=partner["url"],
+                                    target="_blank",
+                                    rel="noopener noreferrer",
+                                    aria_label=f"Visit {partner['name']} website",
+                                    cls="flex items-center justify-center"
+                                ),
+                                cls="flex items-center justify-center"
+                            )
+                            for partner in partners
+                        ],
+                        cls="flex flex-nowrap justify-center items-center gap-8 md:gap-12 max-w-4xl mx-auto overflow-x-auto"
+                    ),
+                    
+                    cls="container"
                 ),
                 
                 cls="container"
             ),
             id="benefits",
-            cls="py-16 md:py-24 bg-white/80 backdrop-blur-sm"
+            cls="pt-16 pb-8 bg-white/80 backdrop-blur-sm"
         )
     
     def _create_reviews_section(self):
@@ -558,81 +602,6 @@ class TeambeeApp:
             ),
             id="reviews",
             cls="py-8 md:py-16 bg-gray-100"
-        )
-    
-    def _create_partners_section(self):
-        """Create the partners section with industry leaders."""
-        partners = [
-            {"name": "TechnoGym", "logo": "TechnoGym", "url": "https://www.technogym.com"},
-            {"name": "Matrix Fitness", "logo": "Matrix Fitness", "url": "https://www.matrixfitness.com"},
-            {"name": "Life Fitness", "logo": "Life Fitness", "url": "https://www.lifefitness.com"},
-            {"name": "Precor", "logo": "Precor", "url": "https://www.precor.com"},
-            {"name": "Keiser", "logo": "Keiser", "url": "https://www.keiser.com"},
-            {"name": "Hammer Strength", "logo": "Hammer Strength", "url": "https://www.lifefitness.com/hammer-strength"}
-        ]
-        
-        return Section(
-            Div(
-                Div(
-                    H2(
-                        "Trusted by Industry Leaders",
-                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
-                    ),
-                    P(
-                        "sub tekst -----------",
-                        cls="text-lg text-gray-600 max-w-3xl mx-auto"
-                    ),
-                    cls="text-center mb-12"
-                ),
-                
-                Div(
-                    *[
-                        Div(
-                            A(
-                                Img(
-                                    src=self.versioned_url(f"/static/assets/{partner['logo']}.png"),
-                                    alt=partner["name"],
-                                    cls="h-12 w-auto object-contain transition-transform hover:scale-105"
-                                ),
-                                href=partner["url"],
-                                target="_blank",
-                                rel="noopener noreferrer",
-                                aria_label=f"Visit {partner['name']} website",
-                                cls="flex items-center justify-center h-full w-full p-6 rounded-lg border border-gray-100 bg-white hover:shadow-md transition-shadow duration-300"
-                            ),
-                            cls="flex items-center justify-center"
-                        )
-                        for partner in partners[:3]
-                    ],
-                    cls="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8"
-                ),
-                
-                Div(
-                    *[
-                        Div(
-                            A(
-                                Img(
-                                    src=self.versioned_url(f"/static/assets/{partner['logo']}.png"),
-                                    alt=partner["name"],
-                                    cls="h-12 w-auto object-contain transition-transform hover:scale-105"
-                                ),
-                                href=partner["url"],
-                                target="_blank",
-                                rel="noopener noreferrer",
-                                aria_label=f"Visit {partner['name']} website",
-                                cls="flex items-center justify-center h-full w-full p-6 rounded-lg border border-gray-100 bg-white hover:shadow-md transition-shadow duration-300"
-                            ),
-                            cls="flex items-center justify-center"
-                        )
-                        for partner in partners[3:]
-                    ],
-                    cls="grid grid-cols-1 md:grid-cols-3 gap-8"
-                ),
-                
-                cls="container"
-            ),
-            id="partners",
-            cls="pt-16 pb-8 md:pt-24 md:pb-12 bg-white"
         )
     
     def _create_login_section(self):

@@ -8,5 +8,4 @@ startCommand = "python main.py"
 healthcheckPath = "/"
 restartPolicyType = "ON_FAILURE"
 healthcheckTimeout = 100
-multiRegionConfig = {"europe-west4-drams3a":{"numReplicas":1}}
 

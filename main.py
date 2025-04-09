@@ -146,6 +146,16 @@ class TeambeeApp:
                 # Hero Section
                 self._create_hero_section(),
                 
+                # Jumping arrow between hero and about sections
+                Div(
+                    Img(
+                        src=self.versioned_url("/static/assets/arrow-sm-down.svg"),
+                        alt="Scroll down",
+                        cls="w-12 h-12 mx-auto mb-8 animate-jump opacity-50"
+                    ),
+                    cls="text-center -mt-8"
+                ),
+                
                 # About Section
                 self._create_about_section(),
                 
@@ -178,7 +188,7 @@ class TeambeeApp:
             Div(
                 Div(
                     A(
-                        Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-10 w-auto"),
+                        Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-8 sm:h-10 w-auto"),
                         href="#",
                         title="Back to top",
                         aria_label="Back to top of page",
@@ -216,7 +226,8 @@ class TeambeeApp:
                                 "Our services",
                                 Span("→", cls="ml-2"),
                                 href="#services",
-                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#3D2E7C]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
+                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2",
+                                data_scroll_to="services"
                             ),
                             # A(
                             #     "Login",
@@ -365,6 +376,17 @@ class TeambeeApp:
                         cls="bg-[#1B1947] p-6 rounded-lg"
                     ),
                     
+                    # Add the call-to-action button outside the container but within the section
+                    Div(
+                        A(
+                            "Plan nu een gratis demo",
+                            href="#contact",
+                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
+                            data_scroll_to="contact"
+                        ),
+                        cls="text-center"
+                    ),
+                    
                     cls="grid md:grid-cols-1 gap-8"
                 ),
                 
@@ -388,6 +410,13 @@ class TeambeeApp:
     
     def _create_benefits_section(self):
         """Create the benefits section."""
+        partners = [
+            {"name": "TechnoGym", "logo": "TechnoGym", "url": "https://www.technogym.com/"},
+            {"name": "Sportivity", "logo": "Sportivity", "url": "https://sportivity.nl/"},
+            {"name": "Clickables", "logo": "Clickables", "url": "https://clickables.nl/"},
+            {"name": "Unlock", "logo": "Unlock", "url": "https://unlock.nl/"}
+        ]
+        
         return Section(
             Div(
                 Div(
@@ -454,13 +483,53 @@ class TeambeeApp:
                         cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
                     ),
                     
-                    cls="grid md:grid-cols-3 gap-8"
+                    cls="grid md:grid-cols-3 gap-8 mb-16"
+                ),
+                
+                # Subtle line separator
+                Div(
+                    cls="border-t border-gray-100 w-full mb-8"
+                ),
+                
+                # Partners section
+                Div(
+                    Div(
+                        H3(
+                            "Our partners:",
+                            cls="text-lg font-medium text-gray-500 mb-8"
+                        ),
+                        cls="text-center"
+                    ),
+                    
+                    Div(
+                        *[
+                            Div(
+                                A(
+                                    Img(
+                                        src=self.versioned_url(f"/static/assets/{partner['logo']}.png"),
+                                        alt=partner["name"],
+                                        cls="md:h-8 w-auto object-contain transition-all duration-300 hover:scale-110 hover:opacity-90"
+                                    ),
+                                    href=partner["url"],
+                                    target="_blank",
+                                    rel="noopener noreferrer",
+                                    aria_label=f"Visit {partner['name']} website",
+                                    cls="flex items-center justify-center p-4"
+                                ),
+                                cls="flex items-center justify-center"
+                            )
+                            for partner in partners
+                        ],
+                        cls="flex flex-nowrap justify-center items-center gap-8 md:gap-12 max-w-4xl mx-auto overflow-x-auto"
+                    ),
+                    
+                    cls="container"
                 ),
                 
                 cls="container"
             ),
             id="benefits",
-            cls="py-16 md:py-24 bg-white/80 backdrop-blur-sm"
+            cls="pt-16 pb-8 bg-white/80 backdrop-blur-sm"
         )
     
     def _create_reviews_section(self):
@@ -524,7 +593,7 @@ class TeambeeApp:
                     ),
                     cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-full flex flex-col justify-between w-full"
                 ),
-                cls="review-card w-full md:w-[90%] max-w-3xl flex-shrink-0 px-4 mx-auto"
+                cls="review-card w-full md:w-[90%] max-w-3xl flex-shrink-0 px-4 mx-auto snap-center"
             )
             review_cards.append(review_card)
         
@@ -548,15 +617,57 @@ class TeambeeApp:
                         Div(
                             *review_cards,
                             id="reviews-container",
-                            cls="flex gap-0 transition-transform duration-500 touch-pan-x cursor-grab"
+                            cls="flex gap-0 transition-transform duration-500 touch-pan-x cursor-grab active:cursor-grabbing snap-start"
                         ),
-                        cls="overflow-hidden w-full max-w-4xl mx-auto touch-pan-x relative"
+                        id="reviews-wrapper",
+                        cls="overflow-x-auto w-full max-w-4xl mx-auto touch-pan-x snap-x snap-mandatory scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                     ),
                     
                     # Dots for navigation
                     Div(
                         id="review-dots",
                         cls="flex justify-center gap-2 mt-8"
+                    ),
+                    
+                    # Success stories button
+                    Div(
+                        Button(
+                            "Zie onze klanten succes verhalen",
+                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
+                            id="show-success-stories"
+                        ),
+                        cls="text-center"
+                    ),
+                    
+                    # Success stories panel (initially hidden)
+                    Div(
+                        Div(
+                            # Close button
+                            Button(
+                                Img(
+                                    src=self.versioned_url("/static/assets/close.svg"),
+                                    alt="Close",
+                                    cls="w-6 h-6"
+                                ),
+                                cls="fixed top-4 right-4 text-white hover:text-gray-200 transition-colors z-50",
+                                id="close-success-stories"
+                            ),
+                            
+                            # Panel content
+                            Div(
+                                H3(
+                                    "Klanten Succes Verhalen",
+                                    cls="text-3xl md:text-4xl font-bold italic text-[#ffffff] mb-8 sticky top-0 bg-[#3D2E7C] pt-4 pb-4 z-10"
+                                ),
+                                Div(
+                                    # Success stories container with vertical scrolling
+                                    cls="space-y-8"
+                                ),
+                                cls="max-w-7xl mx-auto px-4 py-12"
+                            ),
+                            cls="bg-[#3D2E7C] h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[100] overflow-y-auto"
+                        ),
+                        id="success-stories-panel"
                     ),
                     
                     cls="relative"
@@ -629,7 +740,7 @@ class TeambeeApp:
             ),
             
             id="login",
-            cls="pt-16 md:pt-24 pb-16 bg-white/90 backdrop-blur-sm relative"
+            cls="pt-8 md:pt-12 pb-16 bg-white/90 backdrop-blur-sm relative"
         )
     
     def _create_footer(self):
@@ -687,7 +798,7 @@ class TeambeeApp:
                             ),
                             cls="space-y-2"
                         ),
-                        cls="md:text-right"
+                        cls="md:text-right contact-info"
                     ),
                     
                     cls="grid gap-8 md:grid-cols-2"
@@ -756,8 +867,9 @@ class TeambeeApp:
                 
                 cls="container"
             ),
-            cls="bg-[#1B1947] text-white py-12 relative z-10",
-            role="contentinfo"
+            cls="bg-[#1B1947] text-white py-12 relative z-0",
+            role="contentinfo",
+            id="contact"
         )
     
     def get_app(self):

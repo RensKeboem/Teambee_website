@@ -590,7 +590,7 @@ class TeambeeApp:
                                     alt="Close",
                                     cls="w-6 h-6"
                                 ),
-                                cls="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors",
+                                cls="fixed top-4 right-4 text-white hover:text-gray-200 transition-colors z-50",
                                 id="close-success-stories"
                             ),
                             
@@ -598,15 +598,15 @@ class TeambeeApp:
                             Div(
                                 H3(
                                     "Klanten Succes Verhalen",
-                                    cls="text-3xl md:text-4xl font-bold italic text-[#ffffff] mb-8"
+                                    cls="text-3xl md:text-4xl font-bold italic text-[#ffffff] mb-8 sticky top-0 bg-[#3D2E7C] pt-4 pb-4 z-10"
                                 ),
                                 Div(
-                                    # Large review cards will be added here
-                                    cls="grid md:grid-cols-3 gap-8"
+                                    # Success stories container with vertical scrolling
+                                    cls="space-y-8"
                                 ),
                                 cls="max-w-7xl mx-auto px-4 py-12"
                             ),
-                            cls="bg-[#3D2E7C] min-h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[45] overflow-y-auto"
+                            cls="bg-[#3D2E7C] h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[45] overflow-y-auto"
                         ),
                         id="success-stories-panel"
                     ),

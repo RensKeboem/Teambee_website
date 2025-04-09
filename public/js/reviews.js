@@ -337,7 +337,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (targetElement) {
                 // Set flag to indicate button-initiated scroll
                 isButtonScroll = true;
-                targetElement.scrollIntoView({ behavior: 'smooth' });
+                
+                // Calculate the offset to account for the fixed header
+                const headerHeight = document.querySelector('header').offsetHeight;
+                const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
             }
         });
     });
@@ -372,14 +380,14 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/static/data/success_stories.json')
             .then(response => response.json())
             .then(successStories => {
-                const largeReviewsContainer = storiesPanel.querySelector('.grid');
+                const largeReviewsContainer = storiesPanel.querySelector('.space-y-8');
                 
                 if (largeReviewsContainer) {
                     // Clear existing content
                     largeReviewsContainer.innerHTML = '';
                     
                     // Create cards for each success story
-                    successStories.forEach(story => {
+                    successStories.forEach((story, index) => {
                         const metricsHtml = Object.entries(story.metrics)
                             .map(([key, value]) => `
                                 <div class="text-white/80">
@@ -388,24 +396,56 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             `).join('');
 
+                        // Determine if image should be on left or right based on index
+                        const isImageLeft = index % 2 === 0;
+                        
                         const largeCard = document.createElement('div');
-                        largeCard.className = 'bg-white/10 backdrop-blur-sm p-8 rounded-lg shadow-lg';
+                        largeCard.className = 'bg-white/10 backdrop-blur-sm p-8 rounded-lg shadow-lg mb-12 last:mb-0';
                         largeCard.innerHTML = `
-                            <div class="mb-6">
-                                <img src="/static/assets/quote.svg" alt="Quote" class="w-12 h-12 text-[#E8973A] mb-4">
-                                <p class="text-white/90 text-lg mb-6 whitespace-pre-line">${story.quote}</p>
-                            </div>
-                            <div class="space-y-6">
-                                <div class="flex items-center">
-                                    <img src="${story.image}" alt="${story.author}" class="w-16 h-16 rounded-full bg-white/20 mr-4 object-cover">
-                                    <div>
-                                        <div class="font-semibold text-white text-xl">${story.author}</div>
-                                        <div class="text-white/70">${story.title}</div>
+                            <div class="flex flex-col md:flex-row gap-8 items-center">
+                                ${isImageLeft ? `
+                                    <div class="w-full md:w-1/3">
+                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg">
                                     </div>
-                                </div>
-                                <div class="space-y-2 pt-4 border-t border-white/10">
-                                    ${metricsHtml}
-                                </div>
+                                    <div class="w-full md:w-2/3">
+                                        <div class="mb-6">
+                                            <img src="/static/assets/quote.svg" alt="Quote" class="w-12 h-12 text-[#E8973A] mb-4">
+                                            <p class="text-white/90 text-lg mb-6 whitespace-pre-line">${story.quote}</p>
+                                        </div>
+                                        <div class="space-y-6">
+                                            <div class="flex items-center">
+                                                <div>
+                                                    <div class="font-semibold text-white text-xl">${story.author}</div>
+                                                    <div class="text-white/70">${story.title}</div>
+                                                </div>
+                                            </div>
+                                            <div class="space-y-2 pt-4 border-t border-white/10">
+                                                ${metricsHtml}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="w-full md:w-2/3">
+                                        <div class="mb-6">
+                                            <img src="/static/assets/quote.svg" alt="Quote" class="w-12 h-12 text-[#E8973A] mb-4">
+                                            <p class="text-white/90 text-lg mb-6 whitespace-pre-line">${story.quote}</p>
+                                        </div>
+                                        <div class="space-y-6">
+                                            <div class="flex items-center">
+                                                <div>
+                                                    <div class="font-semibold text-white text-xl">${story.author}</div>
+                                                    <div class="text-white/70">${story.title}</div>
+                                                </div>
+                                            </div>
+                                            <div class="space-y-2 pt-4 border-t border-white/10">
+                                                ${metricsHtml}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="w-full md:w-1/3">
+                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg">
+                                    </div>
+                                `}
                             </div>
                         `;
                         largeReviewsContainer.appendChild(largeCard);

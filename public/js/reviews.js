@@ -271,12 +271,99 @@ document.addEventListener('DOMContentLoaded', function() {
       // Click on carousel pauses autoplay
       this.container.addEventListener('click', () => this.pauseAutoplay());
       
-      // Handle resize events
-      window.addEventListener('resize', () => this.handleResize());
+      // Handle window resize
+      window.addEventListener('resize', this.handleResize.bind(this));
       
-      // Handle transition end
+      // Handle container transitions ending
       this.container.addEventListener('transitionend', () => {
         this.isTransitioning = false;
+      });
+
+      // Add scroll event detection for updating dots during manual scrolling
+      const reviewsWrapper = document.getElementById('reviews-wrapper');
+      if (reviewsWrapper) {
+        reviewsWrapper.addEventListener('scroll', this.handleScroll.bind(this));
+        // Also listen for scroll end to ensure we catch the final position
+        this.setupScrollEndDetection(reviewsWrapper);
+      }
+    }
+    
+    setupScrollEndDetection(element) {
+      let scrollTimeout;
+      element.addEventListener('scroll', () => {
+        // Clear the timeout if a new scroll event comes in
+        if (scrollTimeout) {
+          clearTimeout(scrollTimeout);
+        }
+        
+        // Set a timeout to detect when scrolling stops
+        scrollTimeout = setTimeout(() => {
+          this.handleScrollEnd(element);
+        }, 150); // Wait 150ms after scrolling stops
+      });
+    }
+    
+    handleScrollEnd(element) {
+      // Get the scroll position
+      const scrollLeft = element.scrollLeft;
+      const cardWidth = this.cards[0].offsetWidth;
+      
+      // Calculate the index of the card that should be centered
+      const index = Math.round(scrollLeft / cardWidth);
+      
+      // Convert to an index within our carousel range (accounting for clones)
+      let adjustedIndex = index + 1; // +1 for clone offset
+      
+      // Handle infinite scroll wrap-around
+      if (adjustedIndex <= 0) {
+        // If at beginning clone, jump to last real slide
+        adjustedIndex = this.totalCards;
+        // Reset scroll position without animation
+        setTimeout(() => {
+          element.scrollLeft = this.totalCards * cardWidth;
+        }, 50);
+      } else if (adjustedIndex >= this.totalCards + 1) {
+        // If at end clone, jump to first real slide
+        adjustedIndex = 1;
+        // Reset scroll position without animation
+        setTimeout(() => {
+          element.scrollLeft = 0;
+        }, 50);
+      }
+      
+      // Update the active dot
+      const dotIndex = this.getDotIndexFromSlideIndex(adjustedIndex);
+      this.updateActiveDot(dotIndex);
+      
+      // Update current index and pause autoplay
+      this.currentIndex = adjustedIndex;
+      this.pauseAutoplay();
+    }
+    
+    handleScroll() {
+      if (this.isHandlingScroll) return;
+      this.isHandlingScroll = true;
+      
+      // Debounce the scroll handling for better performance
+      requestAnimationFrame(() => {
+        const containerWidth = this.getContainerWidth();
+        const cardWidth = this.cards[0].offsetWidth;
+        const scrollLeft = this.container.parentElement.scrollLeft;
+        
+        // Calculate which card is centered
+        const centeredCardIndex = Math.round(scrollLeft / cardWidth) + 1; // +1 for the cloned card
+        
+        // Update active dot
+        const dotIndex = this.getDotIndexFromSlideIndex(centeredCardIndex);
+        this.updateActiveDot(dotIndex);
+        
+        // Update current index
+        this.currentIndex = centeredCardIndex;
+        
+        // Pause autoplay when manually scrolling
+        this.pauseAutoplay();
+        
+        this.isHandlingScroll = false;
       });
     }
     

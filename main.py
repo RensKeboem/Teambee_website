@@ -560,7 +560,7 @@ class TeambeeApp:
                     ),
                     cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-full flex flex-col justify-between w-full"
                 ),
-                cls="review-card w-full md:w-[90%] max-w-3xl flex-shrink-0 px-4 mx-auto"
+                cls="review-card w-full md:w-[90%] max-w-3xl flex-shrink-0 px-4 mx-auto snap-center"
             )
             review_cards.append(review_card)
         
@@ -584,9 +584,10 @@ class TeambeeApp:
                         Div(
                             *review_cards,
                             id="reviews-container",
-                            cls="flex gap-0 transition-transform duration-500 touch-pan-x cursor-grab"
+                            cls="flex gap-0 transition-transform duration-500 touch-pan-x cursor-grab active:cursor-grabbing snap-start"
                         ),
-                        cls="overflow-hidden w-full max-w-4xl mx-auto touch-pan-x relative"
+                        id="reviews-wrapper",
+                        cls="overflow-x-auto w-full max-w-4xl mx-auto touch-pan-x snap-x snap-mandatory scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                     ),
                     
                     # Dots for navigation

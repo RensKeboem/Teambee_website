@@ -178,7 +178,7 @@ class TeambeeApp:
             Div(
                 Div(
                     A(
-                        Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-10 w-auto"),
+                        Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-8 sm:h-10 w-auto"),
                         href="#",
                         title="Back to top",
                         aria_label="Back to top of page",
@@ -492,7 +492,7 @@ class TeambeeApp:
                                     target="_blank",
                                     rel="noopener noreferrer",
                                     aria_label=f"Visit {partner['name']} website",
-                                    cls="flex items-center justify-center"
+                                    cls="flex items-center justify-center p-4"
                                 ),
                                 cls="flex items-center justify-center"
                             )

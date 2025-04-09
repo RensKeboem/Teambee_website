@@ -1,11 +1,12 @@
 [build]
-builder = "NIXPACKS"
-buildCommand = "npm install && npm run build:css"
+builder = "DOCKERFILE"
+buildCommand = "npm install && npm run build: css"
+dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "python main.py"
-healthcheckPath = "null"
+healthcheckPath = "/"
 restartPolicyType = "ON_FAILURE"
+healthcheckTimeout = 100
+multiRegionConfig = {"europe-west4-drams3a":{"numReplicas":1}}
 
-[nixpacks]
-framework = ["python", "nodejs"] 

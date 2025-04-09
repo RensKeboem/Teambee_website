@@ -1,35 +1,74 @@
 [
     {
-        "quote": "\"Keboem has helped 't Gymlokaal strengthen its structure, enhancing work efficiency within our team. Our customers feel seen and valued. Thanks to Keboem's reports, we stay sharp and know where our focus should be. We now have a better grip on our overall business, with specific action points for individual and team guidance. A valuable partnership for 't Gymlokaal.\n\nDoor de implementatie van MyWellness CRM hebben we onze ledenretentie met 35% zien stijgen en is de betrokkenheid van onze leden significant verbeterd. De gepersonaliseerde aanpak heeft echt het verschil gemaakt.\"",
-        "author": "Rick Sombroek",
-        "title": "Founder, 't Gymlokaal'",
-        "image": "/static/assets/reviews/@Rick.jpg",
+        "title": "EV Fysiotherapie",
+        "subtitle": "Van behandelruimte naar fitnesscommunity met resultaat",
+        "image": "/static/assets/EV Fysiotherapie foto.jpeg",
+        "strategy": "EV Fysiotherapie wilde meer doen met hun oefenzaal en leden langer binden aan hun praktijk. In samenwerking met Teambee werd gekozen voor een gefaseerde aanpak: uitbreiding met Technogym Smart Equipment, implementatie van het Mywellness CRM en begeleiding op het gebied van sales, klantreis en teamstructuur. De focus lag op het bouwen van een onderscheidende sportomgeving binnen de fysiopraktijk, ondersteund door digitale en persoonlijke ledenbegeleiding.",
         "metrics": {
-            "retention_increase": "35%",
-            "member_satisfaction": "92%",
-            "engagement_rate": "78%"
-        }
+            "start": {
+                "members": "323",
+                "app_users": "280",
+                "visitors": "272"
+            },
+            "three_months": {
+                "members": "481",
+                "app_users": "458",
+                "visitors": "451"
+            },
+            "current": {
+                "members": "749",
+                "app_users": "626",
+                "visitors": "603"
+            }
+        },
+        "conclusion": "EV Fysiotherapie maakte de succesvolle overstap van zorglocatie naar fitnessconcept. Dankzij structuur, digitalisering en focus op beleving is sporten nu een vast onderdeel van de klantrelatie. De club onderscheidt zich met een professionele journey en langdurige klantbinding."
     },
     {
-        "quote": "\"Bij Basic-Fit Amsterdam hebben we dankzij Teambee een complete transformatie doorgemaakt in hoe we met onze leden communiceren. De geautomatiseerde, maar persoonlijke aanpak zorgt ervoor dat elk lid zich speciaal voelt, zonder dat dit extra druk legt op ons team. We zien niet alleen betere retentiecijfers, maar ook meer referrals van bestaande leden.\n\nDe implementatie was soepel en het team van Teambee stond altijd klaar om ons te ondersteunen. Een echte game-changer voor onze club.\"",
-        "author": "Mark van der Berg",
-        "title": "Club Manager, Basic-Fit Amsterdam",
-        "image": "/static/assets/reviews/mark.jpg",
+        "title": "Sportclub Do-It",
+        "subtitle": "Premium groei met Biostrength en slimme CRM",
+        "image": "/static/assets/Do it.jpg",
+        "strategy": "In januari 2023 besloot Sportclub Do-It te investeren in Biocircuit van Technogym gecombineerd met volledige connected equipment van Technogym en het volledige Technogym Ecosysteem.\n\nSamen met Teambee werd een strategie opgesteld voor sales, onboarding, klantreis en teambegeleiding.\n\nDe ambitie: doorgroeien naar een premium club met digitale grip op instroom, retentie en upsell.",
         "metrics": {
-            "retention_increase": "42%",
-            "referral_growth": "185%",
-            "member_satisfaction": "94%"
-        }
+            "start": {
+                "members": "1223",
+                "app_users": "980",
+                "visitors": "1108"
+            },
+            "three_months": {
+                "members": "1335",
+                "app_users": "1109",
+                "visitors": "1177"
+            },
+            "current": {
+                "members": "1818",
+                "app_users": "1452",
+                "visitors": "1493"
+            }
+        },
+        "conclusion": "De slimme combinatie van Biocircuit en smart/connected equipment, CRM-strategie en teamtraining heeft geleid tot premium groei.\n\nMet de volledige ledenbezetting en sterke klantbinding heeft Sportclub Do-It een solide basis voor toekomstige groei."
     },
     {
-        "quote": "\"De samenwerking met Teambee heeft ons hele perspectief op ledenbehoud veranderd. Door de data-gedreven aanpak kunnen we nu proactief handelen in plaats van reactief. We zien patronen in ledenbetrokkenheid voordat problemen ontstaan en kunnen direct actie ondernemen.\n\nDe ROI was al binnen 6 maanden zichtbaar, niet alleen in cijfers maar ook in de positieve feedback van onze leden. Het heeft onze club echt naar een hoger niveau getild.\"",
-        "author": "Sophie Jansen",
-        "title": "Owner, Sportclub Sophie",
-        "image": "/static/assets/reviews/sophie.jpg",
+        "title": "'t Gymlokaal Alkmaar",
+        "subtitle": "Van pionieren naar professionaliseren met vier vestigingen",
+        "image": "/static/assets/Gymlokaal foto.jpg",
+        "strategy": "Rick Sombroek en 't Gymlokaal startten al in 2019 met Teambee.\n\nDe ambitie: een onderscheidende boutique fitnessformule met maximale klantbeleving en een efficiënt werkend team onder de naam 't Gymlokaal!\n\nVia maandelijkse sessies werd gewerkt aan teamstructuur, retentie, klantreizen en het strategisch inzetten van data.",
         "metrics": {
-            "roi_period": "6 months",
-            "retention_increase": "45%",
-            "revenue_growth": "28%"
-        }
+            "start": {
+                "members": "0",
+                "app_users": "0",
+                "visitors": "0"
+            },
+            "three_months": {
+                "members": "208",
+                "app_users": "171",
+                "visitors": "177"
+            },
+            "current": {
+                "members": "601",
+                "app_users": "523",
+                "visitors": "468"
+            }
+        },
+        "conclusion": "'t Gymlokaal laat zien dat lange termijn samenwerking loont. Door stap voor stap te bouwen aan strategie, structuur en datasturing is het merk uitgegroeid tot een professioneel boutique concept met grip op groei en schaalbaarheid."
     }
 ] 

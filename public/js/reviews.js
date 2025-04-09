@@ -354,18 +354,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const showStoriesBtn = document.getElementById('show-success-stories');
     const closeStoriesBtn = document.getElementById('close-success-stories');
     const storiesPanel = document.getElementById('success-stories-panel');
+    const footer = document.querySelector('footer');
 
-    if (showStoriesBtn && closeStoriesBtn && storiesPanel) {
+    if (showStoriesBtn && closeStoriesBtn && storiesPanel && footer) {
         // Show panel
         showStoriesBtn.addEventListener('click', () => {
             storiesPanel.querySelector('.transform').classList.remove('translate-x-full');
             document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            footer.style.display = 'none'; // Hide footer
         });
 
         // Close panel
         closeStoriesBtn.addEventListener('click', () => {
             storiesPanel.querySelector('.transform').classList.add('translate-x-full');
             document.body.style.overflow = ''; // Restore scrolling
+            footer.style.display = ''; // Show footer
         });
 
         // Close panel when clicking outside
@@ -373,6 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target === storiesPanel) {
                 storiesPanel.querySelector('.transform').classList.add('translate-x-full');
                 document.body.style.overflow = '';
+                footer.style.display = ''; // Show footer
             }
         });
 
@@ -402,48 +406,108 @@ document.addEventListener('DOMContentLoaded', function() {
                         const largeCard = document.createElement('div');
                         largeCard.className = 'bg-white/10 backdrop-blur-sm p-8 rounded-lg shadow-lg mb-12 last:mb-0';
                         largeCard.innerHTML = `
-                            <div class="flex flex-col md:flex-row gap-8 items-center">
+                            <div class="flex flex-col md:flex-row gap-8 items-start">
                                 ${isImageLeft ? `
                                     <div class="w-full md:w-1/3">
-                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg">
+                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
+                                        <div class="bg-white/5 p-4 rounded-lg">
+                                            <h4 class="text-white text-xl font-bold mb-2">${story.title}</h4>
+                                            <p class="text-white/80">${story.subtitle}</p>
+                                        </div>
                                     </div>
                                     <div class="w-full md:w-2/3">
-                                        <div class="mb-6">
-                                            <img src="/static/assets/quote.svg" alt="Quote" class="w-12 h-12 text-[#E8973A] mb-4">
-                                            <p class="text-white/90 text-lg mb-6 whitespace-pre-line">${story.quote}</p>
+                                        <div class="mb-8">
+                                            <h3 class="text-white text-2xl font-bold mb-4">Strategie & Aanpak</h3>
+                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.strategy}</p>
                                         </div>
-                                        <div class="space-y-6">
-                                            <div class="flex items-center">
-                                                <div>
-                                                    <div class="font-semibold text-white text-xl">${story.author}</div>
-                                                    <div class="text-white/70">${story.title}</div>
+                                        
+                                        <div class="mb-8">
+                                            <h3 class="text-white text-2xl font-bold mb-4">Resultaten & KPI's</h3>
+                                            <div class="space-y-6">
+                                                <div class="bg-white/5 p-4 rounded-lg">
+                                                    <h4 class="text-white font-semibold mb-2">📍 Start samenwerking (september 2023):</h4>
+                                                    <ul class="list-disc list-inside text-white/80 space-y-1">
+                                                        <li>Totale aantal leden: ${story.metrics.start.members}</li>
+                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.start.app_users}</li>
+                                                        <li>Aantal recente bezoekers: ${story.metrics.start.visitors}</li>
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div class="bg-white/5 p-4 rounded-lg">
+                                                    <h4 class="text-white font-semibold mb-2">📊 Impactmeting na 3 maanden (november 2023):</h4>
+                                                    <ul class="list-disc list-inside text-white/80 space-y-1">
+                                                        <li>Totale aantal leden: ${story.metrics.three_months.members}</li>
+                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.three_months.app_users}</li>
+                                                        <li>Aantal recente bezoekers: ${story.metrics.three_months.visitors}</li>
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div class="bg-white/5 p-4 rounded-lg">
+                                                    <h4 class="text-white font-semibold mb-2">📈 Huidige situatie (maart 2025):</h4>
+                                                    <ul class="list-disc list-inside text-white/80 space-y-1">
+                                                        <li>Totale aantal leden: ${story.metrics.current.members}</li>
+                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.current.app_users}</li>
+                                                        <li>Aantal recente bezoekers: ${story.metrics.current.visitors}</li>
+                                                    </ul>
                                                 </div>
                                             </div>
-                                            <div class="space-y-2 pt-4 border-t border-white/10">
-                                                ${metricsHtml}
-                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 class="text-white text-2xl font-bold mb-4">Conclusie</h3>
+                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.conclusion}</p>
                                         </div>
                                     </div>
                                 ` : `
                                     <div class="w-full md:w-2/3">
-                                        <div class="mb-6">
-                                            <img src="/static/assets/quote.svg" alt="Quote" class="w-12 h-12 text-[#E8973A] mb-4">
-                                            <p class="text-white/90 text-lg mb-6 whitespace-pre-line">${story.quote}</p>
+                                        <div class="mb-8">
+                                            <h3 class="text-white text-2xl font-bold mb-4">Strategie & Aanpak</h3>
+                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.strategy}</p>
                                         </div>
-                                        <div class="space-y-6">
-                                            <div class="flex items-center">
-                                                <div>
-                                                    <div class="font-semibold text-white text-xl">${story.author}</div>
-                                                    <div class="text-white/70">${story.title}</div>
+                                        
+                                        <div class="mb-8">
+                                            <h3 class="text-white text-2xl font-bold mb-4">Resultaten & KPI's</h3>
+                                            <div class="space-y-6">
+                                                <div class="bg-white/5 p-4 rounded-lg">
+                                                    <h4 class="text-white font-semibold mb-2">📍 Start samenwerking (september 2023):</h4>
+                                                    <ul class="list-disc list-inside text-white/80 space-y-1">
+                                                        <li>Totale aantal leden: ${story.metrics.start.members}</li>
+                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.start.app_users}</li>
+                                                        <li>Aantal recente bezoekers: ${story.metrics.start.visitors}</li>
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div class="bg-white/5 p-4 rounded-lg">
+                                                    <h4 class="text-white font-semibold mb-2">📊 Impactmeting na 3 maanden (november 2023):</h4>
+                                                    <ul class="list-disc list-inside text-white/80 space-y-1">
+                                                        <li>Totale aantal leden: ${story.metrics.three_months.members}</li>
+                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.three_months.app_users}</li>
+                                                        <li>Aantal recente bezoekers: ${story.metrics.three_months.visitors}</li>
+                                                    </ul>
+                                                </div>
+                                                
+                                                <div class="bg-white/5 p-4 rounded-lg">
+                                                    <h4 class="text-white font-semibold mb-2">📈 Huidige situatie (maart 2025):</h4>
+                                                    <ul class="list-disc list-inside text-white/80 space-y-1">
+                                                        <li>Totale aantal leden: ${story.metrics.current.members}</li>
+                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.current.app_users}</li>
+                                                        <li>Aantal recente bezoekers: ${story.metrics.current.visitors}</li>
+                                                    </ul>
                                                 </div>
                                             </div>
-                                            <div class="space-y-2 pt-4 border-t border-white/10">
-                                                ${metricsHtml}
-                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 class="text-white text-2xl font-bold mb-4">Conclusie</h3>
+                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.conclusion}</p>
                                         </div>
                                     </div>
                                     <div class="w-full md:w-1/3">
-                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg">
+                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
+                                        <div class="bg-white/5 p-4 rounded-lg">
+                                            <h4 class="text-white text-xl font-bold mb-2">${story.title}</h4>
+                                            <p class="text-white/80">${story.subtitle}</p>
+                                        </div>
                                     </div>
                                 `}
                             </div>

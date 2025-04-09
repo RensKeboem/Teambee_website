@@ -606,7 +606,7 @@ class TeambeeApp:
                                 ),
                                 cls="max-w-7xl mx-auto px-4 py-12"
                             ),
-                            cls="bg-[#3D2E7C] h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[45] overflow-y-auto"
+                            cls="bg-[#3D2E7C] h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[100] overflow-y-auto"
                         ),
                         id="success-stories-panel"
                     ),
@@ -808,7 +808,7 @@ class TeambeeApp:
                 
                 cls="container"
             ),
-            cls="bg-[#1B1947] text-white py-12 relative z-10",
+            cls="bg-[#1B1947] text-white py-12 relative z-0",
             role="contentinfo",
             id="contact"
         )

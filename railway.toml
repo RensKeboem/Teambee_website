@@ -1,11 +1,11 @@
 [build]
-builder = "DOCKERFILE"
-buildCommand = "npm install && npm run build: css"
-dockerfilePath = "Dockerfile"
+builder = "NIXPACKS"
+buildCommand = "npm install && npm run build:css"
 
 [deploy]
 startCommand = "python main.py"
 healthcheckPath = "/"
-restartPolicyType = "ON_FAILURE"
 healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
 
+[nixpacks]

@@ -669,8 +669,8 @@ class TeambeeApp:
                             ),
                             Li(
                                 A(
-                                    "+31 (0)20 123 4567", 
-                                    href="tel:+31201234567",
+                                    "+31 (6) 24 52 79 37", 
+                                    href="tel:+31624527937",
                                     cls="text-white/70 hover:text-white transition-colors"
                                 ),
                                 cls=""

@@ -1,27 +1,32 @@
 [
     {
-      "quote": "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam.\"",
-      "author": "Thomas Bakker",
-      "title": "CEO, FitLife Netherlands"
+      "quote": "\"Keboem has helped 't Gymlokaal strengthen its structure, enhancing work efficiency within our team. Our customers feel seen and valued. Thanks to Keboem's reports, we stay sharp and know where our focus should be. We now have a better grip on our overall business, with specific action points for individual and team guidance. A valuable partnership for 't Gymlokaal.\"",
+      "author": "Rick Sombroek",
+      "title": "Founder, 't Gymlokaal'",
+      "image": "/Rick.jpg"
     },
     {
       "quote": "\"Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt.\"",
       "author": "Emma de Vries",
-      "title": "Marketing Director, Urban Fitness"
+      "title": "Marketing Director, Urban Fitness",
+      "image": "/static/assets/reviews/emma-de-vries.jpg"
     },
     {
       "quote": "\"Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt, neque porro quisquam est.\"",
       "author": "Sarah Johnson",
-      "title": "Fitness Director, Elite Fitness Club"
+      "title": "Fitness Director, Elite Fitness Club",
+      "image": "/static/assets/reviews/sarah-johnson.jpg"
     },
     {
       "quote": "\"Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse.\"",
       "author": "Michael Rodriguez",
-      "title": "Operations Manager, PowerFit Gym"
+      "title": "Operations Manager, PowerFit Gym",
+      "image": "/static/assets/reviews/michael-rodriguez.jpg"
     },
     {
       "quote": "\"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"",
       "author": "Lisa Vandenberg",
-      "title": "Founder, Wellness Studio Amsterdam"
+      "title": "Founder, Wellness Studio Amsterdam",
+      "image": "/static/assets/reviews/lisa-vandenberg.jpg"
     }
   ]  

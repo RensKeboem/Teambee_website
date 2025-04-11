@@ -44,3 +44,21 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
 } 
+
+/* Contact highlight animation */
+.scale-contact {
+  animation: contactPulse 1s ease-in-out;
+}
+
+@keyframes contactPulse {
+  0% {
+    transform: scale(1) translateX(0);
+  }
+  50% {
+    transform: scale(1.05) translateX(-10px);
+    color: var(--color-accent);
+  }
+  100% {
+    transform: scale(1) translateX(0);
+  }
+} 

@@ -107,6 +107,7 @@ class TeambeeApp:
                 Script(src=self.versioned_url("/static/js/success-stories.js")),
                 Script(src=self.versioned_url("/static/js/carousel.js")),
                 Script(src=self.versioned_url("/static/js/language-dropdown.js")),
+                Script(src=self.versioned_url("/static/js/contact-highlight.js")),
             ],
             middleware=middleware
         )

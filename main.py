@@ -793,28 +793,34 @@ class TeambeeApp:
                     # Success stories panel (initially hidden)
                     Div(
                         Div(
-                            # Close button
-                            Button(
-                                Img(
-                                    src=self.versioned_url("/static/assets/close.svg"),
-                                    alt="Close",
-                                    cls="w-6 h-6"
+                            # Header with close button that sticks to the top
+                            Div(
+                                # Title on the left
+                                H3(
+                                    self.get_text("reviews", "success_title"),
+                                    cls="text-3xl md:text-4xl font-bold italic text-[#ffffff] mb-0"
                                 ),
-                                cls="fixed top-4 right-4 text-white hover:text-gray-200 transition-colors z-50",
-                                id="close-success-stories"
+                                # Close button on the right
+                                Button(
+                                    Img(
+                                        src=self.versioned_url("/static/assets/close.svg"),
+                                        alt="Close",
+                                        cls="w-6 h-6"
+                                    ),
+                                    cls="text-white hover:text-gray-200 transition-colors",
+                                    id="close-success-stories"
+                                ),
+                                cls="sticky top-0 bg-[#3D2E7C] pt-4 pb-4 z-20 flex justify-between items-center px-4 md:px-8"
                             ),
                             
                             # Panel content
                             Div(
-                                H3(
-                                    self.get_text("reviews", "success_title"),
-                                    cls="text-3xl md:text-4xl font-bold italic text-[#ffffff] mb-8 sticky top-0 bg-[#3D2E7C] pt-4 pb-4 z-10"
-                                ),
                                 Div(
                                     # Success stories container with vertical scrolling
                                     cls="space-y-8"
                                 ),
-                                cls="max-w-7xl mx-auto px-4 py-12"
+                                # Add extra padding at the bottom
+                                cls="max-w-7xl mx-auto px-4 pt-4 pb-24"
                             ),
                             cls="bg-[#3D2E7C] h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[100] overflow-y-auto"
                         ),

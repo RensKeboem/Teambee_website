@@ -9,6 +9,11 @@
     --color-accent: #94C46F;
     --container-max-width: 80rem;
     --container-padding: 2rem;
+    
+    /* Scrollbar */
+    --scrollbar-track: #f1f1f1;
+    --scrollbar-thumb: #888;
+    --scrollbar-thumb-hover: #555;
   }
 } 
 
@@ -20,4 +25,22 @@
     padding-inline: var(--container-padding);
     max-width: var(--container-max-width);
   }
+} 
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 } 

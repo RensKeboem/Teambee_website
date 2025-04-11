@@ -8,6 +8,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import RedirectResponse
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware to add security headers to all responses."""
@@ -43,6 +44,25 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             
         return response
 
+class LanguageMiddleware(BaseHTTPMiddleware):
+    """Middleware to handle language routing and detection."""
+    
+    async def dispatch(self, request, call_next):
+        # Get the path
+        path = request.url.path
+        
+        # Determine language from path
+        if path.startswith("/en"):
+            request.state.language = "en"
+            # Strip language prefix for internal routing if it's not just /en
+            if path != "/en" and path != "/en/":
+                request.scope["path"] = path[3:]
+        else:
+            request.state.language = "nl"
+        
+        response = await call_next(request)
+        return response
+
 class TeambeeApp:
     """Main application class for the Teambee website."""
     
@@ -54,12 +74,17 @@ class TeambeeApp:
         
         # Define middleware
         middleware = [
-            Middleware(SecurityHeadersMiddleware)
+            Middleware(SecurityHeadersMiddleware),
+            Middleware(LanguageMiddleware)
         ]
         
         # Only add HTTPS redirect in production
         if os.environ.get("ENVIRONMENT", "development") == "production":
             middleware.append(Middleware(HTTPSRedirectMiddleware))
+        
+        # Load translations
+        self.translations = {}
+        self.load_translations()
             
         self.app = FastHTML(
             hdrs=[
@@ -71,12 +96,17 @@ class TeambeeApp:
                 Meta(property="og:description", content="Help your fitness club members become loyal ambassadors through personalized attention at scale."),
                 Meta(property="og:type", content="website"),
                 Meta(property="og:url", content="https://teambee.fit"),
+                # Language-specific meta tags
+                Link(rel="alternate", hreflang="nl", href="https://teambee.fit/"),
+                Link(rel="alternate", hreflang="en", href="https://teambee.fit/en"),
+                Link(rel="alternate", hreflang="x-default", href="https://teambee.fit/"),
                 # Stylesheets and scripts
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
                 Script(src=self.versioned_url("/static/js/parallax.js")),
                 Script(src=self.versioned_url("/static/js/reviews.js")),
                 Script(src=self.versioned_url("/static/js/carousel.js")),
+                Script(src=self.versioned_url("/static/js/language-dropdown.js")),
             ],
             middleware=middleware
         )
@@ -86,7 +116,35 @@ class TeambeeApp:
         
         # Mount static files after routes are defined
         self.app.mount("/static", StaticFiles(directory="public"), name="static")
-        
+    
+    def load_translations(self):
+        """Load translations from JSON files."""
+        translations_dir = os.path.join(os.path.dirname(__file__), "translations")
+        for lang in ["nl", "en"]:
+            file_path = os.path.join(translations_dir, f"{lang}.json")
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    self.translations[lang] = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                print(f"Error loading translations for {lang}: {e}")
+                self.translations[lang] = {}
+    
+    def get_text(self, section, key, default=""):
+        """Get text in the current language."""
+        current_request = getattr(self, 'request', None)
+        if not current_request:
+            return default
+            
+        lang = current_request.state.language
+        try:
+            return self.translations[lang][section][key]
+        except (KeyError, AttributeError):
+            # Fallback to default language (Dutch) if translation is missing
+            try:
+                return self.translations["nl"][section][key]
+            except (KeyError, AttributeError):
+                return default
+    
     def versioned_url(self, path):
         """Add version parameter to URL for cache busting.
         
@@ -122,9 +180,34 @@ class TeambeeApp:
         rt = self.app.route
         
         @rt("/")
-        def home():
-            """Render the home page."""
+        async def home(request):
+            """Render the home page in Dutch (default)."""
+            self.request = request  # Store request for translation context
             return Title("Teambee"), self.create_homepage()
+        
+        @rt("/en")
+        async def home_en(request):
+            """Render the home page in English."""
+            self.request = request  # Store request for translation context
+            return Title("Teambee"), self.create_homepage()
+        
+        @rt("/en/")
+        async def home_en_slash(request):
+            """Redirect /en/ to /en."""
+            return RedirectResponse(url="/en", status_code=301)
+        
+        # Add a route to detect browser language and redirect accordingly
+        @rt("/detect-language")
+        async def detect_language(request):
+            """Detect browser language and redirect to appropriate version."""
+            accept_language = request.headers.get("accept-language", "")
+            browser_lang = accept_language.split(",")[0].split("-")[0] if accept_language else "en"
+            
+            # Default to English unless browser language is Dutch
+            if browser_lang == "nl":
+                return RedirectResponse(url="/", status_code=302)
+            else:
+                return RedirectResponse(url="/en", status_code=302)
     
     def create_homepage(self):
         """Create the Teambee homepage."""
@@ -185,6 +268,20 @@ class TeambeeApp:
     
     def _create_header(self):
         """Create the header section."""
+        # Determine the current language and alternate language URL
+        current_lang = self.request.state.language
+        current_path = self.request.url.path
+        
+        # Determine the alternate language URL
+        if current_lang == "nl":
+            alt_lang = "en"
+            alt_path = "/en" + (current_path if current_path != "/" else "")
+        else:
+            alt_lang = "nl"
+            alt_path = current_path[3:] if current_path.startswith("/en") else current_path
+            if alt_path == "" or alt_path == "/":
+                alt_path = "/"
+        
         return Header(
             Div(
                 Div(
@@ -197,11 +294,60 @@ class TeambeeApp:
                     ),
                     cls="flex items-center gap-2"
                 ),
-                # A(
-                #     "Login",
-                #     href="#login",
-                #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"§
-                # ),
+                # Language selector dropdown
+                Div(
+                    Div(
+                        # Dropdown button
+                        Button(
+                            Span(current_lang.upper(), cls="mr-1"),
+                            Img(
+                                src=self.versioned_url("/static/assets/dropdown-arrow.svg"),
+                                alt="Language Dropdown",
+                                cls="w-4 h-4"
+                            ),
+                            cls="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:ring-offset-2",
+                            id="language-dropdown-button",
+                            type="button",
+                            aria_haspopup="true",
+                            aria_expanded="false"
+                        ),
+                        # A(
+                        #     "Login",
+                        #     href="#login",
+                        #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"§
+                        # ),
+                        # Dropdown menu (initially hidden)
+                        Div(
+                            Div(
+                                A(
+                                    "Nederlands",
+                                    href="/" if current_lang != "nl" else "#",
+                                    cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'nl' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
+                                    hreflang="nl",
+                                    rel="alternate"
+                                ),
+                                cls="border-b border-gray-100"
+                            ),
+                            Div(
+                                A(
+                                    "English",
+                                    href=alt_path if current_lang != "en" else "#",
+                                    cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'en' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
+                                    hreflang="en",
+                                    rel="alternate"
+                                ),
+                                cls=""
+                            ),
+                            cls="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden",
+                            role="menu",
+                            aria_orientation="vertical",
+                            aria_labelledby="language-dropdown-button",
+                            id="language-dropdown-menu"
+                        ),
+                        cls="relative ml-3"
+                    ),
+                    cls="flex items-center"
+                ),
                 cls="container flex h-16 items-center justify-between"
             ),
             cls="fixed top-0 z-50 w-full bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/65 border-b shadow-sm",
@@ -215,11 +361,11 @@ class TeambeeApp:
                 Div(
                     Div(
                         H1(
-                            "We beat the short with the long term",
+                            self.get_text("home", "hero_title"),
                             cls="text-4xl md:text-5xl font-bold italic text-[#3D2E7C] leading-tight"
                         ),
                         P(
-                            "Teambee helpt premium health- en wellnesscentra leden te transformeren tot loyale ambassadeurs via MyWellness CRM, met gepersonaliseerde aandacht en op maat gemaakte customer journeys voor duurzame groei.",
+                            self.get_text("home", "hero_subtitle"),
                             cls="text-lg text-gray-600 max-w-md"
                         ),
                         Div(
@@ -235,7 +381,7 @@ class TeambeeApp:
                             #     href="#login",
                             #     cls="inline-flex h-10 items-center justify-center rounded-lg border border-[#3D2E7C] px-8 py-2 text-sm font-medium text-[#3D2E7C] shadow-sm transition-colors hover:bg-[#3D2E7C]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
                             # ),
-                            # cls="flex flex-col sm:flex-row gap-4"
+                            cls="flex flex-col sm:flex-row gap-4"
                         ),
                         cls="space-y-6"
                     ),
@@ -261,11 +407,11 @@ class TeambeeApp:
             Div(
                 Div(
                     H2(
-                        "Let's win together!",
+                        self.get_text("about", "title"),
                         cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
                     ),
                     P(
-                        "Teamwork is onze kracht. Met data en gepersonaliseerde aandacht creëren we synergie tussen health- en wellnesscentra en hun leden voor duurzame groei.",
+                        self.get_text("about", "subtitle"),
                         cls="text-lg text-gray-600 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-12"
@@ -283,11 +429,11 @@ class TeambeeApp:
                             cls="w-12 h-12 bg-[#E8973A]/20 rounded-full flex items-center justify-center mb-4"
                         ),
                         H3(
-                            "Teamwork makes the dream work",
+                            self.get_text("about", "teamwork_title"),
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Bij Teambee draait alles om samenwerking. We verbinden clubs en leden met op maat gemaakte oplossingen, wat leidt tot wederzijds succes en langdurige relaties.",
+                            self.get_text("about", "teamwork_text"),
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -304,11 +450,11 @@ class TeambeeApp:
                             cls="w-12 h-12 bg-[#3D2E7C]/20 rounded-full flex items-center justify-center mb-4"
                         ),
                         H3(
-                            "Resultaten die er toe doen",
+                            self.get_text("about", "results_title"),
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Onze focus ligt op meetbare resultaten: hogere ledenretentie, tevreden leden en een stijgende omzet voor clubs.",
+                            self.get_text("about", "results_text"),
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -325,11 +471,11 @@ class TeambeeApp:
                             cls="w-12 h-12 bg-[#94C46F]/20 rounded-full flex items-center justify-center mb-4"
                         ),
                         H3(
-                            "Duurzame groei, langdurig succes",
+                            self.get_text("about", "sustainable_title"),
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "We bouwen duurzame relaties die zorgen voor stabiele groei en langdurig succes voor clubs.",
+                            self.get_text("about", "sustainable_text"),
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
@@ -350,11 +496,11 @@ class TeambeeApp:
             Div(
                 Div(
                     H2(
-                        "Happy, healthy members mean sustainable growth",
+                        self.get_text("services", "title"),
                         cls="text-3xl md:text-4xl font-bold italic mb-4"
                     ),
                     P(
-                        "Onze bewezen 5-stappen aanpak zorgt voor strategische, datagedreven groei voor jouw fitnessclub:",
+                        self.get_text("services", "subtitle"),
                         cls="text-lg text-white/80 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-12"
@@ -363,15 +509,15 @@ class TeambeeApp:
                 Div(
                     Div(
                         H3(
-                            "CRM-implementatie (3 maanden)",
+                            self.get_text("services", "implementation"),
                             cls="text-xl font-semibold text-[#ffffff] mb-2"
                         ),
                         Ul(
-                            self._create_check_list_item("Strategie – Samen ontwikkelen we een gepersonaliseerde aanpak die perfect past bij jouw club en leden."),
-                            self._create_check_list_item("Design – We ontwerpen Customer Journeys die leden écht raken en langdurig betrokken houden."),
-                            self._create_check_list_item("Implementatie – Naadloze integratie met MyWellness CRM en geautomatiseerde workflows voor maximale efficiëntie."),
-                            self._create_check_list_item("Educatie – Training en begeleiding van jouw team op locatie voor een succesvolle uitvoering van de strategie."),
-                            self._create_check_list_item("Data support – Doorlopende monitoring en optimalisatie van de resultaten voor constante groei."),
+                            self._create_check_list_item(self.get_text("services", "strategy")),
+                            self._create_check_list_item(self.get_text("services", "design")),
+                            self._create_check_list_item(self.get_text("services", "implementation_detail")),
+                            self._create_check_list_item(self.get_text("services", "education")),
+                            self._create_check_list_item(self.get_text("services", "data_support")),
                             cls="space-y-3"
                         ),
                         cls="bg-[#1B1947] p-6 rounded-lg"
@@ -380,7 +526,7 @@ class TeambeeApp:
                     # Add the call-to-action button
                     Div(
                         A(
-                            "Plan nu een gratis demo",
+                            self.get_text("services", "cta"),
                             href="#contact",
                             cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
                             data_scroll_to="contact"
@@ -422,11 +568,11 @@ class TeambeeApp:
             Div(
                 Div(
                     H2(
-                        "The best-scored goal is the goal we achieve",
+                        self.get_text("benefits", "title"),
                         cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
                     ),
                     P(
-                        "Ontdek hoe Teambee de ledenervaring transformeert en duurzame groei stimuleert.",
+                        self.get_text("benefits", "subtitle"),
                         cls="text-lg text-gray-600 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-12"
@@ -436,15 +582,15 @@ class TeambeeApp:
                     # Member Retention
                     Div(
                         Div(
-                            "73%",
+                            self.get_text("benefits", "retention_percent"),
                             cls="text-4xl font-bold text-[#E8973A] mb-2"
                         ),
                         H3(
-                            "Gemiddelde retentie",
+                            self.get_text("benefits", "retention_title"),
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Gemiddeld zien onze klanten een ledenretentie van 73%, ver boven de industrienormen.",
+                            self.get_text("benefits", "retention_text"),
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
@@ -453,15 +599,15 @@ class TeambeeApp:
                     # Member Referrals
                     Div(
                         Div(
-                            "3.8x",
+                            self.get_text("benefits", "referral_times"),
                             cls="text-4xl font-bold text-[#E8973A] mb-2"
                         ),
                         H3(
-                            "Meer member referrals",
+                            self.get_text("benefits", "referral_title"),
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Leden worden ambassadeurs, die 3.8x meer aanbevelingen genereren dan traditionele marketing.",
+                            self.get_text("benefits", "referral_text"),
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
@@ -470,15 +616,15 @@ class TeambeeApp:
                     # Engagement Increase
                     Div(
                         Div(
-                            "68%",
+                            self.get_text("benefits", "engagement_percent"),
                             cls="text-4xl font-bold text-[#E8973A] mb-2"
                         ),
                         H3(
-                            "Hogere engagement",
+                            self.get_text("benefits", "engagement_title"),
                             cls="text-xl font-semibold text-[#1B1947] mb-2"
                         ),
                         P(
-                            "Leden tonen 68% meer betrokkenheid met gepersonaliseerde journeys en aandacht.",
+                            self.get_text("benefits", "engagement_text"),
                             cls="text-gray-600"
                         ),
                         cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
@@ -496,7 +642,7 @@ class TeambeeApp:
                 Div(
                     Div(
                         H3(
-                            "Our partners:",
+                            self.get_text("benefits", "partners"),
                             cls="text-lg font-medium text-gray-500 mb-8"
                         ),
                         cls="text-center"
@@ -600,11 +746,11 @@ class TeambeeApp:
             Div(
                 Div(
                     H2(
-                        "What our clients say",
+                        self.get_text("reviews", "title"),
                         cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
                     ),
                     P(
-                        "Ontdek hoe Teambee fitnessclubs verandert.",
+                        self.get_text("reviews", "subtitle"),
                         cls="text-lg text-gray-600 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-6"
@@ -637,7 +783,7 @@ class TeambeeApp:
                     # Success stories button
                     Div(
                         Button(
-                            "Zie onze klanten succes verhalen",
+                            self.get_text("reviews", "success_stories"),
                             cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
                             id="show-success-stories"
                         ),
@@ -661,7 +807,7 @@ class TeambeeApp:
                             # Panel content
                             Div(
                                 H3(
-                                    "Klanten Succes Verhalen",
+                                    self.get_text("reviews", "success_title"),
                                     cls="text-3xl md:text-4xl font-bold italic text-[#ffffff] mb-8 sticky top-0 bg-[#3D2E7C] pt-4 pb-4 z-10"
                                 ),
                                 Div(
@@ -693,12 +839,12 @@ class TeambeeApp:
                 Div(
                     Div(
                         H2(
-                            "Login to your dashboard",
+                            self.get_text("login", "title"),
                             id="login-heading",
                             cls="text-3xl font-bold italic text-[#3D2E7C] mb-2"
                         ),
                         P(
-                            "Krijg toegang tot je persoonlijke Teambee dashboard om inzicht te krijgen in jouw clubprestaties",
+                            self.get_text("login", "subtitle"),
                             cls="text-gray-600"
                         ),
                         cls="text-center mb-8"
@@ -713,11 +859,11 @@ class TeambeeApp:
                         Div(
                             Div(
                                 H3(
-                                    "Coming soon!",
+                                    self.get_text("login", "coming_soon"),
                                     cls="text-2xl font-bold text-white mb-2"
                                 ),
                                 P(
-                                    "We zijn druk bezig met het ontwikkelen van deze functie. Houd onze updates in de gaten – binnenkort live!",
+                                    self.get_text("login", "coming_soon_text"),
                                     cls="text-white/90"
                                 ),
                                 cls="text-center p-8 bg-[#3D2E7C] rounded-lg shadow-lg w-full max-w-sm"
@@ -763,7 +909,7 @@ class TeambeeApp:
                             cls="mb-4"
                         ),
                         P(
-                            "Teambee helpt fitnessclubs wereldwijd leden te binden en duurzame groei te realiseren met slimme technologie en persoonlijke aanpak.",
+                            self.get_text("footer", "description"),
                             cls="text-white/70 text-sm"
                         ),
                         cls=""
@@ -771,7 +917,7 @@ class TeambeeApp:
                     
                     Div(
                         H3(
-                            "Contact",
+                            self.get_text("footer", "contact"),
                             cls="font-semibold text-lg mb-4"
                         ),
                         Ul(
@@ -812,7 +958,7 @@ class TeambeeApp:
                 Div(
                     Div(
                         P(
-                            f"© {datetime.now().year} Teambee. All rights reserved.",
+                            f"© {datetime.now().year} Teambee. " + self.get_text("footer", "rights_reserved"),
                             cls=""
                         ),
                         cls="text-white/50 text-sm"

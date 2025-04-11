@@ -1,0 +1,62 @@
+{
+  "home": {
+    "title": "Teambee",
+    "hero_title": "We beat the short with the long term",
+    "hero_subtitle": "Teambee helpt premium health- en wellnesscentra leden te transformeren tot loyale ambassadeurs via MyWellness CRM, met gepersonaliseerde aandacht en op maat gemaakte customer journeys voor duurzame groei."
+  },
+  "about": {
+    "title": "Let's win together!",
+    "subtitle": "Teamwork is onze kracht. Met data en gepersonaliseerde aandacht creëren we synergie tussen health- en wellnesscentra en hun leden voor duurzame groei.",
+    "teamwork_title": "Teamwork makes the dream work",
+    "teamwork_text": "Bij Teambee draait alles om samenwerking. We verbinden clubs en leden met op maat gemaakte oplossingen, wat leidt tot wederzijds succes en langdurige relaties.",
+    "results_title": "Resultaten die er toe doen",
+    "results_text": "Onze focus ligt op meetbare resultaten: hogere ledenretentie, tevreden leden en een stijgende omzet voor clubs.",
+    "sustainable_title": "Duurzame groei, langdurig succes",
+    "sustainable_text": "We bouwen duurzame relaties die zorgen voor stabiele groei en langdurig succes voor clubs."
+  },
+  "services": {
+    "title": "Happy, healthy members mean sustainable growth",
+    "subtitle": "Onze bewezen 5-stappen aanpak zorgt voor strategische, datagedreven groei voor jouw fitnessclub:",
+    "implementation": "CRM-implementatie (3 maanden)",
+    "strategy": "Strategie – Samen ontwikkelen we een gepersonaliseerde aanpak die perfect past bij jouw club en leden.",
+    "design": "Design – We ontwerpen Customer Journeys die leden écht raken en langdurig betrokken houden.",
+    "implementation_detail": "Implementatie – Naadloze integratie met MyWellness CRM en geautomatiseerde workflows voor maximale efficiëntie.",
+    "education": "Educatie – Training en begeleiding van jouw team op locatie voor een succesvolle uitvoering van de strategie.",
+    "data_support": "Data support – Doorlopende monitoring en optimalisatie van de resultaten voor constante groei.",
+    "cta": "Plan nu een gratis demo"
+  },
+  "benefits": {
+    "title": "The best-scored goal is the goal we achieve",
+    "subtitle": "Ontdek hoe Teambee de ledenervaring transformeert en duurzame groei stimuleert.",
+    "retention_percent": "73%",
+    "retention_title": "Gemiddelde retentie",
+    "retention_text": "Gemiddeld zien onze klanten een ledenretentie van 73%, ver boven de industrienormen.",
+    "referral_times": "3.8x",
+    "referral_title": "Meer member referrals",
+    "referral_text": "Leden worden ambassadeurs, die 3.8x meer aanbevelingen genereren dan traditionele marketing.",
+    "engagement_percent": "68%",
+    "engagement_title": "Hogere engagement",
+    "engagement_text": "Leden tonen 68% meer betrokkenheid met gepersonaliseerde journeys en aandacht.",
+    "partners": "Our partners:"
+  },
+  "reviews": {
+    "title": "What our clients say",
+    "subtitle": "Ontdek hoe Teambee fitnessclubs verandert.",
+    "success_stories": "Zie onze klanten succes verhalen",
+    "success_title": "Klanten Succes Verhalen"
+  },
+  "login": {
+    "title": "Login to your dashboard",
+    "subtitle": "Krijg toegang tot je persoonlijke Teambee dashboard om inzicht te krijgen in jouw clubprestaties",
+    "coming_soon": "Coming soon!",
+    "coming_soon_text": "We zijn druk bezig met het ontwikkelen van deze functie. Houd onze updates in de gaten – binnenkort live!"
+  },
+  "footer": {
+    "description": "Teambee helpt fitnessclubs wereldwijd leden te binden en duurzame groei te realiseren met slimme technologie en persoonlijke aanpak.",
+    "contact": "Contact",
+    "rights_reserved": "All rights reserved."
+  },
+  "language": {
+    "switch_to": "English"
+  }
+} 

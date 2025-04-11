@@ -1,0 +1,62 @@
+{
+  "home": {
+    "title": "Teambee",
+    "hero_title": "We beat the short with the long term",
+    "hero_subtitle": "Teambee helps premium health and wellness centers transform members into loyal ambassadors through MyWellness CRM, with personalized attention and customized customer journeys for sustainable growth."
+  },
+  "about": {
+    "title": "Let's win together!",
+    "subtitle": "Teamwork is our strength. With data and personalized attention, we create synergy between health and wellness centers and their members for sustainable growth.",
+    "teamwork_title": "Teamwork makes the dream work",
+    "teamwork_text": "At Teambee, it's all about collaboration. We connect clubs and members with tailored solutions, leading to mutual success and long-term relationships.",
+    "results_title": "Results that matter",
+    "results_text": "Our focus is on measurable results: higher member retention, satisfied members, and increasing revenue for clubs.",
+    "sustainable_title": "Sustainable growth, long-term success",
+    "sustainable_text": "We build sustainable relationships that ensure stable growth and long-term success for clubs."
+  },
+  "services": {
+    "title": "Happy, healthy members mean sustainable growth",
+    "subtitle": "Our proven 5-step approach ensures strategic, data-driven growth for your fitness club:",
+    "implementation": "CRM implementation (3 months)",
+    "strategy": "Strategy – Together, we develop a personalized approach that perfectly fits your club and members.",
+    "design": "Design – We design Customer Journeys that truly resonate with members and keep them engaged long-term.",
+    "implementation_detail": "Implementation – Seamless integration with MyWellness CRM and automated workflows for maximum efficiency.",
+    "education": "Education – Training and guidance of your team on-site for successful execution of the strategy.",
+    "data_support": "Data support – Continuous monitoring and optimization of results for constant growth.",
+    "cta": "Schedule a free demo now"
+  },
+  "benefits": {
+    "title": "The best-scored goal is the goal we achieve",
+    "subtitle": "Discover how Teambee transforms the member experience and stimulates sustainable growth.",
+    "retention_percent": "73%",
+    "retention_title": "Average retention",
+    "retention_text": "On average, our clients see a member retention rate of 73%, far above industry standards.",
+    "referral_times": "3.8x",
+    "referral_title": "More member referrals",
+    "referral_text": "Members become ambassadors, generating 3.8x more recommendations than traditional marketing.",
+    "engagement_percent": "68%",
+    "engagement_title": "Higher engagement",
+    "engagement_text": "Members show 68% more engagement with personalized journeys and attention.",
+    "partners": "Our partners:"
+  },
+  "reviews": {
+    "title": "What our clients say",
+    "subtitle": "Discover how Teambee is transforming fitness clubs.",
+    "success_stories": "See our client success stories",
+    "success_title": "Client Success Stories"
+  },
+  "login": {
+    "title": "Login to your dashboard",
+    "subtitle": "Get access to your personal Teambee dashboard to gain insight into your club's performance",
+    "coming_soon": "Coming soon!",
+    "coming_soon_text": "We're busy developing this feature. Keep an eye on our updates – coming soon!"
+  },
+  "footer": {
+    "description": "Teambee helps fitness clubs worldwide bind members and achieve sustainable growth with smart technology and a personal approach.",
+    "contact": "Contact",
+    "rights_reserved": "All rights reserved."
+  },
+  "language": {
+    "switch_to": "Nederlands"
+  }
+} 

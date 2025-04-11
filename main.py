@@ -287,7 +287,7 @@ class TeambeeApp:
                 Div(
                     A(
                         Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-8 sm:h-10 w-auto"),
-                        href="#",
+                        href="/" if current_lang == "nl" else "/en",
                         title="Back to top",
                         aria_label="Back to top of page",
                         cls="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
@@ -655,7 +655,7 @@ class TeambeeApp:
                                     Img(
                                         src=self.versioned_url(f"/static/assets/{partner['logo']}.png"),
                                         alt=partner["name"],
-                                        cls="md:h-8 w-auto object-contain transition-all duration-300 hover:scale-110 hover:opacity-90"
+                                        cls="h-10 md:h-8 w-auto object-contain transition-all duration-300 hover:scale-110 hover:opacity-90"
                                     ),
                                     href=partner["url"],
                                     target="_blank",
@@ -667,7 +667,7 @@ class TeambeeApp:
                             )
                             for partner in partners
                         ],
-                        cls="flex flex-nowrap justify-center items-center gap-8 md:gap-12 max-w-4xl mx-auto overflow-x-auto"
+                        cls="grid grid-cols-2 md:flex md:flex-nowrap justify-center items-center gap-4 md:gap-12 max-w-4xl mx-auto"
                     ),
                     
                     cls="container"

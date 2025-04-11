@@ -117,14 +117,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         largeCard.innerHTML = `
                             <div class="flex flex-col md:flex-row gap-8 items-start">
                                 ${isImageLeft ? `
-                                    <div class="w-full md:w-1/3">
+                                    <div class="w-full md:w-1/3 order-first">
                                         <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
                                         <div class="bg-white/5 p-4 rounded-lg">
                                             <h4 class="text-white text-xl font-bold mb-2">${story.title}</h4>
                                             <p class="text-white/80">${story.subtitle}</p>
                                         </div>
                                     </div>
-                                    <div class="w-full md:w-2/3">
+                                    <div class="w-full md:w-2/3 order-last md:order-last">
                                         <div class="mb-8">
                                             <h3 class="text-white text-2xl font-bold mb-4">Strategie & Aanpak</h3>
                                             <p class="text-white/90 text-lg whitespace-pre-line">${story.strategy}</p>
@@ -168,7 +168,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </div>
                                     </div>
                                 ` : `
-                                    <div class="w-full md:w-2/3">
+                                    <div class="w-full md:w-1/3 order-first md:order-last">
+                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
+                                        <div class="bg-white/5 p-4 rounded-lg">
+                                            <h4 class="text-white text-xl font-bold mb-2">${story.title}</h4>
+                                            <p class="text-white/80">${story.subtitle}</p>
+                                        </div>
+                                    </div>
+                                    <div class="w-full md:w-2/3 order-last md:order-first">
                                         <div class="mb-8">
                                             <h3 class="text-white text-2xl font-bold mb-4">Strategie & Aanpak</h3>
                                             <p class="text-white/90 text-lg whitespace-pre-line">${story.strategy}</p>
@@ -209,13 +216,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <div>
                                             <h3 class="text-white text-2xl font-bold mb-4">Conclusie</h3>
                                             <p class="text-white/90 text-lg whitespace-pre-line">${story.conclusion}</p>
-                                        </div>
-                                    </div>
-                                    <div class="w-full md:w-1/3">
-                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
-                                        <div class="bg-white/5 p-4 rounded-lg">
-                                            <h4 class="text-white text-xl font-bold mb-2">${story.title}</h4>
-                                            <p class="text-white/80">${story.subtitle}</p>
                                         </div>
                                     </div>
                                 `}

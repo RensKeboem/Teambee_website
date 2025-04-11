@@ -104,7 +104,7 @@ class TeambeeApp:
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
                 Script(src=self.versioned_url("/static/js/parallax.js")),
-                Script(src=self.versioned_url("/static/js/reviews.js")),
+                Script(src=self.versioned_url("/static/js/success-stories.js")),
                 Script(src=self.versioned_url("/static/js/carousel.js")),
                 Script(src=self.versioned_url("/static/js/language-dropdown.js")),
             ],

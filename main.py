@@ -75,7 +75,8 @@ class TeambeeApp:
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
                 Script(src=self.versioned_url("/static/js/parallax.js")),
-                Script(src=self.versioned_url("/static/js/reviews.js"))
+                Script(src=self.versioned_url("/static/js/reviews.js")),
+                Script(src=self.versioned_url("/static/js/carousel.js")),
             ],
             middleware=middleware
         )
@@ -151,7 +152,7 @@ class TeambeeApp:
                     Img(
                         src=self.versioned_url("/static/assets/arrow-sm-down.svg"),
                         alt="Scroll down",
-                        cls="w-12 h-12 mx-auto mb-8 animate-jump opacity-50"
+                        cls="w-12 h-12 mx-auto mb-8 animate-bounce opacity-50"
                     ),
                     cls="text-center -mt-8"
                 ),
@@ -376,7 +377,7 @@ class TeambeeApp:
                         cls="bg-[#1B1947] p-6 rounded-lg"
                     ),
                     
-                    # Add the call-to-action button outside the container but within the section
+                    # Add the call-to-action button
                     Div(
                         A(
                             "Plan nu een gratis demo",
@@ -540,7 +541,6 @@ class TeambeeApp:
             with open(reviews_path, 'r') as f:
                 reviews = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error loading reviews: {e}")
             reviews = []
         
         # Map of author names to their corresponding image files
@@ -553,23 +553,21 @@ class TeambeeApp:
         
         # Generate review cards dynamically from the loaded data
         review_cards = []
-        for review in reviews:
+        for i, review in enumerate(reviews):
             # Get the appropriate image for the author
             image_file = author_images.get(review["author"], "profile-placeholder.svg")
             
+            # Create the review card
             review_card = Div(
                 Div(
-                    Div(
-                        Img(
-                            src=self.versioned_url("/static/assets/quote.svg"),
-                            alt="Quote",
-                            cls="w-8 h-8 text-[#E8973A]"
-                        ),
-                        P(
-                            review["quote"],
-                            cls="text-gray-600 mb-4 flex-grow"
-                        ),
-                        cls="mb-4"
+                    Img(
+                        src=self.versioned_url("/static/assets/quote.svg"),
+                        alt="Quote",
+                        cls="w-8 h-8 text-[#E8973A]"
+                    ),
+                    P(
+                        review["quote"],
+                        cls="text-gray-600 mb-4 flex-grow"
                     ),
                     Div(
                         Div(
@@ -589,11 +587,12 @@ class TeambeeApp:
                                 ),
                             ),
                         ),
-                        cls="flex items-center"
+                        cls="flex items-center mt-3"
                     ),
                     cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-full flex flex-col justify-between w-full"
                 ),
-                cls="review-card w-full md:w-[90%] max-w-3xl flex-shrink-0 px-4 mx-auto snap-center"
+                cls="slide w-full flex-shrink-0 px-4",
+                id=f"review-{i}"  # Add unique ID for each review
             )
             review_cards.append(review_card)
         
@@ -611,16 +610,22 @@ class TeambeeApp:
                     cls="text-center mb-6"
                 ),
                 
+                # Carousel implementation
                 Div(
-                    # Container for the review cards
+                    # Main slider container
                     Div(
+                        # Wrapper for the slides
                         Div(
-                            *review_cards,
-                            id="reviews-container",
-                            cls="flex gap-0 transition-transform duration-500 touch-pan-x cursor-grab active:cursor-grabbing snap-start"
+                            # Container for the slides
+                            Div(
+                                *review_cards,
+                                id="slides",
+                                cls="slides flex transition-transform duration-300 ease-out relative cursor-grab active:cursor-grabbing"
+                            ),
+                            cls="wrapper overflow-hidden relative w-full touch-pan-x"
                         ),
-                        id="reviews-wrapper",
-                        cls="overflow-x-auto w-full max-w-4xl mx-auto touch-pan-x snap-x snap-mandatory scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                        id="slider",
+                        cls="slider relative w-full max-w-4xl mx-auto"
                     ),
                     
                     # Dots for navigation

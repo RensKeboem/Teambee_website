@@ -36,8 +36,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return path.startsWith('/en') ? 'en' : 'nl';
         }
 
+        // Get version from script tag
+        const scriptTag = document.querySelector('script[src*="success-stories.js"]');
+        const version = scriptTag ? scriptTag.src.split('v=')[1] : '';
+
         // Load and populate success stories
-        fetch('/static/data/success_stories.json')
+        fetch(`/static/data/success_stories.json${version ? `?v=${version}` : ''}`)
             .then(response => response.json())
             .then(successStories => {
                 const largeReviewsContainer = storiesPanel.querySelector('.space-y-8');

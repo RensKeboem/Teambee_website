@@ -1,11 +1,11 @@
-// Contact highlight functionality
+// Smooth scrolling functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Smooth scroll to contact section with highlighting animation
-    const scrollButtons = document.querySelectorAll('[data-scroll-to="contact"]');
-    const contactSection = document.getElementById('contact');
+    // Smooth scroll to any section with highlighting animation
+    const scrollButtons = document.querySelectorAll('[data-scroll-to]');
     let isButtonScroll = false;
     
-    // Create an Intersection Observer
+    // Create an Intersection Observer for contact section highlighting
+    const contactSection = document.getElementById('contact');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && isButtonScroll) {
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(contactSection);
     }
     
-    // Add event listeners to all buttons that scroll to contact
+    // Add event listeners to all buttons that scroll to any section
     scrollButtons.forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const targetElement = document.getElementById(targetId);
             
             if (targetElement) {
-                // Set flag to indicate button-initiated scroll
-                isButtonScroll = true;
+                // Set flag to indicate button-initiated scroll (for contact section animation)
+                isButtonScroll = targetId === 'contact';
                 
                 // Calculate the offset to account for the fixed header
                 const headerHeight = document.querySelector('header').offsetHeight;
@@ -59,4 +59,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-}); 
+});

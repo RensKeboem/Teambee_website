@@ -507,7 +507,7 @@ class TeambeeApp:
                 ),
                 
                 Div(
-                    # Left column - Implementation
+                    # Implementation section
                     Div(
                         Div(
                             H3(
@@ -527,37 +527,17 @@ class TeambeeApp:
                         cls="flex flex-col"
                     ),
                     
-                    # Right column - Support
-                    Div(
-                        Div(
-                            H3(
-                                self.get_text("services", "support"),
-                                cls="text-xl font-semibold text-[#ffffff] mb-2"
-                            ),
-                            Ul(
-                                self._create_check_list_item(self.get_text("services", "ongoing_support")),
-                                self._create_check_list_item(self.get_text("services", "updates")),
-                                self._create_check_list_item(self.get_text("services", "optimization")),
-                                self._create_check_list_item(self.get_text("services", "training")),
-                                self._create_check_list_item(self.get_text("services", "analytics")),
-                                cls="space-y-3"
-                            ),
-                            cls="bg-[#1B1947] p-6 rounded-lg"
-                        ),
-                        cls="flex flex-col"
-                    ),
-                    
-                    # Call-to-action button below both columns
+                    # Call-to-action button
                     Div(
                         A(
                             self.get_text("services", "cta"),
                             cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
                             data_scroll_to="contact"
                         ),
-                        cls="text-center col-span-2"
+                        cls="text-center"
                     ),
                     
-                    cls="grid md:grid-cols-2 gap-8"
+                    cls="grid gap-8"
                 ),
                 
                 cls="container"

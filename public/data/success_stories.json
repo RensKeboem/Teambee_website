@@ -1,9 +1,18 @@
 [
     {
-        "title": "EV Fysiotherapie",
-        "subtitle": "Van behandelruimte naar fitnesscommunity met resultaat",
+        "title": {
+            "nl": "EV Fysiotherapie & Fitness",
+            "en": "EV Fysiotherapie & Fitness"
+        },
+        "subtitle": {
+            "nl": "Van behandelruimte naar fitnesscommunity met resultaat",
+            "en": "From treatment room to fitness community with results"
+        },
         "image": "/static/assets/EV Fysiotherapie foto.jpeg",
-        "strategy": "EV Fysiotherapie wilde meer doen met hun oefenzaal en leden langer binden aan hun praktijk. In samenwerking met Teambee werd gekozen voor een gefaseerde aanpak: uitbreiding met Technogym Smart Equipment, implementatie van het Mywellness CRM en begeleiding op het gebied van sales, klantreis en teamstructuur. De focus lag op het bouwen van een onderscheidende sportomgeving binnen de fysiopraktijk, ondersteund door digitale en persoonlijke ledenbegeleiding.",
+        "strategy": {
+            "nl": "EV Fysiotherapie & Fitness wilde meer doen met hun oefenzaal en leden langer binden aan hun praktijk. In samenwerking met Teambee werd gekozen voor een gefaseerde aanpak: uitbreiding met Technogym Smart Equipment, implementatie van het Mywellness CRM en begeleiding op het gebied van sales, klantreis en teamstructuur. De focus lag op het bouwen van een onderscheidende sportomgeving binnen de fysiopraktijk, ondersteund door digitale en persoonlijke ledenbegeleiding.",
+            "en": "EV Fysiotherapie & Fitness wanted to do more with their exercise room and retain members longer in their practice. In collaboration with Teambee, a phased approach was chosen: expansion with Technogym Smart Equipment, implementation of the Mywellness CRM, and guidance in sales, customer journey, and team structure. The focus was on building a distinctive sports environment within the physiotherapy practice, supported by digital and personal member guidance."
+        },
         "metrics": {
             "start": {
                 "members": "323",
@@ -21,13 +30,25 @@
                 "visitors": "603"
             }
         },
-        "conclusion": "EV Fysiotherapie maakte de succesvolle overstap van zorglocatie naar fitnessconcept. Dankzij structuur, digitalisering en focus op beleving is sporten nu een vast onderdeel van de klantrelatie. De club onderscheidt zich met een professionele journey en langdurige klantbinding."
+        "conclusion": {
+            "nl": "EV Fysiotherapie & Fitness maakte de succesvolle overstap van zorglocatie naar fitnessconcept. Dankzij structuur, digitalisering en focus op beleving is sporten nu een vast onderdeel van de klantrelatie. De club onderscheidt zich met een professionele journey en langdurige klantbinding.",
+            "en": "EV Fysiotherapie & Ftiness successfully transitioned from a healthcare location to a fitness concept. Thanks to structure, digitalization, and focus on experience, exercise is now a permanent part of the customer relationship. The club distinguishes itself with a professional journey and long-term customer retention."
+        }
     },
     {
-        "title": "Sportclub Do-It",
-        "subtitle": "Premium groei met Biostrength en slimme CRM",
+        "title": {
+            "nl": "Sport & Squashclub do-it",
+            "en": "Sport & Squashclub do-it"
+        },
+        "subtitle": {
+            "nl": "Premium groei met Biostrength en slimme CRM",
+            "en": "Premium growth with Biostrength and smart CRM"
+        },
         "image": "/static/assets/Do it.jpg",
-        "strategy": "In januari 2023 besloot Sportclub Do-It te investeren in Biocircuit van Technogym gecombineerd met volledige connected equipment van Technogym en het volledige Technogym Ecosysteem.\n\nSamen met Teambee werd een strategie opgesteld voor sales, onboarding, klantreis en teambegeleiding.\n\nDe ambitie: doorgroeien naar een premium club met digitale grip op instroom, retentie en upsell.",
+        "strategy": {
+            "nl": "In januari 2023 besloot Sport & Squashclub do-it te investeren in Biocircuit van Technogym gecombineerd met volledige connected equipment van Technogym en het volledige Technogym Ecosysteem.\n\nSamen met Teambee werd een strategie opgesteld voor sales, onboarding, klantreis en teambegeleiding.\n\nDe ambitie: doorgroeien naar een premium club met digitale grip op instroom, retentie en upsell.",
+            "en": "In January 2023, Sport & Squashclub do-it decided to invest in Technogym's Biocircuit combined with full connected equipment and the complete Technogym Ecosystem.\n\nTogether with Teambee, a strategy was developed for sales, onboarding, customer journey, and team guidance.\n\nThe ambition: grow into a premium club with digital control over inflow, retention, and upsell."
+        },
         "metrics": {
             "start": {
                 "members": "1223",
@@ -45,13 +66,25 @@
                 "visitors": "1493"
             }
         },
-        "conclusion": "De slimme combinatie van Biocircuit en smart/connected equipment, CRM-strategie en teamtraining heeft geleid tot premium groei.\n\nMet de volledige ledenbezetting en sterke klantbinding heeft Sportclub Do-It een solide basis voor toekomstige groei."
+        "conclusion": {
+            "nl": "De slimme combinatie van Biocircuit en smart/connected equipment, CRM-strategie en teamtraining heeft geleid tot premium groei.\n\nMet de volledige ledenbezetting en sterke klantbinding heeft Sport & Squashclub do-it een solide basis voor toekomstige groei.",
+            "en": "The smart combination of Biocircuit and smart/connected equipment, CRM strategy, and team training has led to premium growth.\n\nWith full member occupancy and strong customer retention, Sport & Squashclub do-it has a solid foundation for future growth."
+        }
     },
     {
-        "title": "'t Gymlokaal Alkmaar",
-        "subtitle": "Van pionieren naar professionaliseren met vier vestigingen",
+        "title": {
+            "nl": "'t Gymlokaal Alkmaar",
+            "en": "'t Gymlokaal Alkmaar"
+        },
+        "subtitle": {
+            "nl": "Van pionieren naar professionaliseren met vier vestigingen",
+            "en": "From pioneering to professionalizing with four locations"
+        },
         "image": "/static/assets/Gymlokaal foto.jpg",
-        "strategy": "Rick Sombroek en 't Gymlokaal startten al in 2019 met Teambee.\n\nDe ambitie: een onderscheidende boutique fitnessformule met maximale klantbeleving en een efficiënt werkend team onder de naam 't Gymlokaal!\n\nVia maandelijkse sessies werd gewerkt aan teamstructuur, retentie, klantreizen en het strategisch inzetten van data.",
+        "strategy": {
+            "nl": "Rick Sombroek en 't Gymlokaal startten al in 2019 met Teambee.\n\nDe ambitie: een onderscheidende boutique fitnessformule met maximale klantbeleving en een efficiënt werkend team onder de naam 't Gymlokaal!\n\nVia maandelijkse sessies werd gewerkt aan teamstructuur, retentie, klantreizen en het strategisch inzetten van data.",
+            "en": "Rick Sombroek and 't Gymlokaal started with Teambee back in 2019.\n\nThe ambition: a distinctive boutique fitness formula with maximum customer experience and an efficient working team under the name 't Gymlokaal!\n\nThrough monthly sessions, work was done on team structure, retention, customer journeys, and the strategic use of data."
+        },
         "metrics": {
             "start": {
                 "members": "0",
@@ -69,6 +102,9 @@
                 "visitors": "468"
             }
         },
-        "conclusion": "'t Gymlokaal laat zien dat lange termijn samenwerking loont. Door stap voor stap te bouwen aan strategie, structuur en datasturing is het merk uitgegroeid tot een professioneel boutique concept met grip op groei en schaalbaarheid."
+        "conclusion": {
+            "nl": "'t Gymlokaal laat zien dat lange termijn samenwerking loont. Door stap voor stap te bouwen aan strategie, structuur en datasturing is het merk uitgegroeid tot een professioneel boutique concept met grip op groei en schaalbaarheid.",
+            "en": "'t Gymlokaal shows that long-term collaboration pays off. By building strategy, structure, and data management step by step, the brand has grown into a professional boutique concept with control over growth and scalability."
+        }
     }
 ] 

@@ -30,6 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        // Get current language from URL or default to Dutch
+        function getCurrentLanguage() {
+            const path = window.location.pathname;
+            return path.startsWith('/en') ? 'en' : 'nl';
+        }
+
         // Load and populate success stories
         fetch('/static/data/success_stories.json')
             .then(response => response.json())
@@ -39,6 +45,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (largeReviewsContainer) {
                     // Clear existing content
                     largeReviewsContainer.innerHTML = '';
+                    
+                    // Get current language
+                    const currentLang = getCurrentLanguage();
                     
                     // Create cards for each success story
                     successStories.forEach((story, index) => {
@@ -59,104 +68,104 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="flex flex-col md:flex-row gap-8 items-start">
                                 ${isImageLeft ? `
                                     <div class="w-full md:w-1/3 order-first">
-                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
+                                        <img src="${story.image}" alt="${story.title[currentLang]}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
                                         <div class="bg-white/5 p-4 rounded-lg">
-                                            <h4 class="text-white text-xl font-bold mb-2">${story.title}</h4>
-                                            <p class="text-white/80">${story.subtitle}</p>
+                                            <h4 class="text-white text-xl font-bold mb-2">${story.title[currentLang]}</h4>
+                                            <p class="text-white/80">${story.subtitle[currentLang]}</p>
                                         </div>
                                     </div>
                                     <div class="w-full md:w-2/3 order-last md:order-last">
                                         <div class="mb-8">
-                                            <h3 class="text-white text-2xl font-bold mb-4">Strategie & Aanpak</h3>
-                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.strategy}</p>
+                                            <h3 class="text-white text-2xl font-bold mb-4">${currentLang === 'nl' ? 'Strategie & Aanpak' : 'Strategy & Approach'}</h3>
+                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.strategy[currentLang]}</p>
                                         </div>
                                         
                                         <div class="mb-8">
-                                            <h3 class="text-white text-2xl font-bold mb-4">Resultaten & KPI's</h3>
+                                            <h3 class="text-white text-2xl font-bold mb-4">${currentLang === 'nl' ? 'Resultaten & KPI\'s' : 'Results & KPIs'}</h3>
                                             <div class="space-y-6">
                                                 <div class="bg-white/5 p-4 rounded-lg">
-                                                    <h4 class="text-white font-semibold mb-2">📍 Start samenwerking (september 2023):</h4>
+                                                    <h4 class="text-white font-semibold mb-2">${currentLang === 'nl' ? '📍 Start samenwerking (september 2023):' : '📍 Start of collaboration (September 2023):'}</h4>
                                                     <ul class="list-disc list-inside text-white/80 space-y-1">
-                                                        <li>Totale aantal leden: ${story.metrics.start.members}</li>
-                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.start.app_users}</li>
-                                                        <li>Aantal recente bezoekers: ${story.metrics.start.visitors}</li>
+                                                        <li>${currentLang === 'nl' ? 'Totale aantal leden:' : 'Total number of members:'} ${story.metrics.start.members}</li>
+                                                        <li>${currentLang === 'nl' ? 'Actieve Technogym app gebruikers:' : 'Active Technogym app users:'} ${story.metrics.start.app_users}</li>
+                                                        <li>${currentLang === 'nl' ? 'Aantal recente bezoekers:' : 'Number of recent visitors:'} ${story.metrics.start.visitors}</li>
                                                     </ul>
                                                 </div>
                                                 
                                                 <div class="bg-white/5 p-4 rounded-lg">
-                                                    <h4 class="text-white font-semibold mb-2">📊 Impactmeting na 3 maanden (november 2023):</h4>
+                                                    <h4 class="text-white font-semibold mb-2">${currentLang === 'nl' ? '📊 Impactmeting na 3 maanden (november 2023):' : '📊 Impact measurement after 3 months (November 2023):'}</h4>
                                                     <ul class="list-disc list-inside text-white/80 space-y-1">
-                                                        <li>Totale aantal leden: ${story.metrics.three_months.members}</li>
-                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.three_months.app_users}</li>
-                                                        <li>Aantal recente bezoekers: ${story.metrics.three_months.visitors}</li>
+                                                        <li>${currentLang === 'nl' ? 'Totale aantal leden:' : 'Total number of members:'} ${story.metrics.three_months.members}</li>
+                                                        <li>${currentLang === 'nl' ? 'Actieve Technogym app gebruikers:' : 'Active Technogym app users:'} ${story.metrics.three_months.app_users}</li>
+                                                        <li>${currentLang === 'nl' ? 'Aantal recente bezoekers:' : 'Number of recent visitors:'} ${story.metrics.three_months.visitors}</li>
                                                     </ul>
                                                 </div>
                                                 
                                                 <div class="bg-white/5 p-4 rounded-lg">
-                                                    <h4 class="text-white font-semibold mb-2">📈 Huidige situatie (maart 2025):</h4>
+                                                    <h4 class="text-white font-semibold mb-2">${currentLang === 'nl' ? '📈 Huidige situatie (maart 2025):' : '📈 Current situation (March 2025):'}</h4>
                                                     <ul class="list-disc list-inside text-white/80 space-y-1">
-                                                        <li>Totale aantal leden: ${story.metrics.current.members}</li>
-                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.current.app_users}</li>
-                                                        <li>Aantal recente bezoekers: ${story.metrics.current.visitors}</li>
+                                                        <li>${currentLang === 'nl' ? 'Totale aantal leden:' : 'Total number of members:'} ${story.metrics.current.members}</li>
+                                                        <li>${currentLang === 'nl' ? 'Actieve Technogym app gebruikers:' : 'Active Technogym app users:'} ${story.metrics.current.app_users}</li>
+                                                        <li>${currentLang === 'nl' ? 'Aantal recente bezoekers:' : 'Number of recent visitors:'} ${story.metrics.current.visitors}</li>
                                                     </ul>
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         <div>
-                                            <h3 class="text-white text-2xl font-bold mb-4">Conclusie</h3>
-                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.conclusion}</p>
+                                            <h3 class="text-white text-2xl font-bold mb-4">${currentLang === 'nl' ? 'Conclusie' : 'Conclusion'}</h3>
+                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.conclusion[currentLang]}</p>
                                         </div>
                                     </div>
                                 ` : `
                                     <div class="w-full md:w-1/3 order-first md:order-last">
-                                        <img src="${story.image}" alt="${story.author}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
+                                        <img src="${story.image}" alt="${story.title[currentLang]}" class="w-full h-auto rounded-lg object-cover aspect-square shadow-lg mb-4">
                                         <div class="bg-white/5 p-4 rounded-lg">
-                                            <h4 class="text-white text-xl font-bold mb-2">${story.title}</h4>
-                                            <p class="text-white/80">${story.subtitle}</p>
+                                            <h4 class="text-white text-xl font-bold mb-2">${story.title[currentLang]}</h4>
+                                            <p class="text-white/80">${story.subtitle[currentLang]}</p>
                                         </div>
                                     </div>
                                     <div class="w-full md:w-2/3 order-last md:order-first">
                                         <div class="mb-8">
-                                            <h3 class="text-white text-2xl font-bold mb-4">Strategie & Aanpak</h3>
-                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.strategy}</p>
+                                            <h3 class="text-white text-2xl font-bold mb-4">${currentLang === 'nl' ? 'Strategie & Aanpak' : 'Strategy & Approach'}</h3>
+                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.strategy[currentLang]}</p>
                                         </div>
                                         
                                         <div class="mb-8">
-                                            <h3 class="text-white text-2xl font-bold mb-4">Resultaten & KPI's</h3>
+                                            <h3 class="text-white text-2xl font-bold mb-4">${currentLang === 'nl' ? 'Resultaten & KPI\'s' : 'Results & KPIs'}</h3>
                                             <div class="space-y-6">
                                                 <div class="bg-white/5 p-4 rounded-lg">
-                                                    <h4 class="text-white font-semibold mb-2">📍 Start samenwerking (september 2023):</h4>
+                                                    <h4 class="text-white font-semibold mb-2">${currentLang === 'nl' ? '📍 Start samenwerking (september 2023):' : '📍 Start of collaboration (September 2023):'}</h4>
                                                     <ul class="list-disc list-inside text-white/80 space-y-1">
-                                                        <li>Totale aantal leden: ${story.metrics.start.members}</li>
-                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.start.app_users}</li>
-                                                        <li>Aantal recente bezoekers: ${story.metrics.start.visitors}</li>
+                                                        <li>${currentLang === 'nl' ? 'Totale aantal leden:' : 'Total number of members:'} ${story.metrics.start.members}</li>
+                                                        <li>${currentLang === 'nl' ? 'Actieve Technogym app gebruikers:' : 'Active Technogym app users:'} ${story.metrics.start.app_users}</li>
+                                                        <li>${currentLang === 'nl' ? 'Aantal recente bezoekers:' : 'Number of recent visitors:'} ${story.metrics.start.visitors}</li>
                                                     </ul>
                                                 </div>
                                                 
                                                 <div class="bg-white/5 p-4 rounded-lg">
-                                                    <h4 class="text-white font-semibold mb-2">📊 Impactmeting na 3 maanden (november 2023):</h4>
+                                                    <h4 class="text-white font-semibold mb-2">${currentLang === 'nl' ? '📊 Impactmeting na 3 maanden (november 2023):' : '📊 Impact measurement after 3 months (November 2023):'}</h4>
                                                     <ul class="list-disc list-inside text-white/80 space-y-1">
-                                                        <li>Totale aantal leden: ${story.metrics.three_months.members}</li>
-                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.three_months.app_users}</li>
-                                                        <li>Aantal recente bezoekers: ${story.metrics.three_months.visitors}</li>
+                                                        <li>${currentLang === 'nl' ? 'Totale aantal leden:' : 'Total number of members:'} ${story.metrics.three_months.members}</li>
+                                                        <li>${currentLang === 'nl' ? 'Actieve Technogym app gebruikers:' : 'Active Technogym app users:'} ${story.metrics.three_months.app_users}</li>
+                                                        <li>${currentLang === 'nl' ? 'Aantal recente bezoekers:' : 'Number of recent visitors:'} ${story.metrics.three_months.visitors}</li>
                                                     </ul>
                                                 </div>
                                                 
                                                 <div class="bg-white/5 p-4 rounded-lg">
-                                                    <h4 class="text-white font-semibold mb-2">📈 Huidige situatie (maart 2025):</h4>
+                                                    <h4 class="text-white font-semibold mb-2">${currentLang === 'nl' ? '📈 Huidige situatie (maart 2025):' : '📈 Current situation (March 2025):'}</h4>
                                                     <ul class="list-disc list-inside text-white/80 space-y-1">
-                                                        <li>Totale aantal leden: ${story.metrics.current.members}</li>
-                                                        <li>Actieve Technogym app gebruikers: ${story.metrics.current.app_users}</li>
-                                                        <li>Aantal recente bezoekers: ${story.metrics.current.visitors}</li>
+                                                        <li>${currentLang === 'nl' ? 'Totale aantal leden:' : 'Total number of members:'} ${story.metrics.current.members}</li>
+                                                        <li>${currentLang === 'nl' ? 'Actieve Technogym app gebruikers:' : 'Active Technogym app users:'} ${story.metrics.current.app_users}</li>
+                                                        <li>${currentLang === 'nl' ? 'Aantal recente bezoekers:' : 'Number of recent visitors:'} ${story.metrics.current.visitors}</li>
                                                     </ul>
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         <div>
-                                            <h3 class="text-white text-2xl font-bold mb-4">Conclusie</h3>
-                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.conclusion}</p>
+                                            <h3 class="text-white text-2xl font-bold mb-4">${currentLang === 'nl' ? 'Conclusie' : 'Conclusion'}</h3>
+                                            <p class="text-white/90 text-lg whitespace-pre-line">${story.conclusion[currentLang]}</p>
                                         </div>
                                     </div>
                                 `}

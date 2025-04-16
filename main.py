@@ -376,11 +376,6 @@ class TeambeeApp:
                                 cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2",
                                 data_scroll_to="services"
                             ),
-                            # A(
-                            #     "Login",
-                            #     href="#login",
-                            #     cls="inline-flex h-10 items-center justify-center rounded-lg border border-[#3D2E7C] px-8 py-2 text-sm font-medium text-[#3D2E7C] shadow-sm transition-colors hover:bg-[#3D2E7C]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
-                            # ),
                             cls="flex flex-col sm:flex-row gap-4"
                         ),
                         cls="space-y-6"
@@ -700,38 +695,49 @@ class TeambeeApp:
             "Jasper Appeldoorn": "xfit_foto.jpg"
         }
         
+        # Get current language
+        current_lang = self.request.state.language
+        
         # Generate review cards dynamically from the loaded data
         review_cards = []
         for i, review in enumerate(reviews):
             # Get the appropriate image for the author
-            image_file = author_images.get(review["author"], "profile-placeholder.svg")
+            image_file = author_images.get(review["author"]["nl"], "profile-placeholder.svg")
             
             # Create the review card
             review_card = Div(
                 Div(
-                    Img(
-                        src=self.versioned_url("/static/assets/quote.svg"),
-                        alt="Quote",
-                        cls="w-8 h-8 text-[#E8973A]"
+                    Div(
+                        Img(
+                            src=self.versioned_url("/static/assets/quote.svg"),
+                            alt="Quote",
+                            cls="w-8 h-8 text-[#E8973A]"
+                        ),
+                        # Add translation label for English
+                        Span(
+                            "Translated from Dutch",
+                            cls="text-xs text-gray-400 ml-2 italic" if current_lang == "en" else "hidden",
+                        ),
+                        cls="flex items-center mb-4"
                     ),
                     P(
-                        review["quote"],
+                        review["quote"][current_lang],
                         cls="text-gray-600 mb-4 flex-grow"
                     ),
                     Div(
                         Div(
                             Img(
                                 src=self.versioned_url(f"/static/assets/{image_file}"),
-                                alt=review["author"],
+                                alt=review["author"][current_lang],
                                 cls="w-10 h-10 rounded-full bg-gray-200 mr-3 object-cover"
                             ),
                             Div(
                                 Div(
-                                    review["author"],
+                                    review["author"][current_lang],
                                     cls="font-semibold text-[#1B1947]"
                                 ),
                                 Div(
-                                    review["title"],
+                                    review["title"][current_lang],
                                     cls="text-sm text-gray-500"
                                 ),
                             ),

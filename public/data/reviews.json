@@ -1,22 +1,58 @@
 [
     {
-      "quote": "\"Eind 2022 zijn we de samenwerking met Teambee aangegaan. Inmiddels hebben wij onze samenwerking met nog een jaar verlengd. De meest opvallende vooruitgang is de bewustwording van onze collega’s (personeel). Zowel de klantbeleving als ook hoe het bedrijfsmatig werkt. Met behulp van Teambee als ook my wellness hebben wij meer structuur en zijn we nog professioneler en persoonlijk geworden. De beleving van onze klanten is nog positiever wat geresulteerd heeft dat onze sportclub momenteel zo goed als aan het maximum leden zit.\"",
-      "author": "Marco & Patricia Kalfshoven",
-      "title": "Eigenaren, Sport & Squashclub do-it"
+      "quote": {
+        "nl": "\"Eind 2022 zijn we de samenwerking met Teambee aangegaan. Inmiddels hebben wij onze samenwerking met nog een jaar verlengd. De meest opvallende vooruitgang is de bewustwording van onze collega's (personeel). Zowel de klantbeleving als ook hoe het bedrijfsmatig werkt. Met behulp van Teambee als ook my wellness hebben wij meer structuur en zijn we nog professioneler en persoonlijk geworden. De beleving van onze klanten is nog positiever wat geresulteerd heeft dat onze sportclub momenteel zo goed als aan het maximum leden zit.\"",
+        "en": "\"At the end of 2022, we partnered with Teambee. We have since extended our cooperation for another year. The most striking progress is the awareness of our colleagues (staff). Both the customer experience and also how it works business-wise. With the help of Teambee as well as my wellness, we have more structure and have become even more professional and personal. The experience of our clients is even more positive, which has resulted in our sports club currently being close to its maximum membership.\""
+      },
+      "author": {
+        "nl": "Marco & Patricia Kalfshoven",
+        "en": "Marco & Patricia Kalfshoven"
+      },
+      "title": {
+        "nl": "Eigenaren, Sport & Squashclub do-it",
+        "en": "Owners, Sport & Squashclub do-it"
+      }
     },
     {
-      "quote": "\"Teambee heeft 't Gymlokaal geholpen haar structuur te versterken, waardoor de efficiëntie binnen ons team is toegenomen. Onze klanten voelen zich gezien en gewaardeerd. Dankzij de rapportages van Teambee blijven we scherp en weten we waar onze focus moet liggen. We hebben nu meer grip op onze totale business, met specifieke actiepunten voor individuele en teambegeleiding. Een waardevolle samenwerking voor 't Gymlokaal.\"",
-      "author": "Rick Sombroek",
-      "title": "Eigenaar, 't Gymlokaal"
+      "quote": {
+        "nl": "\"Teambee heeft 't Gymlokaal geholpen haar structuur te versterken, waardoor de efficiëntie binnen ons team is toegenomen. Onze klanten voelen zich gezien en gewaardeerd. Dankzij de rapportages van Teambee blijven we scherp en weten we waar onze focus moet liggen. We hebben nu meer grip op onze totale business, met specifieke actiepunten voor individuele en teambegeleiding. Een waardevolle samenwerking voor 't Gymlokaal.\"",
+        "en": "\"Teambee has helped 't Gymlokaal strengthen its structure, increasing efficiency within our team. Our clients feel seen and valued. Thanks to Teambee's reports, we stay sharp and know where our focus should be. We now have a better grip on our overall business, with specific action points for individual and team coaching. A valuable collaboration for 't Gymlokaal.\""
+      },
+      "author": {
+        "nl": "Rick Sombroek",
+        "en": "Rick Sombroek"
+      },
+      "title": {
+        "nl": "Eigenaar, 't Gymlokaal",
+        "en": "Owner, 't Gymlokaal"
+      }
     },
     {
-      "quote": "\"Elke club zou moeten samenwerken met Teambee en hun 12 weken succesformule. Dit helpt om een echte kwaliteitsslag te maken!\"",
-      "author": "Jochem van der Linden",
-      "title": "Club Manager, Xfitclub"
+      "quote": {
+        "nl": "\"Elke club zou moeten samenwerken met Teambee en hun 12 weken succesformule. Dit helpt om een echte kwaliteitsslag te maken!\"",
+        "en": "\"Every club should partner with Teambee and their 12-week success formula. This helps to make a real quality impact!\""
+      },
+      "author": {
+        "nl": "Jochem van der Linden",
+        "en": "Jochem van der Linden"
+      },
+      "title": {
+        "nl": "Club Manager, Xfitclub",
+        "en": "Club Manager, Xfitclub"
+      }
     },
     {
-      "quote": "\"Mijn team is super enthousiast! We kunnen nu elk lid de aandacht geven die ze verdienen, met een heldere workflow die iedereen scherp houdt.\"",
-      "author": "Jasper Appeldoorn",
-      "title": "Fitness Manager, Xfitclub"
+      "quote": {
+        "nl": "\"Mijn team is super enthousiast! We kunnen nu elk lid de aandacht geven die ze verdienen, met een heldere workflow die iedereen scherp houdt.\"",
+        "en": "\"My team is super excited! We can now give each member the attention they deserve, with a clear workflow that keeps everyone on their toes.\""
+      },
+      "author": {
+        "nl": "Jasper Appeldoorn",
+        "en": "Jasper Appeldoorn"
+      },
+      "title": {
+        "nl": "Fitness Manager, Xfitclub",
+        "en": "Fitness Manager, Xfitclub"
+      }
     }
-  ]  
+]  

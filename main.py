@@ -108,6 +108,7 @@ class TeambeeApp:
                 Script(src=self.versioned_url("/static/js/carousel.js")),
                 Script(src=self.versioned_url("/static/js/language-dropdown.js")),
                 Script(src=self.versioned_url("/static/js/smooth-scroll.js")),
+                Script(src=self.versioned_url("/static/js/scroll-animations.js")),
             ],
             middleware=middleware
         )
@@ -286,70 +287,74 @@ class TeambeeApp:
         return Header(
             Div(
                 Div(
-                    A(
-                        Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-8 sm:h-10 w-auto"),
-                        href="/" if current_lang == "nl" else "/en",
-                        title="Back to top",
-                        aria_label="Back to top of page",
-                        cls="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
-                    ),
-                    cls="flex items-center gap-2"
-                ),
-                # Language selector dropdown
-                Div(
                     Div(
-                        # Dropdown button
-                        Button(
-                            Span(current_lang.upper(), cls="mr-1"),
-                            Img(
-                                src=self.versioned_url("/static/assets/dropdown-arrow.svg"),
-                                alt="Language Dropdown",
-                                cls="w-4 h-4"
-                            ),
-                            cls="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:ring-offset-2",
-                            id="language-dropdown-button",
-                            type="button",
-                            aria_haspopup="true",
-                            aria_expanded="false"
+                        A(
+                            Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-8 sm:h-10 w-auto"),
+                            href="/" if current_lang == "nl" else "/en",
+                            title="Back to top",
+                            aria_label="Back to top of page",
+                            cls="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
                         ),
-                        # A(
-                        #     "Login",
-                        #     href="#login",
-                        #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"§
-                        # ),
-                        # Dropdown menu (initially hidden)
-                        Div(
-                            Div(
-                                A(
-                                    "Nederlands",
-                                    href="/" if current_lang != "nl" else "#",
-                                    cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'nl' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
-                                    hreflang="nl",
-                                    rel="alternate"
-                                ),
-                                cls="border-b border-gray-100"
-                            ),
-                            Div(
-                                A(
-                                    "English",
-                                    href=alt_path if current_lang != "en" else "#",
-                                    cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'en' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
-                                    hreflang="en",
-                                    rel="alternate"
-                                ),
-                                cls=""
-                            ),
-                            cls="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden",
-                            role="menu",
-                            aria_orientation="vertical",
-                            aria_labelledby="language-dropdown-button",
-                            id="language-dropdown-menu"
-                        ),
-                        cls="relative ml-3"
+                        cls="flex items-center gap-2"
                     ),
-                    cls="flex items-center"
+                    # Language selector dropdown
+                    Div(
+                        Div(
+                            # Dropdown button
+                            Button(
+                                Span(current_lang.upper(), cls="mr-1"),
+                                Img(
+                                    src=self.versioned_url("/static/assets/dropdown-arrow.svg"),
+                                    alt="Language Dropdown",
+                                    cls="w-4 h-4"
+                                ),
+                                cls="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:ring-offset-2",
+                                id="language-dropdown-button",
+                                type="button",
+                                aria_haspopup="true",
+                                aria_expanded="false"
+                            ),
+                            # A(
+                            #     "Login",
+                            #     href="#login",
+                            #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"§
+                            # ),
+                            # Dropdown menu (initially hidden)
+                            Div(
+                                Div(
+                                    A(
+                                        "Nederlands",
+                                        href="/" if current_lang != "nl" else "#",
+                                        cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'nl' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
+                                        hreflang="nl",
+                                        rel="alternate"
+                                    ),
+                                    cls="border-b border-gray-100"
+                                ),
+                                Div(
+                                    A(
+                                        "English",
+                                        href=alt_path if current_lang != "en" else "#",
+                                        cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'en' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
+                                        hreflang="en",
+                                        rel="alternate"
+                                    ),
+                                    cls=""
+                                ),
+                                cls="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden",
+                                role="menu",
+                                aria_orientation="vertical",
+                                aria_labelledby="language-dropdown-button",
+                                id="language-dropdown-menu"
+                            ),
+                            cls="relative ml-3"
+                        ),
+                        cls="flex items-center"
+                    ),
+                    cls="container flex h-16 items-center justify-between"
                 ),
-                cls="container flex h-16 items-center justify-between"
+                cls="fixed top-0 z-50 w-full bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/65 border-b shadow-sm",
+                role="banner"
             ),
             cls="fixed top-0 z-50 w-full bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/65 border-b shadow-sm",
             role="banner"
@@ -363,17 +368,17 @@ class TeambeeApp:
                     Div(
                         H1(
                             self.get_text("home", "hero_title"),
-                            cls="text-4xl md:text-5xl font-bold italic text-[#3D2E7C] leading-tight"
+                            cls="text-4xl md:text-5xl font-bold italic text-[#3D2E7C] leading-tight animate-section-title"
                         ),
                         P(
                             self.get_text("home", "hero_subtitle"),
-                            cls="text-lg text-gray-600 max-w-md"
+                            cls="text-lg text-gray-600 max-w-md animate-section-subtitle"
                         ),
                         Div(
                             A(
                                 "Our services",
                                 Span("→", cls="ml-2"),
-                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2",
+                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 animate-card",
                                 data_scroll_to="services"
                             ),
                             cls="flex flex-col sm:flex-row gap-4"
@@ -384,7 +389,7 @@ class TeambeeApp:
                         Img(
                             src=self.versioned_url("/static/assets/Teambee icon.png"),
                             alt="Teambee Hero",
-                            cls="w-full h-full object-contain",
+                            cls="w-full h-full object-contain animate-card",
                             loading="lazy"
                         ),
                         cls="relative h-[300px] md:h-[400px] hidden md:flex items-center justify-center"
@@ -403,11 +408,11 @@ class TeambeeApp:
                 Div(
                     H2(
                         self.get_text("about", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
+                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4 animate-section-title"
                     ),
                     P(
                         self.get_text("about", "subtitle"),
-                        cls="text-lg text-gray-600 max-w-2xl mx-auto"
+                        cls="text-lg text-gray-600 max-w-2xl mx-auto animate-section-subtitle"
                     ),
                     cls="text-center mb-12"
                 ),
@@ -431,7 +436,7 @@ class TeambeeApp:
                             self.get_text("about", "teamwork_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md animate-card"
                     ),
                     
                     # Resultaatgericht card
@@ -452,7 +457,7 @@ class TeambeeApp:
                             self.get_text("about", "results_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md animate-card"
                     ),
                     
                     # Duurzaam card
@@ -473,10 +478,10 @@ class TeambeeApp:
                             self.get_text("about", "sustainable_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md animate-card"
                     ),
                     
-                    cls="grid md:grid-cols-3 gap-8"
+                    cls="grid md:grid-cols-3 gap-8 animate-stagger-container"
                 ),
                 
                 cls="container"
@@ -492,11 +497,11 @@ class TeambeeApp:
                 Div(
                     H2(
                         self.get_text("services", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic mb-4"
+                        cls="text-3xl md:text-4xl font-bold italic mb-4 animate-section-title"
                     ),
                     P(
                         self.get_text("services", "subtitle"),
-                        cls="text-lg text-white/80 max-w-2xl mx-auto"
+                        cls="text-lg text-white/80 max-w-2xl mx-auto animate-section-subtitle"
                     ),
                     cls="text-center mb-12"
                 ),
@@ -517,7 +522,27 @@ class TeambeeApp:
                                 self._create_check_list_item(self.get_text("services", "data_support")),
                                 cls="space-y-3"
                             ),
-                            cls="bg-[#1B1947] p-6 rounded-lg"
+                            cls="bg-[#1B1947] p-6 rounded-lg h-full animate-card"
+                        ),
+                        cls="flex flex-col"
+                    ),
+                    
+                    # Data Support section (new card)
+                    Div(
+                        Div(
+                            H3(
+                                "Data support (ongoing)",
+                                cls="text-xl font-semibold text-[#ffffff] mb-2"
+                            ),
+                            Ul(
+                                self._create_check_list_item("Inzicht – Elke maand een Club Performance Report met data over clubprestaties, retentie en teamperformance (binnenkort beschikbaar via je eigen inlogpagina)."),
+                                self._create_check_list_item("Actie – Data-gedreven keuzes maken op basis van gedrag, trends en KPI's."),
+                                self._create_check_list_item("Retentie – Concrete cijfers over ledenbehoud waarmee je gericht kunt sturen op het verbeteren van retentie en het voorkomen van opzeggingen."),
+                                self._create_check_list_item("Team – Stuur effectiever aan met inzicht in teamimpact en prestaties."),
+                                self._create_check_list_item("Groei – Doorlopende optimalisatie en, bij Premium, extra support en implementatie-uren voor blijvende innovatie."),
+                                cls="space-y-3"
+                            ),
+                            cls="bg-[#1B1947] p-6 rounded-lg h-full animate-card"
                         ),
                         cls="flex flex-col"
                     ),
@@ -526,13 +551,13 @@ class TeambeeApp:
                     Div(
                         A(
                             self.get_text("services", "cta"),
-                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
+                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8 animate-card",
                             data_scroll_to="contact"
                         ),
                         cls="text-center"
                     ),
                     
-                    cls="grid gap-8"
+                    cls="grid md:grid-cols-2 gap-8 animate-stagger-container"
                 ),
                 
                 cls="container"
@@ -550,7 +575,7 @@ class TeambeeApp:
                 cls="h-6 w-6 mr-2 mt-0.5"
             ),
             Span(text),
-            cls="flex items-start"
+            cls="flex items-start animate-stagger-item"
         )
     
     def _create_benefits_section(self):
@@ -567,11 +592,11 @@ class TeambeeApp:
                 Div(
                     H2(
                         self.get_text("benefits", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
+                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4 animate-section-title"
                     ),
                     P(
                         self.get_text("benefits", "subtitle"),
-                        cls="text-lg text-gray-600 max-w-2xl mx-auto"
+                        cls="text-lg text-gray-600 max-w-2xl mx-auto animate-section-subtitle"
                     ),
                     cls="text-center mb-12"
                 ),
@@ -591,7 +616,7 @@ class TeambeeApp:
                             self.get_text("benefits", "retention_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
+                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 animate-card"
                     ),
                     
                     # Member Referrals
@@ -608,7 +633,7 @@ class TeambeeApp:
                             self.get_text("benefits", "referral_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
+                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 animate-card"
                     ),
                     
                     # Engagement Increase
@@ -625,10 +650,10 @@ class TeambeeApp:
                             self.get_text("benefits", "engagement_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
+                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 animate-card"
                     ),
                     
-                    cls="grid md:grid-cols-3 gap-8 mb-16"
+                    cls="grid md:grid-cols-3 gap-8 mb-16 animate-stagger-container"
                 ),
                 
                 # Subtle line separator
@@ -641,7 +666,7 @@ class TeambeeApp:
                     Div(
                         H3(
                             self.get_text("benefits", "partners"),
-                            cls="text-lg font-medium text-gray-500 mb-8"
+                            cls="text-lg font-medium text-gray-500 mb-8 animate-section-title"
                         ),
                         cls="text-center"
                     ),
@@ -661,11 +686,11 @@ class TeambeeApp:
                                     aria_label=f"Visit {partner['name']} website",
                                     cls="flex items-center justify-center p-4"
                                 ),
-                                cls="flex items-center justify-center"
+                                cls="flex items-center justify-center animate-stagger-item"
                             )
                             for partner in partners
                         ],
-                        cls="grid grid-cols-2 md:flex md:flex-nowrap justify-center items-center gap-4 md:gap-12 max-w-4xl mx-auto"
+                        cls="grid grid-cols-2 md:flex md:flex-nowrap justify-center items-center gap-4 md:gap-12 max-w-4xl mx-auto animate-stagger-container"
                     ),
                     
                     cls="container"
@@ -744,7 +769,7 @@ class TeambeeApp:
                         ),
                         cls="flex items-center mt-3"
                     ),
-                    cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-full flex flex-col justify-between w-full"
+                    cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-full flex flex-col justify-between w-full animate-card"
                 ),
                 cls="slide w-full flex-shrink-0 px-4",
                 id=f"review-{i}"  # Add unique ID for each review
@@ -756,11 +781,11 @@ class TeambeeApp:
                 Div(
                     H2(
                         self.get_text("reviews", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
+                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4 animate-section-title"
                     ),
                     P(
                         self.get_text("reviews", "subtitle"),
-                        cls="text-lg text-gray-600 max-w-2xl mx-auto"
+                        cls="text-lg text-gray-600 max-w-2xl mx-auto animate-section-subtitle"
                     ),
                     cls="text-center mb-6"
                 ),
@@ -775,7 +800,7 @@ class TeambeeApp:
                             Div(
                                 *review_cards,
                                 id="slides",
-                                cls="slides flex transition-transform duration-300 ease-out relative cursor-grab active:cursor-grabbing"
+                                cls="slides flex transition-transform duration-300 ease-out relative cursor-grab active:cursor-grabbing animate-stagger-container"
                             ),
                             cls="wrapper overflow-hidden relative w-full touch-pan-x"
                         ),
@@ -793,7 +818,7 @@ class TeambeeApp:
                     Div(
                         Button(
                             self.get_text("reviews", "success_stories"),
-                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8",
+                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8 animate-card",
                             id="show-success-stories"
                         ),
                         cls="text-center"

@@ -23,7 +23,15 @@
     "implementation_detail": "Implementation – Seamless integration with MyWellness CRM and automated workflows for maximum efficiency.",
     "education": "Education – Training and guidance of your team on-site for successful execution of the strategy.",
     "data_support": "Data support – Continuous monitoring and optimization of results for constant growth.",
-    "cta": "Schedule a free demo now"
+    "cta": "Schedule a free demo",
+    "data_support_title": "Data support (ongoing)",
+    "data_support_subtitle": "Our data support ensures continuous growth and keen insight into your club performance, team and members:",
+    "data_support_inzicht": "Insight – Monthly Club Performance Report with data on club performance, retention, and team performance (coming soon through your own login page).",
+    "data_support_actie": "Action – Make data-driven choices based on behavior, trends, and KPIs.",
+    "data_support_retentie": "Retention – Concrete figures on member retention that allow you to focus on improving retention and preventing cancellations",
+    "data_support_team": "Team – Steer more effectively with insight into team impact and performance.",
+    "data_support_groei": "Growth – Continuous optimization and, with Premium, extra support and implementation hours for lasting innovation.",
+    "view_report": "View sample report?"
   },
   "benefits": {
     "title": "The best-scored goal is the goal we achieve",

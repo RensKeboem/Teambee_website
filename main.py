@@ -408,11 +408,11 @@ class TeambeeApp:
                 Div(
                     H2(
                         self.get_text("about", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4 animate-section-title"
+                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
                     ),
                     P(
                         self.get_text("about", "subtitle"),
-                        cls="text-lg text-gray-600 max-w-2xl mx-auto animate-section-subtitle"
+                        cls="text-lg text-gray-600 max-w-2xl mx-auto"
                     ),
                     cls="text-center mb-12"
                 ),
@@ -499,10 +499,6 @@ class TeambeeApp:
                         self.get_text("services", "title"),
                         cls="text-3xl md:text-4xl font-bold italic mb-4 animate-section-title"
                     ),
-                    P(
-                        self.get_text("services", "subtitle"),
-                        cls="text-lg text-white/80 max-w-2xl mx-auto animate-section-subtitle"
-                    ),
                     cls="text-center mb-12"
                 ),
                 
@@ -510,53 +506,96 @@ class TeambeeApp:
                     # Implementation section
                     Div(
                         Div(
-                            H3(
-                                self.get_text("services", "implementation"),
-                                cls="text-xl font-semibold text-[#ffffff] mb-2"
+                            # Header section
+                            Div(
+                                H3(
+                                    self.get_text("services", "implementation"),
+                                    cls="text-xl font-semibold text-[#ffffff] mb-2"
+                                ),
+                                P(
+                                    self.get_text("services", "subtitle"),
+                                    cls="text-sm text-white/80 animate-section-subtitle mb-4"
+                                ),
+                                # Separator line
+                                Div(
+                                    cls="w-50 h-0.5 bg-white/30 mb-6"
+                                ),
+                                cls=""
                             ),
-                            Ul(
-                                self._create_check_list_item(self.get_text("services", "strategy")),
-                                self._create_check_list_item(self.get_text("services", "design")),
-                                self._create_check_list_item(self.get_text("services", "implementation_detail")),
-                                self._create_check_list_item(self.get_text("services", "education")),
-                                self._create_check_list_item(self.get_text("services", "data_support")),
-                                cls="space-y-3"
+                            
+                            # Content section
+                            Div(
+                                Ul(
+                                    self._create_check_list_item(self.get_text("services", "strategy")),
+                                    self._create_check_list_item(self.get_text("services", "design")),
+                                    self._create_check_list_item(self.get_text("services", "implementation_detail")),
+                                    self._create_check_list_item(self.get_text("services", "education")),
+                                    self._create_check_list_item(self.get_text("services", "data_support")),
+                                    cls="space-y-3"
+                                ),
+                                cls="flex-grow"
                             ),
-                            cls="bg-[#1B1947] p-6 rounded-lg h-full animate-card"
+                            
+                            # Button container
+                            Div(
+                                A(
+                                    self.get_text("services", "cta"),
+                                    cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
+                                    data_scroll_to="contact"
+                                ),
+                                cls="text-center mt-10"
+                            ),
+                            cls="bg-[#1B1947] p-6 rounded-lg min-h-[570px] animate-card flex flex-col justify-between"
                         ),
                         cls="flex flex-col"
                     ),
                     
-                    # Data Support section (new card)
+                    # Data Support section
                     Div(
                         Div(
-                            H3(
-                                "Data support (ongoing)",
-                                cls="text-xl font-semibold text-[#ffffff] mb-2"
+                            # Header section
+                            Div(
+                                H3(
+                                    self.get_text("services", "data_support_title"),
+                                    cls="text-xl font-semibold text-[#ffffff] mb-2"
+                                ),
+                                P(
+                                    self.get_text("services", "data_support_subtitle"),
+                                    cls="text-sm text-white/80 animate-section-subtitle mb-4"
+                                ),
+                                # Separator line
+                                Div(
+                                    cls="w-50 h-0.5 bg-white/30 mb-6"
+                                ),
+                                cls=""
                             ),
-                            Ul(
-                                self._create_check_list_item("Inzicht – Elke maand een Club Performance Report met data over clubprestaties, retentie en teamperformance (binnenkort beschikbaar via je eigen inlogpagina)."),
-                                self._create_check_list_item("Actie – Data-gedreven keuzes maken op basis van gedrag, trends en KPI's."),
-                                self._create_check_list_item("Retentie – Concrete cijfers over ledenbehoud waarmee je gericht kunt sturen op het verbeteren van retentie en het voorkomen van opzeggingen."),
-                                self._create_check_list_item("Team – Stuur effectiever aan met inzicht in teamimpact en prestaties."),
-                                self._create_check_list_item("Groei – Doorlopende optimalisatie en, bij Premium, extra support en implementatie-uren voor blijvende innovatie."),
-                                cls="space-y-3"
+                            
+                            # Content section
+                            Div(
+                                Ul(
+                                    self._create_check_list_item(self.get_text("services", "data_support_inzicht")),
+                                    self._create_check_list_item(self.get_text("services", "data_support_actie")),
+                                    self._create_check_list_item(self.get_text("services", "data_support_retentie")),
+                                    self._create_check_list_item(self.get_text("services", "data_support_team")),
+                                    self._create_check_list_item(self.get_text("services", "data_support_groei")),
+                                    cls="space-y-3"
+                                ),
+                                cls="flex-grow"
                             ),
-                            cls="bg-[#1B1947] p-6 rounded-lg h-full animate-card"
+                            
+                            # Button container
+                            Div(
+                                A(
+                                    self.get_text("services", "view_report"),
+                                    cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
+                                    data_scroll_to="contact"
+                                ),
+                                cls="text-center mt-10"
+                            ),
+                            cls="bg-[#1B1947] p-6 rounded-lg min-h-[570px] animate-card flex flex-col justify-between"
                         ),
                         cls="flex flex-col"
                     ),
-                    
-                    # Call-to-action button
-                    Div(
-                        A(
-                            self.get_text("services", "cta"),
-                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8 animate-card",
-                            data_scroll_to="contact"
-                        ),
-                        cls="text-center"
-                    ),
-                    
                     cls="grid md:grid-cols-2 gap-8 animate-stagger-container"
                 ),
                 

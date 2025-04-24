@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function isInViewport(element) {
         const rect = element.getBoundingClientRect();
         return (
-            rect.top <= (window.innerHeight || document.documentElement.clientHeight) * 0.85 &&
+            rect.top <= (window.innerHeight || document.documentElement.clientHeight) * 0.95 &&
             rect.bottom >= 0
         );
     }

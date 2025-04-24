@@ -103,6 +103,8 @@ class TeambeeApp:
                 # Stylesheets and scripts
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
+                # Analytics tracking
+                Script(src="https://cloud.umami.is/script.js", defer=True, data_website_id="142ecdae-c07c-43bb-9719-70be96850045"),
                 Script(src=self.versioned_url("/static/js/parallax.js")),
                 Script(src=self.versioned_url("/static/js/success-stories.js")),
                 Script(src=self.versioned_url("/static/js/carousel.js")),

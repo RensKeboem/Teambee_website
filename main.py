@@ -100,11 +100,12 @@ class TeambeeApp:
                 Link(rel="alternate", hreflang="nl", href="https://teambee.fit/"),
                 Link(rel="alternate", hreflang="en", href="https://teambee.fit/en"),
                 Link(rel="alternate", hreflang="x-default", href="https://teambee.fit/"),
-                # Stylesheets and scripts
+                # Stylesheets
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
                 # Analytics tracking
                 Script(src="https://cloud.umami.is/script.js", defer=True, data_website_id="142ecdae-c07c-43bb-9719-70be96850045"),
+                # Scripts
                 Script(src=self.versioned_url("/static/js/parallax.js")),
                 Script(src=self.versioned_url("/static/js/success-stories.js")),
                 Script(src=self.versioned_url("/static/js/carousel.js")),
@@ -289,74 +290,70 @@ class TeambeeApp:
         return Header(
             Div(
                 Div(
-                    Div(
-                        A(
-                            Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-8 sm:h-10 w-auto"),
-                            href="/" if current_lang == "nl" else "/en",
-                            title="Back to top",
-                            aria_label="Back to top of page",
-                            cls="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
-                        ),
-                        cls="flex items-center gap-2"
+                    A(
+                        Img(src=self.versioned_url("/static/assets/Teambee logo donker.png"), alt="Teambee Logo", cls="h-8 sm:h-10 w-auto"),
+                        href="/" if current_lang == "nl" else "/en",
+                        title="Back to top",
+                        aria_label="Back to top of page",
+                        cls="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
                     ),
-                    # Language selector dropdown
-                    Div(
-                        Div(
-                            # Dropdown button
-                            Button(
-                                Span(current_lang.upper(), cls="mr-1"),
-                                Img(
-                                    src=self.versioned_url("/static/assets/dropdown-arrow.svg"),
-                                    alt="Language Dropdown",
-                                    cls="w-4 h-4"
-                                ),
-                                cls="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:ring-offset-2",
-                                id="language-dropdown-button",
-                                type="button",
-                                aria_haspopup="true",
-                                aria_expanded="false"
-                            ),
-                            # A(
-                            #     "Login",
-                            #     href="#login",
-                            #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"§
-                            # ),
-                            # Dropdown menu (initially hidden)
-                            Div(
-                                Div(
-                                    A(
-                                        "Nederlands",
-                                        href="/" if current_lang != "nl" else "#",
-                                        cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'nl' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
-                                        hreflang="nl",
-                                        rel="alternate"
-                                    ),
-                                    cls="border-b border-gray-100"
-                                ),
-                                Div(
-                                    A(
-                                        "English",
-                                        href=alt_path if current_lang != "en" else "#",
-                                        cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'en' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
-                                        hreflang="en",
-                                        rel="alternate"
-                                    ),
-                                    cls=""
-                                ),
-                                cls="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden",
-                                role="menu",
-                                aria_orientation="vertical",
-                                aria_labelledby="language-dropdown-button",
-                                id="language-dropdown-menu"
-                            ),
-                            cls="relative ml-3"
-                        ),
-                        cls="flex items-center"
-                    ),
-                    cls="container flex h-16 items-center justify-between"
+                    cls="flex items-center gap-2"
                 ),
-                cls="fixed top-0 z-50 w-full bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/65 border-b shadow-sm",
-                role="banner"
+                # Language selector dropdown
+                Div(
+                    Div(
+                        # Dropdown button
+                        Button(
+                            Span(current_lang.upper(), cls="mr-1"),
+                            Img(
+                                src=self.versioned_url("/static/assets/dropdown-arrow.svg"),
+                                alt="Language Dropdown",
+                                cls="w-4 h-4"
+                            ),
+                            cls="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:ring-offset-2",
+                            id="language-dropdown-button",
+                            type="button",
+                            aria_haspopup="true",
+                            aria_expanded="false"
+                        ),
+                        # A(
+                        #     "Login",
+                        #     href="#login",
+                        #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"§
+                        # ),
+                        # Dropdown menu (initially hidden)
+                        Div(
+                            Div(
+                                A(
+                                    "Nederlands",
+                                    href="/" if current_lang != "nl" else "#",
+                                    cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'nl' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
+                                    hreflang="nl",
+                                    rel="alternate"
+                                ),
+                                cls="border-b border-gray-100"
+                            ),
+                            Div(
+                                A(
+                                    "English",
+                                    href=alt_path if current_lang != "en" else "#",
+                                    cls=f"block w-full px-4 py-2 text-left text-sm {'text-[#3D2E7C] font-semibold bg-gray-50' if current_lang == 'en' else 'text-gray-700'} hover:bg-gray-100 hover:text-[#3D2E7C]",
+                                    hreflang="en",
+                                    rel="alternate"
+                                ),
+                                cls=""
+                            ),
+                            cls="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden",
+                            role="menu",
+                            aria_orientation="vertical",
+                            aria_labelledby="language-dropdown-button",
+                            id="language-dropdown-menu"
+                        ),
+                        cls="relative ml-3"
+                    ),
+                    cls="flex items-center"
+                ),
+                cls="container flex h-16 items-center justify-between"
             ),
             cls="fixed top-0 z-50 w-full bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/65 border-b shadow-sm",
             role="banner"
@@ -545,7 +542,7 @@ class TeambeeApp:
                                     cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
                                     data_scroll_to="contact"
                                 ),
-                                cls="text-center mt-10"
+                                cls="text-center mt-4"
                             ),
                             cls="bg-[#1B1947] p-6 rounded-lg min-h-[570px] animate-card flex flex-col justify-between"
                         ),
@@ -592,7 +589,7 @@ class TeambeeApp:
                                     cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
                                     data_scroll_to="contact"
                                 ),
-                                cls="text-center mt-10"
+                                cls="text-center mt-4"
                             ),
                             cls="bg-[#1B1947] p-6 rounded-lg min-h-[570px] animate-card flex flex-col justify-between"
                         ),

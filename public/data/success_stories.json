@@ -106,5 +106,41 @@
             "nl": "'t Gymlokaal laat zien dat lange termijn samenwerking loont. Door stap voor stap te bouwen aan strategie, structuur en datasturing is het merk uitgegroeid tot een professioneel boutique concept met grip op groei en schaalbaarheid.",
             "en": "'t Gymlokaal shows that long-term collaboration pays off. By building strategy, structure, and data management step by step, the brand has grown into a professional boutique concept with control over growth and scalability."
         }
+    },
+    {
+        "title": {
+            "nl": "Xfitclub",
+            "en": "Xfitclub"
+        },
+        "subtitle": {
+            "nl": "Meer beleving, meer binding – door digitalisering en persoonlijke coaching",
+            "en": "More experience, more engagement – through digitalization and personal coaching"
+        },
+        "image": "/static/assets/xfitclub.jpg",
+        "strategy": {
+            "nl": "Onze samenwerking met Xfitclub begon in oktober 2024. De club had een heldere ambitie: zich sterker onderscheiden in regio Huizen door te focussen op kwaliteit, persoonlijke aandacht en een digitale klantervaring.\n\nNa een succesvolle restyling van de clubruimte, verschoof de aandacht naar de klantreis. Samen met Teambee werd gekozen voor een volledige implementatie van het Technogym Ecosysteem.\n\nDoel: maximale grip op de werkwijze, gepersonaliseerde klantreizen die bijdragen aan meer betrokkenheid en meetbare resultaten, én meer fysieke touchpoints tussen coach en lid om leefstijlverandering te ondersteunen.",
+            "en": "Our collaboration with Xfitclub began in October 2024. The club had a clear ambition: to distinguish itself more strongly in the Huizen region by focusing on quality, personal attention, and a digital customer experience.\n\nAfter a successful restyling of the club space, attention shifted to the customer journey. Together with Teambee, a full implementation of the Technogym Ecosystem was chosen.\n\nGoal: maximum control over the workflow, personalized customer journeys that contribute to more engagement and measurable results, and more physical touchpoints between coach and member to support lifestyle changes."
+        },
+        "metrics": {
+            "start": {
+                "members": "2095",
+                "app_users": "744",
+                "visitors": "1634"
+            },
+            "three_months": {
+                "members": "2099",
+                "app_users": "1520",
+                "visitors": "1679"
+            },
+            "current": {
+                "members": "1984",
+                "app_users": "1581",
+                "visitors": "1627"
+            }
+        },
+        "conclusion": {
+            "nl": "Xfitclub laat zien dat digitalisering en persoonlijke begeleiding hand in hand gaan.\n\nMet een stijging van 4% in recente bezoekers in slechts drie maanden wordt de basis gelegd voor een sterke verlaging van de uitstroom. De lichte daling in ledenaantal is een bewuste keuze: door te focussen op waarde in plaats van volume positioneert de club zich als premium in de markt.\n\nDe verdubbeling van actieve appgebruikers onderstreept de impact van het ecosysteem én het commitment van de leden. Een succesvol voorbeeld van toekomstbestendige fitness!",
+            "en": "Xfitclub shows that digitalization and personal guidance go hand in hand.\n\nWith a 4% increase in recent visitors in just three months, the foundation is laid for a strong reduction in outflow. The slight decrease in membership is a conscious choice: by focusing on value instead of volume, the club positions itself as premium in the market.\n\nThe doubling of active app users underscores the impact of the ecosystem and the commitment of the members. A successful example of future-proof fitness!"
+        }
     }
 ] 

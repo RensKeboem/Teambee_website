@@ -103,8 +103,6 @@ class TeambeeApp:
                 # Stylesheets
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
-                # Analytics tracking
-                Script(src="https://cloud.umami.is/script.js", defer=True, data_website_id="142ecdae-c07c-43bb-9719-70be96850045"),
                 # Scripts
                 Script(src=self.versioned_url("/static/js/parallax.js")),
                 Script(src=self.versioned_url("/static/js/success-stories.js")),
@@ -377,7 +375,7 @@ class TeambeeApp:
                             A(
                                 "Our services",
                                 Span("→", cls="ml-2"),
-                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 animate-card",
+                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:-translate-y-2 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 animate-card",
                                 data_scroll_to="services"
                             ),
                             cls="flex flex-col sm:flex-row gap-4"
@@ -435,7 +433,7 @@ class TeambeeApp:
                             self.get_text("about", "teamwork_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md animate-card"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 cursor-pointer hover:shadow-md hover:shadow-gray-300"
                     ),
                     
                     # Resultaatgericht card
@@ -456,7 +454,7 @@ class TeambeeApp:
                             self.get_text("about", "results_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md animate-card"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 cursor-pointer hover:shadow-md hover:shadow-gray-300"
                     ),
                     
                     # Duurzaam card
@@ -477,7 +475,7 @@ class TeambeeApp:
                             self.get_text("about", "sustainable_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-all duration-300 hover:-translate-y-2 hover:shadow-md animate-card"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 cursor-pointer hover:shadow-md hover:shadow-gray-300"
                     ),
                     
                     cls="grid md:grid-cols-3 gap-8 animate-stagger-container"
@@ -755,7 +753,8 @@ class TeambeeApp:
             "Marco & Patricia Kalfshoven": "doit_foto.jpeg",
             "Rick Sombroek": "rick_foto.jpg",
             "Jochem van der Linden": "xfit_foto.jpg",
-            "Jasper Appeldoorn": "xfit_foto.jpg"
+            "Jasper Appeldoorn": "xfit_foto.jpg",
+            "Jelle Notkamp": "EV_jelle.jpg"
         }
         
         # Get current language
@@ -883,7 +882,7 @@ class TeambeeApp:
                                         cls="text-white hover:text-gray-200 transition-colors",
                                         id="close-success-stories"
                                     ),
-                                    cls="flex justify-between items-center w-full max-w-[96rem] mx-auto px-4"
+                                    cls="flex justify-between items-center w-full container mx-auto"
                                 ),
                                 cls="sticky top-0 bg-[#3D2E7C] pt-4 pb-4 z-20 w-full flex justify-center"
                             ),
@@ -895,7 +894,7 @@ class TeambeeApp:
                                     cls="space-y-8"
                                 ),
                                 # Add extra padding at the bottom
-                                cls="max-w-[96rem] mx-auto px-4 pt-4 pb-24"
+                                cls="container mx-auto pt-4 pb-24"
                             ),
                             cls="bg-[#3D2E7C] h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[100] overflow-y-auto"
                         ),

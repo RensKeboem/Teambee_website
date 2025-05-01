@@ -1,4 +1,5 @@
 // Success stories functionality
+// kakhiel
 document.addEventListener('DOMContentLoaded', function() {
     // Success stories panel functionality
     const showStoriesBtn = document.getElementById('show-success-stories');

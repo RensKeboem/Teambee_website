@@ -1003,7 +1003,7 @@ class TeambeeApp:
                         Ul(
                             Li(
                                 A(
-                                    "info@teambee.nl",
+                                    "info@teambee.fit",
                                     href="mailto:info@teambee.fit",
                                     cls="text-white/70 hover:text-white transition-colors"
                                 ),

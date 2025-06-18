@@ -110,6 +110,7 @@ class TeambeeApp:
                 Script(src=self.versioned_url("/static/js/language-dropdown.js")),
                 Script(src=self.versioned_url("/static/js/smooth-scroll.js")),
                 Script(src=self.versioned_url("/static/js/scroll-animations.js")),
+                Script(src=self.versioned_url("/static/js/login-popup.js")),
             ],
             middleware=middleware
         )
@@ -266,6 +267,9 @@ class TeambeeApp:
             # Footer
             self._create_footer(),
             
+            # Login popup modal
+            self._create_login_popup(),
+            
             cls="flex min-h-screen flex-col relative"
         )
     
@@ -297,10 +301,9 @@ class TeambeeApp:
                     ),
                     cls="flex items-center gap-2"
                 ),
-                # Language selector dropdown
+                # Language selector dropdown and login button
                 Div(
                     Div(
-                        # Dropdown button
                         Button(
                             Span(current_lang.upper(), cls="mr-1"),
                             Img(
@@ -308,17 +311,12 @@ class TeambeeApp:
                                 alt="Language Dropdown",
                                 cls="w-4 h-4"
                             ),
-                            cls="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:ring-offset-2",
+                            cls="flex items-center justify-center rounded-lg border border-gray-300 px-3 h-9 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:ring-offset-2",
                             id="language-dropdown-button",
                             type="button",
                             aria_haspopup="true",
                             aria_expanded="false"
                         ),
-                        # A(
-                        #     "Login",
-                        #     href="#login",
-                        #     cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"§
-                        # ),
                         # Dropdown menu (initially hidden)
                         Div(
                             Div(
@@ -347,7 +345,13 @@ class TeambeeApp:
                             aria_labelledby="language-dropdown-button",
                             id="language-dropdown-menu"
                         ),
-                        cls="relative ml-3"
+                        cls="relative"
+                    ),
+                    # Login button
+                    Button(
+                        "Login",
+                        id="login-button",
+                        cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 ml-3"
                     ),
                     cls="flex items-center"
                 ),
@@ -930,29 +934,8 @@ class TeambeeApp:
                         cls="text-center mb-8"
                     ),
                     
-                    # Wrapper with relative positioning
-                    Div(
-                        # Login form
-                        login_form.render(),
-                        
-                        # Overlay with improved styling, extended beyond form edges
-                        Div(
-                            Div(
-                                H3(
-                                    self.get_text("login", "coming_soon"),
-                                    cls="text-2xl font-bold text-white mb-2"
-                                ),
-                                P(
-                                    self.get_text("login", "coming_soon_text"),
-                                    cls="text-white/90"
-                                ),
-                                cls="text-center p-8 bg-[#3D2E7C] rounded-lg shadow-lg w-full max-w-sm"
-                            ),
-                            cls="absolute -inset-8 flex items-center justify-center z-10 bg-white/50 backdrop-blur-sm rounded-2xl"
-                        ),
-                        
-                        cls="relative"
-                    ),
+                    # Login form
+                    login_form.render(),
                     
                     cls="max-w-md mx-auto"
                 ),
@@ -972,6 +955,53 @@ class TeambeeApp:
             
             id="login",
             cls="pt-8 md:pt-12 pb-16 bg-white/90 backdrop-blur-sm relative"
+        )
+    
+    def _create_login_popup(self):
+        """Create the login popup modal."""
+        login_form = LoginForm()
+        
+        return Div(
+            # Modal backdrop
+            Div(
+                # Modal content
+                Div(
+                    # Modal header
+                    Div(
+                        H2(
+                            self.get_text("login", "title"),
+                            cls="text-2xl font-bold text-[#3D2E7C] mb-2"
+                        ),
+                        Button(
+                            Img(
+                                src=self.versioned_url("/static/assets/close.svg"),
+                                alt="Close",
+                                cls="w-6 h-6 filter brightness-0"
+                            ),
+                            id="close-login-popup",
+                            cls="text-gray-700 hover:text-gray-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
+                        ),
+                        cls="flex justify-between items-center mb-6"
+                    ),
+                    
+                    # Modal body
+                    Div(
+                        P(
+                            self.get_text("login", "subtitle"),
+                            cls="text-gray-600 mb-6"
+                        ),
+                        
+                        # Login form
+                        login_form.render(),
+                        cls=""
+                    ),
+                    
+                    cls="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto transform transition-all duration-300 ease-out scale-95 opacity-0"
+                ),
+                cls="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            ),
+            id="login-popup",
+            cls="hidden"
         )
     
     def _create_footer(self):

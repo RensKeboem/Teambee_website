@@ -1137,7 +1137,6 @@ class TeambeeApp:
         """Return the FastHTML app instance."""
         return self.app
 
-
 # Initialize the Teambee application
 teambee = TeambeeApp()
 

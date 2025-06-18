@@ -376,7 +376,7 @@ class TeambeeApp:
                             cls="text-lg text-gray-600 max-w-md animate-section-subtitle"
                         ),
                         Div(
-                            A(
+                            Button(
                                 "Our services",
                                 Span("→", cls="ml-2"),
                                 cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:-translate-y-2 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 animate-card",
@@ -539,7 +539,7 @@ class TeambeeApp:
                             
                             # Button container
                             Div(
-                                A(
+                                Button(
                                     self.get_text("services", "cta"),
                                     cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
                                     data_scroll_to="contact"
@@ -586,7 +586,7 @@ class TeambeeApp:
                             
                             # Button container
                             Div(
-                                A(
+                                Button(
                                     self.get_text("services", "view_report"),
                                     cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
                                     data_scroll_to="contact"

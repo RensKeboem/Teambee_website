@@ -437,7 +437,7 @@ class TeambeeApp:
                             self.get_text("about", "teamwork_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 cursor-pointer hover:shadow-md hover:shadow-gray-300"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300"
                     ),
                     
                     # Resultaatgericht card
@@ -458,7 +458,7 @@ class TeambeeApp:
                             self.get_text("about", "results_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 cursor-pointer hover:shadow-md hover:shadow-gray-300"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300"
                     ),
                     
                     # Duurzaam card
@@ -479,7 +479,7 @@ class TeambeeApp:
                             self.get_text("about", "sustainable_text"),
                             cls="text-gray-600"
                         ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 cursor-pointer hover:shadow-md hover:shadow-gray-300"
+                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300"
                     ),
                     
                     cls="grid md:grid-cols-3 gap-8 animate-stagger-container"

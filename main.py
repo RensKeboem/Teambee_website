@@ -1,5 +1,8 @@
 from fasthtml.common import *
 from login_form import LoginForm
+from auth import AuthManager
+from forms import RegistrationForm, PasswordResetForm, DashboardLayout, AdminPanelLayout, ClubForm
+from database_manager import DatabaseManager
 from datetime import datetime
 import os
 import time
@@ -9,6 +12,7 @@ from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import RedirectResponse
+from starlette.middleware.sessions import SessionMiddleware
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware to add security headers to all responses."""
@@ -72,8 +76,16 @@ class TeambeeApp:
         self.version = str(int(time.time()))
         self.file_versions = {}
         
+        # Initialize authentication manager
+        try:
+            self.auth = AuthManager(DatabaseManager())
+        except Exception as e:
+            print(f"Warning: Could not initialize authentication: {e}")
+            self.auth = None
+        
         # Define middleware
         middleware = [
+            Middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "teambee-secret-key-change-in-production")),
             Middleware(SecurityHeadersMiddleware),
             Middleware(LanguageMiddleware)
         ]
@@ -111,6 +123,7 @@ class TeambeeApp:
                 Script(src=self.versioned_url("/static/js/smooth-scroll.js")),
                 Script(src=self.versioned_url("/static/js/scroll-animations.js")),
                 Script(src=self.versioned_url("/static/js/login-popup.js")),
+                Script(src=self.versioned_url("/static/js/ajax-login.js")),
             ],
             middleware=middleware
         )
@@ -148,6 +161,41 @@ class TeambeeApp:
                 return self.translations["nl"][section][key]
             except (KeyError, AttributeError):
                 return default
+    
+    def is_authenticated(self, request):
+        """Check if user is authenticated."""
+        return request.session.get("user_id") is not None
+    
+    def get_current_user(self, request):
+        """Get current user from session."""
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return None
+        
+        return {
+            "user_id": user_id,
+            "club_id": request.session.get("club_id"),
+            "email": request.session.get("email"),
+            "club_name": request.session.get("club_name")
+        }
+    
+    def login_user(self, request, user_info):
+        """Log in user by storing info in session."""
+        request.session["user_id"] = user_info["user_id"]
+        request.session["club_id"] = user_info["club_id"]
+        request.session["email"] = user_info["email"]
+        request.session["club_name"] = user_info["club_name"]
+    
+    def logout_user(self, request):
+        """Log out user by clearing session."""
+        request.session.clear()
+    
+    def require_admin(self, request):
+        """Check if user is authenticated and is admin."""
+        if not self.is_authenticated(request):
+            return False
+        user_info = self.get_current_user(request)
+        return self.auth and self.auth.is_admin(user_info)
     
     def versioned_url(self, path):
         """Add version parameter to URL for cache busting.
@@ -212,6 +260,573 @@ class TeambeeApp:
                 return RedirectResponse(url="/", status_code=302)
             else:
                 return RedirectResponse(url="/en", status_code=302)
+        
+        # Authentication routes
+        @rt("/login", methods=["POST"])
+        async def login(request):
+            """Handle login form submission."""
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            
+            if not self.auth:
+                if is_ajax:
+                    return {"success": False, "message": "Authentication service is currently unavailable"}
+                else:
+                    return RedirectResponse(url="/?error=auth_not_available", status_code=302)
+            
+            form = await request.form()
+            email = form.get("email", "").strip()
+            password = form.get("password", "")
+            
+            if not email or not password:
+                if is_ajax:
+                    return {"success": False, "message": "Please enter both email and password"}
+                else:
+                    return RedirectResponse(url="/?error=missing_credentials", status_code=302)
+            
+            success, user_info, message = self.auth.authenticate_user(email, password)
+            
+            if success:
+                self.login_user(request, user_info)
+                # Redirect to admin panel if user is admin, otherwise to dashboard
+                redirect_url = "/admin" if self.auth.is_admin(user_info) else "/dashboard"
+                
+                if is_ajax:
+                    return {"success": True, "redirect_url": redirect_url}
+                else:
+                    return RedirectResponse(url=redirect_url, status_code=302)
+            else:
+                # Convert error codes to user-friendly messages
+                error_messages = {
+                    "Invalid email or password": "Invalid email or password. Please try again.",
+                    "missing_credentials": "Please enter both email and password",
+                    "auth_not_available": "Authentication service is currently unavailable"
+                }
+                
+                # Check if message contains account lock information
+                if "Account is locked until" in message:
+                    user_message = "Your account has been temporarily locked due to multiple failed login attempts. Please try again later."
+                else:
+                    user_message = error_messages.get(message, "Login failed. Please try again.")
+                
+                if is_ajax:
+                    return {"success": False, "message": user_message}
+                else:
+                    return RedirectResponse(url=f"/?error={message}", status_code=302)
+        
+        @rt("/logout")
+        async def logout(request):
+            """Handle user logout."""
+            self.logout_user(request)
+            return RedirectResponse(url="/", status_code=302)
+        
+        @rt("/dashboard")
+        async def dashboard(request):
+            """Render the dashboard for authenticated users."""
+            if not self.is_authenticated(request):
+                return RedirectResponse(url="/", status_code=302)
+            
+            user_info = self.get_current_user(request)
+            dashboard_layout = DashboardLayout()
+            return dashboard_layout.render(user_info)
+        
+        @rt("/register/{token}", methods=["GET", "POST"])
+        async def registration_handler(request):
+            """Handle both GET and POST for user registration."""
+            if not self.auth:
+                return RedirectResponse(url="/?error=auth_not_available", status_code=302)
+            
+            token = request.path_params["token"]
+            
+            if request.method == "GET":
+                # Show registration form
+                club_id = self.auth.validate_registration_token(token)
+                
+                if not club_id:
+                    return Title("Invalid Registration Link"), Div(
+                        Div(
+                            H1("Invalid or Expired Registration Link", cls="text-3xl font-bold text-red-600 mb-4"),
+                            P("This registration link is invalid or has expired.", cls="text-gray-600 mb-4"),
+                            A("Go to Home", href="/", cls="text-[#3D2E7C] hover:underline"),
+                            cls="text-center"
+                        ),
+                        cls="min-h-screen flex items-center justify-center bg-gray-50"
+                    )
+                
+                # Get club name
+                clubs_df = self.auth.get_clubs()
+                club_name = ""
+                if clubs_df is not None and not clubs_df.empty:
+                    club_row = clubs_df[clubs_df['club_id'] == club_id]
+                    if not club_row.empty:
+                        club_name = club_row.iloc[0]['name']
+                
+                registration_form = RegistrationForm()
+                return Title("Create Account"), Html(
+                    Head(
+                        Title("Create Account"),
+                        Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
+                        Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
+                        Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
+                        Script(src=self.versioned_url("/static/js/registration-validation.js"))
+                    ),
+                    Body(
+                        Div(
+                            registration_form.render(club_name),
+                            cls="min-h-screen flex items-center justify-center bg-gray-50 py-12"
+                        )
+                    )
+                )
+            
+            elif request.method == "POST":
+                # Handle user registration
+                form = await request.form()
+                email = form.get("email", "").strip()
+                password = form.get("password", "")
+                confirm_password = form.get("confirm_password", "")
+                
+                # Client-side validation prevents invalid submissions
+                # Only need to handle server/database errors now
+                
+                success, message = self.auth.complete_registration(token, email, password)
+                
+                if success:
+                    return RedirectResponse(url="/?success=registration_complete", status_code=302)
+                else:
+                    # Show error page for database/server errors
+                    return Title("Registration Error"), Div(
+                        Div(
+                            H1("Registration Error", cls="text-3xl font-bold text-red-600 mb-4"),
+                            P(f"Registration failed: {message}", cls="text-gray-600 mb-4"),
+                            A("Go Back", href=f"/register/{token}", cls="text-[#3D2E7C] hover:underline"),
+                            cls="text-center"
+                        ),
+                        cls="min-h-screen flex items-center justify-center bg-gray-50"
+                    )
+        
+        @rt("/forgot-password", methods=["GET", "POST"])
+        async def forgot_password_handler(request):
+            """Handle both GET and POST for forgot password."""
+            if request.method == "GET":
+                # Show forgot password form
+                reset_form = PasswordResetForm()
+                return Title("Reset Password"), Div(
+                    reset_form.render_request_form(),
+                    cls="min-h-screen flex items-center justify-center bg-gray-50 py-12"
+                )
+            
+            elif request.method == "POST":
+                # Handle forgot password request
+                if not self.auth:
+                    return RedirectResponse(url="/?error=auth_not_available", status_code=302)
+                
+                form = await request.form()
+                email = form.get("email", "").strip()
+                
+                if not email:
+                    return RedirectResponse(url="/forgot-password?error=missing_email", status_code=302)
+                
+                success, message = self.auth.initiate_password_reset(email)
+                
+                if success:
+                    return RedirectResponse(url="/?success=reset_email_sent", status_code=302)
+                else:
+                    return RedirectResponse(url="/forgot-password?error=reset_failed", status_code=302)
+        
+        @rt("/reset-password/{token}", methods=["GET", "POST"])
+        async def reset_password_handler(request):
+            """Handle both GET and POST for password reset."""
+            if not self.auth:
+                return RedirectResponse(url="/?error=auth_not_available", status_code=302)
+            
+            token = request.path_params["token"]
+            
+            if request.method == "GET":
+                # Show password reset form
+                # Validate token
+                reset_data = self.auth.db.fetch_one(
+                    "SELECT user_id, expires_at, used_at FROM password_resets WHERE token = :token",
+                    {"token": token}
+                )
+                
+                if not reset_data or reset_data[2] or datetime.now() > reset_data[1]:  # used_at or expired
+                    return Title("Invalid Reset Link"), Div(
+                        Div(
+                            H1("Invalid or Expired Reset Link", cls="text-3xl font-bold text-red-600 mb-4"),
+                            P("This password reset link is invalid or has expired.", cls="text-gray-600 mb-4"),
+                            A("Request New Reset Link", href="/forgot-password", cls="text-[#3D2E7C] hover:underline"),
+                            cls="text-center"
+                        ),
+                        cls="min-h-screen flex items-center justify-center bg-gray-50"
+                    )
+                
+                reset_form = PasswordResetForm()
+                return Title("Reset Password"), Div(
+                    reset_form.render_reset_form(),
+                    cls="min-h-screen flex items-center justify-center bg-gray-50 py-12"
+                )
+            
+            elif request.method == "POST":
+                # Handle password reset
+                form = await request.form()
+                password = form.get("password", "")
+                confirm_password = form.get("confirm_password", "")
+                
+                if not password or not confirm_password:
+                    return RedirectResponse(url=f"/reset-password/{token}?error=missing_fields", status_code=302)
+                
+                if password != confirm_password:
+                    return RedirectResponse(url=f"/reset-password/{token}?error=passwords_dont_match", status_code=302)
+                
+                if len(password) < 8:
+                    return RedirectResponse(url=f"/reset-password/{token}?error=password_too_short", status_code=302)
+                
+                success, message = self.auth.reset_password(token, password)
+                
+                if success:
+                    return RedirectResponse(url="/?success=password_reset", status_code=302)
+                else:
+                    return RedirectResponse(url=f"/reset-password/{token}?error={message}", status_code=302)
+        
+        # Admin panel routes
+        @rt("/admin")
+        async def admin_dashboard(request):
+            """Admin dashboard."""
+            if not self.require_admin(request):
+                return RedirectResponse(url="/", status_code=302)
+            
+            user_info = self.get_current_user(request)
+            admin_layout = AdminPanelLayout()
+            
+            content = Div(
+                Div(
+                    H1("Admin Dashboard", cls="text-3xl font-bold text-[#3D2E7C] mb-8"),
+                    
+                    # Quick stats
+                    Div(
+                        Div(
+                            H3("Total Users", cls="text-lg font-semibold text-gray-700 mb-2"),
+                            P("View and manage all users", cls="text-gray-600 mb-4"),
+                            A("View Users", href="/admin/users", 
+                              cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90"),
+                            cls="bg-white p-6 rounded-lg shadow-sm border"
+                        ),
+                        Div(
+                            H3("Total Clubs", cls="text-lg font-semibold text-gray-700 mb-2"),
+                            P("View and manage all clubs", cls="text-gray-600 mb-4"),
+                            A("View Clubs", href="/admin/clubs", 
+                              cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90"),
+                            cls="bg-white p-6 rounded-lg shadow-sm border"
+                        ),
+                        Div(
+                            H3("Create New Club", cls="text-lg font-semibold text-gray-700 mb-2"),
+                            P("Add a new club and generate registration link", cls="text-gray-600 mb-4"),
+                            A("Create Club", href="/admin/create-club", 
+                              cls="inline-flex items-center px-4 py-2 bg-[#94C46F] text-white rounded-lg hover:bg-[#94C46F]/90"),
+                            cls="bg-white p-6 rounded-lg shadow-sm border"
+                        ),
+                        cls="grid md:grid-cols-3 gap-6"
+                    ),
+                    
+                    cls="container mx-auto px-4"
+                ),
+            )
+            
+            return admin_layout.render(user_info, content)
+        
+        @rt("/admin/users")
+        async def admin_users(request):
+            """Admin users page."""
+            if not self.require_admin(request):
+                return RedirectResponse(url="/", status_code=302)
+            
+            user_info = self.get_current_user(request)
+            admin_layout = AdminPanelLayout()
+            
+            # Get all users
+            users_df = self.auth.get_all_users()
+            
+            if users_df is None or users_df.empty:
+                user_rows = [Tr(Td("No users found", colspan="7", cls="text-center text-gray-500 py-4"))]
+            else:
+                user_rows = []
+                for _, user in users_df.iterrows():
+                    user_rows.append(
+                        Tr(
+                            Td(str(user['user_id']), cls="px-4 py-2 text-sm"),
+                            Td(user['email'], cls="px-4 py-2 text-sm"),
+                            Td(user['user_type'], cls="px-4 py-2 text-sm"),
+                            Td(user['club_name'] if user['club_name'] else 'N/A', cls="px-4 py-2 text-sm"),
+                            Td(str(user['last_login']) if user['last_login'] else 'Never', cls="px-4 py-2 text-sm text-gray-500"),
+                            Td(str(user['created_at']), cls="px-4 py-2 text-sm text-gray-500"),
+                            Td(
+                                Form(
+                                    Button(
+                                        Img(
+                                            src=self.versioned_url("/static/assets/trash.svg"),
+                                            alt="Delete",
+                                            cls="w-4 h-4"
+                                        ),
+                                        type="submit",
+                                        cls="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors",
+                                        onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')"
+                                    ),
+                                    method="post",
+                                    action=f"/admin/delete-user/{user['user_id']}"
+                                ),
+                                cls="px-4 py-2 text-sm"
+                            ),
+                            cls="border-b hover:bg-gray-50"
+                        )
+                    )
+            
+            content = Div(
+                Div(
+                    H1("All Users", cls="text-3xl font-bold text-[#3D2E7C] mb-8"),
+                    
+                    Div(
+                        Table(
+                            Thead(
+                                Tr(
+                                    Th("ID", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Email", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Type", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Club", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Last Login", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Created", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Actions", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    cls="bg-gray-50"
+                                )
+                            ),
+                            Tbody(*user_rows),
+                            cls="min-w-full divide-y divide-gray-200"
+                        ),
+                        cls="bg-white shadow-sm rounded-lg overflow-hidden"
+                    ),
+                    
+                    cls="container mx-auto px-4"
+                ),
+            )
+            
+            return admin_layout.render(user_info, content)
+        
+        @rt("/admin/clubs")
+        async def admin_clubs(request):
+            """Admin clubs page."""
+            if not self.require_admin(request):
+                return RedirectResponse(url="/", status_code=302)
+            
+            user_info = self.get_current_user(request)
+            admin_layout = AdminPanelLayout()
+            
+            # Get all clubs
+            clubs_df = self.auth.get_clubs()
+            
+            if clubs_df is None or clubs_df.empty:
+                club_rows = [Tr(Td("No clubs found", colspan="6", cls="text-center text-gray-500 py-8"))]
+            else:
+                club_rows = []
+                for _, club in clubs_df.iterrows():
+                    club_rows.append(
+                        Tr(
+                            Td(str(club['club_id']), cls="px-4 py-3 text-sm"),
+                            Td(club['name'], cls="px-4 py-3 text-sm font-medium"),
+                            Td(club['system_prefix'], cls="px-4 py-3 text-sm"),
+                            Td(club['language'].upper(), cls="px-4 py-3 text-sm"),
+                            Td(str(club['created_at']), cls="px-4 py-3 text-sm text-gray-500"),
+                            Td(
+                                A("Generate Link", href=f"/admin/generate-link/{club['club_id']}", 
+                                  cls="text-[#3D2E7C] hover:underline text-sm"),
+                                cls="px-4 py-3 text-sm"
+                            ),
+                            cls="border-b hover:bg-gray-50"
+                        )
+                    )
+            
+            content = Div(
+                Div(
+                    H1("All Clubs", cls="text-3xl font-bold text-[#3D2E7C] mb-4"),
+                    
+                    Div(
+                        A("Create New Club", href="/admin/create-club", 
+                          cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90 mb-6"),
+                    ),
+                    
+                    Div(
+                        Table(
+                            Thead(
+                                Tr(
+                                    Th("ID", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Name", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("System Prefix", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Language", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Created", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    Th("Actions", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
+                                    cls="bg-gray-50"
+                                )
+                            ),
+                            Tbody(*club_rows),
+                            cls="min-w-full divide-y divide-gray-200"
+                        ),
+                        cls="bg-white shadow-sm rounded-lg overflow-hidden"
+                    ),
+                    
+                    cls="container mx-auto px-4"
+                ),
+            )
+            
+            return admin_layout.render(user_info, content)
+        
+        @rt("/admin/create-club", methods=["GET", "POST"])
+        async def admin_create_club_handler(request):
+            """Handle both GET and POST for club creation."""
+            if not self.require_admin(request):
+                return RedirectResponse(url="/", status_code=302)
+            
+            if request.method == "GET":
+                # Show the form
+                user_info = self.get_current_user(request)
+                admin_layout = AdminPanelLayout()
+                club_form = ClubForm()
+                
+                content = Div(
+                    Div(
+                        club_form.render(),
+                        cls="container mx-auto px-4"
+                    ),
+                )
+                
+                return admin_layout.render(user_info, content)
+            
+            elif request.method == "POST":
+                # Handle form submission
+                if not self.auth:
+                    return RedirectResponse(url="/admin/create-club?error=auth_not_available", status_code=302)
+                
+                try:
+                    form = await request.form()
+                    name = form.get("name", "").strip()
+                    system_prefix = form.get("system_prefix", "").strip()
+                    language = form.get("language", "").strip()
+                    
+                    if not all([name, system_prefix, language]):
+                        return RedirectResponse(url="/admin/create-club?error=missing_fields", status_code=302)
+                    
+                    # Create club
+                    success, message, club_id = self.auth.create_club(name, system_prefix, language)
+                    
+                    if success and club_id:
+                        # Generate registration token for the new club
+                        token = self.auth.create_registration_token(club_id)
+                        
+                        if token:
+                            registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}"
+                            
+                            user_info = self.get_current_user(request)
+                            admin_layout = AdminPanelLayout()
+                            
+                            content = Div(
+                                Div(
+                                    H1("Club Created Successfully!", cls="text-3xl font-bold text-green-600 mb-6"),
+                                    
+                                    Div(
+                                        H3("Club Details:", cls="text-lg font-semibold mb-4"),
+                                        P(f"Name: {name}", cls="mb-2"),
+                                        P(f"System Prefix: {system_prefix}", cls="mb-2"),
+                                        P(f"Language: {language.upper()}", cls="mb-2"),
+                                        P(f"Club ID: {club_id}", cls="mb-6"),
+                                        
+                                        H3("Registration Link:", cls="text-lg font-semibold mb-4"),
+                                        Code(registration_link, cls="block p-4 bg-gray-100 rounded mb-4 break-all text-sm"),
+                                        P("Share this link with the club administrator to create their account.", cls="text-sm text-gray-600 mb-6"),
+                                        
+                                        Div(
+                                            A("Create Another Club", href="/admin/create-club", 
+                                              cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90 mr-4"),
+                                            A("View All Clubs", href="/admin/clubs", 
+                                              cls="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"),
+                                            cls="flex gap-4"
+                                        ),
+                                        
+                                        cls="bg-white p-6 rounded-lg shadow-sm border"
+                                    ),
+                                    
+                                    cls="container mx-auto px-4"
+                                ),
+                            )
+                            
+                            return admin_layout.render(user_info, content)
+                        else:
+                            return RedirectResponse(url="/admin/create-club?error=token_creation_failed", status_code=302)
+                    else:
+                        return RedirectResponse(url=f"/admin/create-club?error={message}", status_code=302)
+                    
+                except Exception as e:
+                    return RedirectResponse(url="/admin/create-club?error=unexpected_error", status_code=302)
+        
+        @rt("/admin/generate-link/{club_id}")
+        async def admin_generate_link(request):
+            """Generate registration link for existing club."""
+            if not self.require_admin(request):
+                return RedirectResponse(url="/", status_code=302)
+            
+            club_id = int(request.path_params["club_id"])
+            
+            if not self.auth:
+                return RedirectResponse(url="/admin/clubs?error=auth_not_available", status_code=302)
+            
+            token = self.auth.create_registration_token(club_id)
+            
+            if token:
+                registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}"
+                
+                user_info = self.get_current_user(request)
+                admin_layout = AdminPanelLayout()
+                
+                content = Div(
+                    Div(
+                        H1("Registration Link Generated", cls="text-3xl font-bold text-green-600 mb-6"),
+                        
+                        Div(
+                            H3("Registration Link:", cls="text-lg font-semibold mb-4"),
+                            Code(registration_link, cls="block p-4 bg-gray-100 rounded mb-4 break-all text-sm"),
+                            P("Share this link with the club administrator to create their account.", cls="text-sm text-gray-600 mb-6"),
+                            
+                            A("Back to Clubs", href="/admin/clubs", 
+                              cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90"),
+                            
+                            cls="bg-white p-6 rounded-lg shadow-sm border"
+                        ),
+                        
+                        cls="container mx-auto px-4"
+                    )
+                )
+                
+                return admin_layout.render(user_info, content)
+            else:
+                return RedirectResponse(url="/admin/clubs?error=token_creation_failed", status_code=302)
+        
+        @rt("/admin/delete-user/{user_id}", methods=["POST"])
+        async def admin_delete_user(request):
+            """Delete a user."""
+            if not self.require_admin(request):
+                return RedirectResponse(url="/", status_code=302)
+            
+            user_id = int(request.path_params["user_id"])
+            
+            if not self.auth:
+                return RedirectResponse(url="/admin/users?error=auth_not_available", status_code=302)
+            
+            # Prevent admin from deleting themselves
+            current_user = self.get_current_user(request)
+            if current_user and current_user["user_id"] == user_id:
+                return RedirectResponse(url="/admin/users?error=cannot_delete_self", status_code=302)
+            
+            success, message = self.auth.delete_user(user_id)
+            
+            if success:
+                return RedirectResponse(url="/admin/users?success=user_deleted", status_code=302)
+            else:
+                return RedirectResponse(url=f"/admin/users?error={message}", status_code=302)
     
     def create_homepage(self):
         """Create the Teambee homepage."""
@@ -349,7 +964,7 @@ class TeambeeApp:
                     ),
                     # Login button
                     Button(
-                        "Login",
+                        self.get_text("login", "header_login"),
                         id="login-button",
                         cls="inline-flex h-9 items-center justify-center rounded-lg bg-[#94C46F] px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-[#94C46F]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 ml-3"
                     ),
@@ -916,7 +1531,9 @@ class TeambeeApp:
     
     def _create_login_section(self):
         """Create the login section."""
-        login_form = LoginForm()
+        # Get login translations for the current language
+        login_translations = self.translations.get(self.request.state.language, {}).get("login", {})
+        login_form = LoginForm(login_translations)
         
         return Section(
             Div(
@@ -959,7 +1576,9 @@ class TeambeeApp:
     
     def _create_login_popup(self):
         """Create the login popup modal."""
-        login_form = LoginForm()
+        # Get login translations for the current language
+        login_translations = self.translations.get(self.request.state.language, {}).get("login", {})
+        login_form = LoginForm(login_translations)
         
         return Div(
             # Modal backdrop

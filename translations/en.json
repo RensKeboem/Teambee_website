@@ -56,6 +56,15 @@
   "login": {
     "title": "Login to your dashboard",
     "subtitle": "Get access to your personal Teambee dashboard to gain insight into your club's performance",
+    "password": "Password",
+    "forgot_password": "Forgot password?",
+    "no_account": "Don't have an account?",
+    "contact_us": "Contact us",
+    "login_button": "Login",
+    "logging_in": "Logging in...",
+    "header_login": "Login",
+    "email_placeholder": "name@example.com",
+    "email_label": "Email",
     "coming_soon": "Coming soon!",
     "coming_soon_text": "We're busy developing this feature. Keep an eye on our updates – coming soon!"
   },

@@ -56,6 +56,15 @@
   "login": {
     "title": "Login to your dashboard",
     "subtitle": "Krijg toegang tot je persoonlijke Teambee dashboard om inzicht te krijgen in jouw clubprestaties",
+    "password": "Wachtwoord",
+    "forgot_password": "Wachtwoord vergeten?",
+    "no_account": "Geen account?",
+    "contact_us": "Neem contact op",
+    "login_button": "Inloggen",
+    "logging_in": "Bezig met inloggen...",
+    "header_login": "Inloggen",
+    "email_placeholder": "naam@voorbeeld.com",
+    "email_label": "E-mail",
     "coming_soon": "Coming soon!",
     "coming_soon_text": "We zijn druk bezig met het ontwikkelen van deze functie. Houd onze updates in de gaten – binnenkort live!"
   },

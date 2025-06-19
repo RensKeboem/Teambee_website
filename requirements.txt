@@ -1,3 +1,7 @@
 python_fasthtml
 uvicorn
 starlette
+sqlalchemy
+pandas
+python-dotenv
+itsdangerous

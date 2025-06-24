@@ -116,15 +116,11 @@ class TeambeeApp:
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
                 # Scripts
-                Script(src=self.versioned_url("/static/js/parallax.js")),
-                Script(src=self.versioned_url("/static/js/success-stories.js")),
+                Script(src=self.versioned_url("/static/js/ui-enhancements.js")),
+                Script(src=self.versioned_url("/static/js/popup-dropdown.js")),
+                Script(src=self.versioned_url("/static/js/form-handlers.js")),
                 Script(src=self.versioned_url("/static/js/carousel.js")),
-                Script(src=self.versioned_url("/static/js/language-dropdown.js")),
-                Script(src=self.versioned_url("/static/js/smooth-scroll.js")),
-                Script(src=self.versioned_url("/static/js/scroll-animations.js")),
-                Script(src=self.versioned_url("/static/js/login-popup.js")),
-                Script(src=self.versioned_url("/static/js/ajax-login.js")),
-                Script(src=self.versioned_url("/static/js/forgot-password.js")),
+                Script(src=self.versioned_url("/static/js/success-stories.js")),
             ],
             middleware=middleware
         )
@@ -454,7 +450,7 @@ class TeambeeApp:
                         Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
                         Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                         Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
-                        Script(src=self.versioned_url("/static/js/registration-validation.js"))
+                        Script(src=self.versioned_url("/static/js/form-handlers.js"))
                     ),
                     Body(
                         Div(

@@ -291,8 +291,6 @@ class AdminPanelLayout:
                 # Navigation
                 Nav(
                     Div(
-                        A("Dashboard", href="/admin", 
-                          cls="px-4 py-2 text-sm font-medium text-[#3D2E7C] hover:bg-gray-100 rounded-lg"),
                         A("Users", href="/admin/users", 
                           cls="px-4 py-2 text-sm font-medium text-[#3D2E7C] hover:bg-gray-100 rounded-lg"),
                         A("Clubs", href="/admin/clubs", 

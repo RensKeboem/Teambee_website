@@ -124,7 +124,7 @@ class TeambeeApp:
                 Script(src=self.versioned_url("/static/js/scroll-animations.js")),
                 Script(src=self.versioned_url("/static/js/login-popup.js")),
                 Script(src=self.versioned_url("/static/js/ajax-login.js")),
-                Script(src=self.versioned_url("/static/js/admin-search.js")),
+                Script(src=self.versioned_url("/static/js/forgot-password.js")),
             ],
             middleware=middleware
         )
@@ -386,7 +386,6 @@ class TeambeeApp:
                 confirm_password = form.get("confirm_password", "")
                 
                 # Client-side validation prevents invalid submissions
-                # Only need to handle server/database errors now
                 
                 success, message = self.auth.complete_registration(token, email, password)
                 
@@ -417,21 +416,36 @@ class TeambeeApp:
             
             elif request.method == "POST":
                 # Handle forgot password request
+                is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                
                 if not self.auth:
-                    return RedirectResponse(url="/?error=auth_not_available", status_code=302)
+                    if is_ajax:
+                        return {"success": False, "message": "Authentication service is currently unavailable"}
+                    else:
+                        return RedirectResponse(url="/?error=auth_not_available", status_code=302)
                 
                 form = await request.form()
                 email = form.get("email", "").strip()
                 
                 if not email:
-                    return RedirectResponse(url="/forgot-password?error=missing_email", status_code=302)
+                    if is_ajax:
+                        return {"success": False, "message": "Please enter your email address"}
+                    else:
+                        return RedirectResponse(url="/forgot-password?error=missing_email", status_code=302)
                 
                 success, message = self.auth.initiate_password_reset(email)
                 
-                if success:
-                    return RedirectResponse(url="/?success=reset_email_sent", status_code=302)
+                if is_ajax:
+                    if success:
+                        return {"success": True, "message": "Password reset link has been sent to your email address if it exists in our system."}
+                    else:
+                        # For security, always show success message to prevent email enumeration
+                        return {"success": True, "message": "Password reset link has been sent to your email address if it exists in our system."}
                 else:
-                    return RedirectResponse(url="/forgot-password?error=reset_failed", status_code=302)
+                    if success:
+                        return RedirectResponse(url="/?success=reset_email_sent", status_code=302)
+                    else:
+                        return RedirectResponse(url="/forgot-password?error=reset_failed", status_code=302)
         
         @rt("/reset-password/{token}", methods=["GET", "POST"])
         async def reset_password_handler(request):
@@ -490,49 +504,12 @@ class TeambeeApp:
         
         # Admin panel routes
         @rt("/admin")
-        async def admin_dashboard(request):
-            """Admin dashboard."""
+        async def admin_redirect(request):
+            """Redirect to admin users page."""
             if not self.require_admin(request):
                 return RedirectResponse(url="/", status_code=302)
             
-            user_info = self.get_current_user(request)
-            admin_layout = AdminPanelLayout()
-            
-            content = Div(
-                Div(
-                    H1("Admin Dashboard", cls="text-3xl font-bold text-[#3D2E7C] mb-8"),
-                    
-                    # Quick stats
-                    Div(
-                        Div(
-                            H3("Total Users", cls="text-lg font-semibold text-gray-700 mb-2"),
-                            P("View and manage all users", cls="text-gray-600 mb-4"),
-                            A("View Users", href="/admin/users", 
-                              cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90"),
-                            cls="bg-white p-6 rounded-lg shadow-sm border"
-                        ),
-                        Div(
-                            H3("Total Clubs", cls="text-lg font-semibold text-gray-700 mb-2"),
-                            P("View and manage all clubs", cls="text-gray-600 mb-4"),
-                            A("View Clubs", href="/admin/clubs", 
-                              cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90"),
-                            cls="bg-white p-6 rounded-lg shadow-sm border"
-                        ),
-                        Div(
-                            H3("Create New Club", cls="text-lg font-semibold text-gray-700 mb-2"),
-                            P("Add a new club and generate registration link", cls="text-gray-600 mb-4"),
-                            A("Create Club", href="/admin/create-club", 
-                              cls="inline-flex items-center px-4 py-2 bg-[#94C46F] text-white rounded-lg hover:bg-[#94C46F]/90"),
-                            cls="bg-white p-6 rounded-lg shadow-sm border"
-                        ),
-                        cls="grid md:grid-cols-3 gap-6"
-                    ),
-                    
-                    cls="container mx-auto px-4"
-                ),
-            )
-            
-            return admin_layout.render(user_info, content)
+            return RedirectResponse(url="/admin/users", status_code=302)
         
         @rt("/admin/users")
         async def admin_users(request):
@@ -620,6 +597,9 @@ class TeambeeApp:
                             cls="hidden bg-white shadow-sm rounded-lg p-4"
                         ),
                         
+                        # Pagination container
+                        Div(id="users-pagination-container"),
+                        
                         cls="bg-white shadow-sm rounded-lg overflow-hidden"
                     ),
 
@@ -703,6 +683,9 @@ class TeambeeApp:
                             id="no-clubs-found",
                             cls="hidden bg-white shadow-sm rounded-lg p-4"
                         ),
+                        
+                        # Pagination container
+                        Div(id="clubs-pagination-container"),
                         
                         cls="bg-white shadow-sm rounded-lg overflow-hidden"
                     ),
@@ -1571,7 +1554,7 @@ class TeambeeApp:
         """Create the login section."""
         # Get login translations for the current language
         login_translations = self.translations.get(self.request.state.language, {}).get("login", {})
-        login_form = LoginForm(login_translations)
+        login_form = LoginForm(login_translations, "main")
         
         return Section(
             Div(
@@ -1616,7 +1599,7 @@ class TeambeeApp:
         """Create the login popup modal."""
         # Get login translations for the current language
         login_translations = self.translations.get(self.request.state.language, {}).get("login", {})
-        login_form = LoginForm(login_translations)
+        login_form = LoginForm(login_translations, "popup")
         
         return Div(
             # Modal backdrop

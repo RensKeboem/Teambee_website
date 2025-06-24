@@ -1,6 +1,5 @@
 // Scroll Animation Script for Teambee
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Scroll animations script loaded successfully!');
     
     // Elements to animate
     const animatedElements = [
@@ -23,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Get all elements to animate
     const elements = document.querySelectorAll(selector);
-    console.log(`Found ${elements.length} elements to animate`);
     
     // Set initial styles (hidden)
     elements.forEach(function(element) {
@@ -37,11 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle staggered containers separately
     const staggerContainers = document.querySelectorAll('.animate-stagger-container');
-    console.log(`Found ${staggerContainers.length} stagger containers`);
     
     staggerContainers.forEach(function(container) {
         const items = container.querySelectorAll('.animate-stagger-item');
-        console.log(`Found ${items.length} stagger items in container`);
         
         items.forEach(function(item, index) {
             item.style.opacity = '0';
@@ -82,9 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Run on initial load
     animateOnScroll();
-    console.log('Initial animations applied');
     
     // Add scroll listener
     window.addEventListener('scroll', animateOnScroll);
-    console.log('Scroll listener added');
 }); 

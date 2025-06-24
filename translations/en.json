@@ -73,6 +73,28 @@
     "contact": "Contact",
     "rights_reserved": "All rights reserved."
   },
+  "dashboard": {
+    "title": "Teambee Dashboard",
+    "page_title": "Dashboard",
+    "welcome": "Welcome,",
+    "welcome_message": "Welcome to your Teambee Dashboard",
+    "welcome_subtitle": "Use the user menu in the top right to update your password or invite new users to your club.",
+    "update_password": "Update Password",
+    "invite_new_user": "Invite New User",
+    "logout": "Logout",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "confirm_new_password": "Confirm New Password",
+    "password_min_length": "Password must be at least 8 characters long",
+    "update_password_button": "Update Password",
+    "updating": "Updating...",
+    "invite_subtitle": "Invite a new user to join your club by sending them a registration link.",
+    "email_address": "Email Address",
+    "email_placeholder": "user@example.com",
+    "email_help": "Enter the email address of the person you want to invite",
+    "send_invitation": "Send Invitation",
+    "sending": "Sending..."
+  },
   "language": {
     "switch_to": "Nederlands"
   }

@@ -609,6 +609,100 @@ class AuthManager:
             self.logger.error(f"Error deleting user {user_id}: {e}")
             return False, "delete_error"
     
+    def update_user_password(self, user_id: int, current_password: str, new_password: str) -> Tuple[bool, str]:
+        """Update user password after verifying current password."""
+        try:
+            # Get user data
+            user_data = self.db.fetch_one(
+                "SELECT user_id, email, password_hash, salt FROM users WHERE user_id = :user_id",
+                {"user_id": user_id}
+            )
+            
+            if not user_data:
+                return False, "User not found"
+            
+            user_id_db, email, stored_hash, salt = user_data
+            
+            # Verify current password
+            if not self._verify_password(current_password, stored_hash, salt):
+                return False, "Current password is incorrect"
+            
+            # Validate new password
+            if len(new_password) < 8:
+                return False, "New password must be at least 8 characters long"
+            
+            # Hash new password
+            new_password_hash, new_salt = self._hash_password(new_password)
+            
+            # Update password in database
+            with self.db.engine.connect() as conn:
+                conn.execute(
+                    text("""
+                        UPDATE users 
+                        SET password_hash = :password_hash, salt = :salt
+                        WHERE user_id = :user_id
+                    """),
+                    {
+                        "password_hash": new_password_hash,
+                        "salt": new_salt,
+                        "user_id": user_id
+                    }
+                )
+                conn.commit()
+            
+            return True, "Password updated successfully"
+            
+        except Exception as e:
+            self.logger.error(f"Error updating password for user {user_id}: {e}")
+            return False, "Error updating password"
+    
+    def invite_user_to_club(self, club_id: int, email: str, inviter_email: str) -> Tuple[bool, str]:
+        """Create an invitation for a new user to join a club."""
+        try:
+            # Validate email
+            if not email or "@" not in email:
+                return False, "Invalid email address"
+            
+            # Check if user already exists
+            existing_user = self.db.fetch_one(
+                "SELECT user_id FROM users WHERE email = :email",
+                {"email": email}
+            )
+            
+            if existing_user:
+                return False, "A user with this email already exists"
+            
+            # Check if club exists
+            club = self.db.fetch_one(
+                "SELECT club_id, name FROM clubs WHERE club_id = :club_id",
+                {"club_id": club_id}
+            )
+            
+            if not club:
+                return False, "Club not found"
+            
+            club_id_db, club_name = club
+            
+            # Create registration token
+            token = self.create_registration_token(club_id)
+            
+            if not token:
+                return False, "Failed to create registration token"
+            
+            # Send invitation email
+            registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}?email={email}"
+            
+            success = self.send_invitation_email(email, registration_link, club_name, inviter_email)
+            
+            if success:
+                return True, f"Invitation sent to {email}"
+            else:
+                return False, "Failed to send invitation email"
+            
+        except Exception as e:
+            self.logger.error(f"Error inviting user to club: {e}")
+            return False, "Error sending invitation"
+    
     def _send_password_reset_email(self, to_email: str, reset_link: str) -> bool:
         """Send password reset email."""
         try:
@@ -687,4 +781,43 @@ class AuthManager:
             
         except Exception as e:
             self.logger.error(f"Error sending registration email: {e}")
+            return False
+    
+    def send_invitation_email(self, to_email: str, registration_link: str, club_name: str, inviter_email: str) -> bool:
+        """Send user invitation email."""
+        try:
+            if not all([self.email_user, self.email_password, self.from_email]):
+                self.logger.warning("Email configuration incomplete, cannot send invitation email")
+                return False
+            
+            msg = MIMEMultipart()
+            msg['From'] = self.from_email
+            msg['To'] = to_email
+            msg['Subject'] = f"Teambee - You're invited to join {club_name}"
+            
+            body = f"""
+            Dear User,
+            
+            You have been invited by {inviter_email} to join {club_name} on Teambee.
+            
+            Please click the following link to create your account:
+            {registration_link}
+            
+            This invitation will expire in 24 hours.
+            
+            Best regards,
+            The Teambee Team
+            """
+            
+            msg.attach(MIMEText(body, 'plain'))
+            
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.email_user, self.email_password)
+                server.send_message(msg)
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error sending invitation email: {e}")
             return False 

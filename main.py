@@ -327,8 +327,91 @@ class TeambeeApp:
                 return RedirectResponse(url="/", status_code=302)
             
             user_info = self.get_current_user(request)
-            dashboard_layout = DashboardLayout()
+            
+            # Get user's language preference from their club or default to Dutch
+            user_lang = "nl"  # Default language
+            if user_info.get("club_id") and self.auth:
+                clubs_df = self.auth.get_clubs()
+                if clubs_df is not None and not clubs_df.empty:
+                    club_row = clubs_df[clubs_df['club_id'] == user_info["club_id"]]
+                    if not club_row.empty:
+                        user_lang = club_row.iloc[0]['language']
+            
+            # Get dashboard translations for the user's language
+            dashboard_translations = self.translations.get(user_lang, {}).get("dashboard", {})
+            
+            dashboard_layout = DashboardLayout(dashboard_translations)
             return dashboard_layout.render(user_info)
+        
+        @rt("/dashboard/update-password", methods=["POST"])
+        async def update_password(request):
+            """Handle password update for authenticated users."""
+            if not self.is_authenticated(request):
+                return {"success": False, "message": "Authentication required"}
+            
+            user_info = self.get_current_user(request)
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            
+            if not self.auth:
+                return {"success": False, "message": "Authentication service unavailable"}
+            
+            form = await request.form()
+            current_password = form.get("current_password", "")
+            new_password = form.get("new_password", "")
+            confirm_new_password = form.get("confirm_new_password", "")
+            
+            # Validate input
+            if not all([current_password, new_password, confirm_new_password]):
+                return {"success": False, "message": "All fields are required"}
+            
+            if new_password != confirm_new_password:
+                return {"success": False, "message": "New passwords do not match"}
+            
+            if len(new_password) < 8:
+                return {"success": False, "message": "New password must be at least 8 characters long"}
+            
+            # Update password
+            success, message = self.auth.update_user_password(
+                user_info["user_id"], 
+                current_password, 
+                new_password
+            )
+            
+            return {"success": success, "message": message}
+        
+        @rt("/dashboard/invite-user", methods=["POST"])
+        async def invite_user(request):
+            """Handle user invitation for authenticated users."""
+            if not self.is_authenticated(request):
+                return {"success": False, "message": "Authentication required"}
+            
+            user_info = self.get_current_user(request)
+            
+            # Only club users can invite (not admins)
+            if not user_info.get("club_id"):
+                return {"success": False, "message": "Only club users can invite new users"}
+            
+            if not self.auth:
+                return {"success": False, "message": "Authentication service unavailable"}
+            
+            form = await request.form()
+            invite_email = form.get("invite_email", "").strip()
+            
+            # Validate input
+            if not invite_email:
+                return {"success": False, "message": "Email address is required"}
+            
+            if "@" not in invite_email:
+                return {"success": False, "message": "Please enter a valid email address"}
+            
+            # Send invitation
+            success, message = self.auth.invite_user_to_club(
+                user_info["club_id"],
+                invite_email,
+                user_info["email"]
+            )
+            
+            return {"success": success, "message": message}
         
         @rt("/register/{token}", methods=["GET", "POST"])
         async def registration_handler(request):
@@ -361,6 +444,9 @@ class TeambeeApp:
                     if not club_row.empty:
                         club_name = club_row.iloc[0]['name']
                 
+                # Check for pre-filled email from invitation
+                pre_filled_email = request.query_params.get("email", "")
+                
                 registration_form = RegistrationForm()
                 return Title("Create Account"), Html(
                     Head(
@@ -372,7 +458,7 @@ class TeambeeApp:
                     ),
                     Body(
                         Div(
-                            registration_form.render(club_name),
+                            registration_form.render(club_name, pre_filled_email),
                             cls="min-h-screen flex items-center justify-center bg-gray-50 py-12"
                         )
                     )

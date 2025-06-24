@@ -7,7 +7,7 @@ class RegistrationForm:
         """Initialize the registration form component."""
         pass
     
-    def render(self, club_name: str = ""):
+    def render(self, club_name: str = "", pre_filled_email: str = ""):
         """Render the registration form with custom validation."""
         return Div(
             Form(
@@ -25,6 +25,7 @@ class RegistrationForm:
                             id="email", 
                             name="email", 
                             placeholder=" ", 
+                            value=pre_filled_email,
                             required=True,
                             pattern="^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$",
                             cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C] peer invalid:[&:not(:placeholder-shown):not(:focus)]:border-red-500"
@@ -192,18 +193,23 @@ class PasswordResetForm:
 class DashboardLayout:
     """Dashboard layout component."""
     
-    def __init__(self):
+    def __init__(self, translations=None):
         """Initialize the dashboard layout."""
-        pass
+        self.translations = translations or {}
+    
+    def get_text(self, key: str, default: str = "") -> str:
+        """Get translated text for the given key."""
+        return self.translations.get(key, default)
     
     def render(self, user_info: dict, content: str = ""):
         """Render the dashboard layout."""
         return Html(
             Head(
-                Title("Teambee Dashboard"),
+                Title(self.get_text("title", "Teambee Dashboard")),
                 Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
                 Link(rel="stylesheet", href="/static/app.css", type="text/css"),
                 Link(rel="icon", href="/static/assets/Teambee icon.png", type="image/png"),
+                Script(src="/static/js/user-dropdown.js"),
             ),
             Body(
                 # Header
@@ -214,10 +220,47 @@ class DashboardLayout:
                             cls="flex items-center"
                         ),
                         Div(
-                            Span(f"Welcome, {user_info.get('email', '')}", cls="text-gray-700 mr-4"),
-                            Span(f"Club: {user_info.get('club_name', '')}", cls="text-gray-500 mr-4"),
-                            A("Logout", href="/logout", 
-                              cls="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"),
+                            Span(f"{self.get_text('welcome', 'Welcome,')} {user_info.get('email', '')}", cls="text-gray-700 mr-4"),
+                            
+                            # User dropdown
+                            Div(
+                                Button(
+                                    Img(src="/static/assets/user.svg", alt="User Menu", cls="w-5 h-5"),
+                                    id="user-dropdown-button",
+                                    aria_expanded="false",
+                                    aria_haspopup="true",
+                                    cls="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-700 border border-gray-300 hover:bg-gray-100 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
+                                ),
+                                
+                                # Dropdown menu
+                                Div(
+                                    Button(
+                                        self.get_text("update_password", "Update Password"),
+                                        type="button",
+                                        id="update-password-option",
+                                        cls="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#3D2E7C]"
+                                    ),
+                                    Button(
+                                        self.get_text("invite_new_user", "Invite New User"),
+                                        type="button",
+                                        id="invite-user-option",
+                                        cls="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#3D2E7C]"
+                                    ),
+                                    Div(cls="border-t border-gray-100 my-1"),
+                                    A(
+                                        self.get_text("logout", "Logout"),
+                                        href="/logout",
+                                        cls="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-500"
+                                    ),
+                                    id="user-dropdown-menu",
+                                    cls="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50",
+                                    role="menu",
+                                    aria_orientation="vertical"
+                                ),
+                                
+                                cls="relative"
+                            ),
+                            
                             cls="flex items-center"
                         ),
                         cls="container flex h-16 items-center justify-between px-4"
@@ -228,17 +271,15 @@ class DashboardLayout:
                 # Main content
                 Main(
                     Div(
-                        H1("Dashboard", cls="text-3xl font-bold text-[#3D2E7C] mb-8"),
+                        H1(self.get_text("page_title", "Dashboard"), cls="text-3xl font-bold text-[#3D2E7C] mb-8"),
                         
-                        # Dashboard content placeholder
+                        # Dashboard content
                         Div(
                             Div(
-                                H2("Welcome to your Teambee Dashboard", cls="text-xl font-semibold mb-4"),
-                                P("This is where you'll be able to access your club's analytics and reports.", 
-                                  cls="text-gray-600 mb-4"),
-                                P("Dashboard functionality will be implemented here.", 
+                                H2(self.get_text("welcome_message", "Welcome to your Teambee Dashboard"), cls="text-xl font-semibold mb-4"),
+                                P(self.get_text("welcome_subtitle", "Use the user menu in the top right to update your password or invite new users to your club."), 
                                   cls="text-gray-500"),
-                                cls="bg-white p-6 rounded-lg shadow-sm border"
+                                cls="bg-white p-6 rounded-lg shadow-sm border max-w-2xl mx-auto text-center"
                             ),
                             cls="grid gap-6"
                         ),
@@ -247,6 +288,65 @@ class DashboardLayout:
                     ),
                     cls="flex-1 bg-gray-50"
                 ),
+                
+                # Password Update Popup
+                Div(
+                    Div(
+                        Div(
+                            # Modal header
+                            Div(
+                                H2(self.get_text("update_password", "Update Password"), cls="text-2xl font-bold text-[#3D2E7C] mb-2"),
+                                Button(
+                                    Img(src="/static/assets/close.svg", alt="Close", cls="w-6 h-6 filter brightness-0"),
+                                    id="close-password-popup",
+                                    cls="text-gray-700 hover:text-gray-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
+                                ),
+                                cls="flex justify-between items-center mb-6"
+                            ),
+                            
+                            # Modal body
+                            Div(
+                                PasswordUpdateForm(self.translations).render(),
+                                cls=""
+                            ),
+                            
+                            cls="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto transform transition-all duration-300 ease-out scale-95 opacity-0"
+                        ),
+                        cls="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+                    ),
+                    id="password-update-popup",
+                    cls="hidden"
+                ),
+                
+                # User Invite Popup
+                Div(
+                    Div(
+                        Div(
+                            # Modal header
+                            Div(
+                                H2(self.get_text("invite_new_user", "Invite New User"), cls="text-2xl font-bold text-[#3D2E7C] mb-2"),
+                                Button(
+                                    Img(src="/static/assets/close.svg", alt="Close", cls="w-6 h-6 filter brightness-0"),
+                                    id="close-invite-popup",
+                                    cls="text-gray-700 hover:text-gray-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
+                                ),
+                                cls="flex justify-between items-center mb-6"
+                            ),
+                            
+                            # Modal body
+                            Div(
+                                UserInviteForm(self.translations).render(),
+                                cls=""
+                            ),
+                            
+                            cls="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto transform transition-all duration-300 ease-out scale-95 opacity-0"
+                        ),
+                        cls="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+                    ),
+                    id="user-invite-popup",
+                    cls="hidden"
+                ),
+                
                                  cls="min-h-screen flex flex-col"
              )
          )
@@ -369,4 +469,138 @@ class ClubForm:
             method="post",
             cls="max-w-md mx-auto",
             role="form"
-        ) 
+        )
+
+class PasswordUpdateForm:
+    """Password update form component."""
+    
+    def __init__(self, translations=None):
+        """Initialize the password update form component."""
+        self.translations = translations or {}
+    
+    def get_text(self, key: str, default: str = "") -> str:
+        """Get translated text for the given key."""
+        return self.translations.get(key, default)
+    
+    def render(self):
+        """Render the password update form."""
+        return Form(
+            Div(
+                # Error message container
+                Div(
+                    id="password-update-error",
+                    cls="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+                ),
+                
+                # Success message container
+                Div(
+                    id="password-update-success",
+                    cls="hidden mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+                ),
+                
+                Div(
+                    Label(self.get_text("current_password", "Current Password"), for_="current_password", cls="block text-sm font-medium text-gray-700 mb-1"),
+                    Input(type="password", id="current_password", name="current_password", 
+                          required=True, aria_required="true",
+                          cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
+                    cls="flex flex-col gap-2"
+                ),
+                
+                Div(
+                    Label(self.get_text("new_password", "New Password"), for_="new_password", cls="block text-sm font-medium text-gray-700 mb-1"),
+                    Input(type="password", id="new_password", name="new_password", 
+                          required=True, aria_required="true", minlength="8",
+                          cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
+                    Div(self.get_text("password_min_length", "Password must be at least 8 characters long"), cls="text-xs text-gray-500 mt-1"),
+                    cls="flex flex-col gap-2"
+                ),
+                
+                Div(
+                    Label(self.get_text("confirm_new_password", "Confirm New Password"), for_="confirm_new_password", cls="block text-sm font-medium text-gray-700 mb-1"),
+                    Input(type="password", id="confirm_new_password", name="confirm_new_password", 
+                          required=True, aria_required="true",
+                          cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
+                    cls="flex flex-col gap-2"
+                ),
+                
+                Div(
+                    Button(
+                        self.get_text("update_password_button", "Update Password"),
+                        type="submit",
+                        id="password-update-btn",
+                        data_updating_text=self.get_text("updating", "Updating..."),
+                        data_default_text=self.get_text("update_password_button", "Update Password"),
+                        cls="w-full bg-[#3D2E7C] hover:bg-[#3D2E7C]/90 text-white font-medium py-2 px-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
+                    ),
+                    cls="flex flex-col"
+                ),
+                
+                cls="flex flex-col gap-4"
+            ),
+            id="password-update-form",
+            method="post",
+            action="/dashboard/update-password",
+            cls="",
+            role="form"
+        )
+
+class UserInviteForm:
+    """User invitation form component."""
+    
+    def __init__(self, translations=None):
+        """Initialize the user invite form component."""
+        self.translations = translations or {}
+    
+    def get_text(self, key: str, default: str = "") -> str:
+        """Get translated text for the given key."""
+        return self.translations.get(key, default)
+    
+    def render(self):
+        """Render the user invitation form."""
+        return Form(
+            Div(
+                P(self.get_text("invite_subtitle", "Invite a new user to join your club by sending them a registration link."), 
+                  cls="text-gray-600 mb-4"),
+                
+                # Error message container
+                Div(
+                    id="invite-error",
+                    cls="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+                ),
+                
+                # Success message container
+                Div(
+                    id="invite-success",
+                    cls="hidden mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+                ),
+                
+                Div(
+                    Label(self.get_text("email_address", "Email Address"), for_="invite_email", cls="block text-sm font-medium text-gray-700 mb-1"),
+                    Input(type="email", id="invite_email", name="invite_email", 
+                          placeholder=self.get_text("email_placeholder", "user@example.com"),
+                          required=True, aria_required="true",
+                          cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
+                    Div(self.get_text("email_help", "Enter the email address of the person you want to invite"), cls="text-xs text-gray-500 mt-1"),
+                    cls="flex flex-col gap-2"
+                ),
+                
+                Div(
+                    Button(
+                        self.get_text("send_invitation", "Send Invitation"),
+                        type="submit",
+                        id="invite-btn",
+                        data_sending_text=self.get_text("sending", "Sending..."),
+                        data_default_text=self.get_text("send_invitation", "Send Invitation"),
+                        cls="w-full bg-[#94C46F] hover:bg-[#94C46F]/90 text-white font-medium py-2 px-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"
+                    ),
+                    cls="flex flex-col"
+                ),
+                
+                cls="flex flex-col gap-4"
+            ),
+            id="invite-form",
+            method="post",
+            action="/dashboard/invite-user",
+            cls="",
+            role="form"
+        )

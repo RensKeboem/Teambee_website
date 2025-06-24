@@ -73,6 +73,28 @@
     "contact": "Contact",
     "rights_reserved": "All rights reserved."
   },
+  "dashboard": {
+    "title": "Teambee Dashboard",
+    "page_title": "Dashboard",
+    "welcome": "Welkom,",
+    "welcome_message": "Welkom bij je Teambee Dashboard",
+    "welcome_subtitle": "Gebruik het gebruikersmenu rechtsboven om je wachtwoord bij te werken of nieuwe gebruikers uit te nodigen voor je club.",
+    "update_password": "Wachtwoord Bijwerken",
+    "invite_new_user": "Nieuwe Gebruiker Uitnodigen",
+    "logout": "Uitloggen",
+    "current_password": "Huidig Wachtwoord",
+    "new_password": "Nieuw Wachtwoord",
+    "confirm_new_password": "Bevestig Nieuw Wachtwoord",
+    "password_min_length": "Wachtwoord moet minimaal 8 tekens lang zijn",
+    "update_password_button": "Wachtwoord Bijwerken",
+    "updating": "Bijwerken...",
+    "invite_subtitle": "Nodig een nieuwe gebruiker uit om lid te worden van je club door hen een registratielink te sturen.",
+    "email_address": "E-mailadres",
+    "email_placeholder": "gebruiker@voorbeeld.com",
+    "email_help": "Voer het e-mailadres in van de persoon die je wilt uitnodigen",
+    "send_invitation": "Uitnodiging Versturen",
+    "sending": "Versturen..."
+  },
   "language": {
     "switch_to": "English"
   }

@@ -46,6 +46,7 @@ class LoginForm:
                         Label(self.get_text("password", "Password"), for_=self.get_id("password"), cls="block text-sm font-medium text-gray-700"),
                         Button(self.get_text("forgot_password", "Forgot password?"), 
                                type="button", id=self.get_id("forgot-password-btn"), aria_label="Reset your password",
+                               tabindex="-1",
                                cls="text-sm text-[#3D2E7C] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded bg-transparent border-none p-0 cursor-pointer"),
                         cls="flex items-center justify-between mb-1"
                     ),

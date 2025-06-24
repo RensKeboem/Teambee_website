@@ -266,6 +266,7 @@ class AdminPanelLayout:
                 Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
                 Link(rel="stylesheet", href="/static/app.css", type="text/css"),
                 Link(rel="icon", href="/static/assets/Teambee icon.png", type="image/png"),
+                Script(src="/static/js/admin-search.js"),
             ),
             Body(
                 # Header

@@ -124,6 +124,7 @@ class TeambeeApp:
                 Script(src=self.versioned_url("/static/js/scroll-animations.js")),
                 Script(src=self.versioned_url("/static/js/login-popup.js")),
                 Script(src=self.versioned_url("/static/js/ajax-login.js")),
+                Script(src=self.versioned_url("/static/js/admin-search.js")),
             ],
             middleware=middleware
         )
@@ -575,13 +576,24 @@ class TeambeeApp:
                                 ),
                                 cls="px-4 py-2 text-sm"
                             ),
-                            cls="border-b hover:bg-gray-50"
+                            cls="border-b hover:bg-gray-50 user-row"
                         )
                     )
             
             content = Div(
                 Div(
-                    H1("All Users", cls="text-3xl font-bold text-[#3D2E7C] mb-8"),
+                    H1("All Users", cls="text-3xl font-bold text-[#3D2E7C] mb-4"),
+                    
+                    # Search bar
+                    Div(
+                        Input(
+                            type="text",
+                            id="user-search",
+                            placeholder="Search by email...",
+                            cls="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:border-[#3D2E7C]"
+                        ),
+                        cls="mb-6"
+                    ),
                     
                     Div(
                         Table(
@@ -597,11 +609,20 @@ class TeambeeApp:
                                     cls="bg-gray-50"
                                 )
                             ),
-                            Tbody(*user_rows),
+                            Tbody(*user_rows, id="users-tbody"),
                             cls="min-w-full divide-y divide-gray-200"
                         ),
+                        
+                        # No results message (initially hidden)
+                        Div(
+                            P("No users found matching your search.", cls="text-center text-gray-500 py-8"),
+                            id="no-users-found",
+                            cls="hidden bg-white shadow-sm rounded-lg p-4"
+                        ),
+                        
                         cls="bg-white shadow-sm rounded-lg overflow-hidden"
                     ),
+
                     
                     cls="container mx-auto px-4"
                 ),
@@ -638,7 +659,7 @@ class TeambeeApp:
                                   cls="text-[#3D2E7C] hover:underline text-sm"),
                                 cls="px-4 py-3 text-sm"
                             ),
-                            cls="border-b hover:bg-gray-50"
+                            cls="border-b hover:bg-gray-50 club-row"
                         )
                     )
             
@@ -646,9 +667,17 @@ class TeambeeApp:
                 Div(
                     H1("All Clubs", cls="text-3xl font-bold text-[#3D2E7C] mb-4"),
                     
+                    # Action bar with search and create button
                     Div(
+                        Input(
+                            type="text",
+                            id="club-search",
+                            placeholder="Search by club name...",
+                            cls="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:border-[#3D2E7C]"
+                        ),
                         A("Create New Club", href="/admin/create-club", 
-                          cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90 mb-6"),
+                          cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90"),
+                        cls="flex justify-between items-center gap-4 mb-6"
                     ),
                     
                     Div(
@@ -664,11 +693,20 @@ class TeambeeApp:
                                     cls="bg-gray-50"
                                 )
                             ),
-                            Tbody(*club_rows),
+                            Tbody(*club_rows, id="clubs-tbody"),
                             cls="min-w-full divide-y divide-gray-200"
                         ),
+                        
+                        # No results message (initially hidden)
+                        Div(
+                            P("No clubs found matching your search.", cls="text-center text-gray-500 py-8"),
+                            id="no-clubs-found",
+                            cls="hidden bg-white shadow-sm rounded-lg p-4"
+                        ),
+                        
                         cls="bg-white shadow-sm rounded-lg overflow-hidden"
                     ),
+
                     
                     cls="container mx-auto px-4"
                 ),

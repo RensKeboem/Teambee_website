@@ -117,5 +117,22 @@
     "invalid_expired_title": "Ongeldige of Verlopen Reset Link",
     "invalid_expired_message": "Deze wachtwoord reset link is ongeldig of verlopen.",
     "request_new_link": "Nieuwe Reset Link Aanvragen"
+  },
+  "contact": {
+    "title": "Neem Contact Op",
+    "subtitle": "Vul onderstaand formulier in en we nemen zo snel mogelijk contact met je op.",
+    "services_title": "Informatie Aanvragen",
+    "services_subtitle": "Vertel ons over je club en we laten je zien hoe Teambee je kan helpen groeien.",
+    "first_name": "Voornaam",
+    "last_name": "Achternaam",
+    "club_name": "Clubnaam",
+    "email": "E-mailadres",
+    "phone": "Telefoonnummer",
+    "submit": "Bericht Versturen",
+    "sending": "Versturen...",
+    "success_message": "Bedankt voor je bericht! We nemen snel contact met je op.",
+    "error_message": "Sorry, er is een fout opgetreden bij het versturen van je bericht. Probeer het opnieuw.",
+    "all_fields_required": "Alle velden zijn verplicht",
+    "invalid_email": "Voer een geldig e-mailadres in"
   }
 } 

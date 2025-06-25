@@ -27,7 +27,7 @@ class RegistrationForm:
                             placeholder=" ", 
                             value=pre_filled_email,
                             required=True,
-                            pattern="^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$",
+                            pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$",
                             cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C] peer invalid:[&:not(:placeholder-shown):not(:focus)]:border-red-500"
                         ),
                         Span(
@@ -629,7 +629,7 @@ class PasswordUpdateForm:
         )
 
 class UserInviteForm:
-    """User invitation form component."""
+    """User invite form component."""
     
     def __init__(self, translations=None):
         """Initialize the user invite form component."""
@@ -640,11 +640,13 @@ class UserInviteForm:
         return self.translations.get(key, default)
     
     def render(self):
-        """Render the user invitation form."""
-        return Form(
+        """Render the user invite form."""
+        return Div(
             Div(
-                P(self.get_text("invite_subtitle", "Invite a new user to join your club by sending them a registration link."), 
-                  cls="text-gray-600 mb-4"),
+                H3(
+                    self.get_text("invite_subtitle", "Invite New User"),
+                    cls="text-lg font-semibold text-[#3D2E7C] mb-4"
+                ),
                 
                 # Error message container
                 Div(
@@ -658,33 +660,224 @@ class UserInviteForm:
                     cls="hidden mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
                 ),
                 
-                Div(
-                    Label(self.get_text("email_address", "Email Address"), for_="invite_email", cls="block text-sm font-medium text-gray-700 mb-1"),
-                    Input(type="email", id="invite_email", name="invite_email", 
-                          placeholder=self.get_text("email_placeholder", "user@example.com"),
-                          required=True, aria_required="true",
-                          cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
-                    Div(self.get_text("email_help", "Enter the email address of the person you want to invite"), cls="text-xs text-gray-500 mt-1"),
-                    cls="flex flex-col gap-2"
+                Form(
+                    P(
+                        self.get_text("invite_subtitle", "Invite a new user to join your club by sending them a registration link."),
+                        cls="text-gray-600 mb-4"
                 ),
                 
                 Div(
-                    Button(
-                        self.get_text("send_invitation", "Send Invitation"),
-                        type="submit",
-                        id="invite-btn",
-                        data_sending_text=self.get_text("sending", "Sending..."),
-                        data_default_text=self.get_text("send_invitation", "Send Invitation"),
-                        cls="w-full bg-[#94C46F] hover:bg-[#94C46F]/90 text-white font-medium py-2 px-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2"
+                        Label(
+                            self.get_text("email_address", "Email Address"),
+                            for_="invite_email",
+                            cls="block text-sm font-medium text-gray-700 mb-1"
+                        ),
+                        Input(
+                            type="email",
+                            id="invite_email",
+                            name="invite_email",
+                            placeholder=self.get_text("email_placeholder", "user@example.com"),
+                            required=True,
+                            cls="w-full px-3 py-2 border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"
+                        ),
+                        Div(
+                            self.get_text("email_help", "Enter the email address of the person you want to invite"),
+                            cls="text-xs text-gray-500 mt-1"
+                        ),
+                        cls="mb-4"
                     ),
-                    cls="flex flex-col"
+                    
+                    Button(
+                        Span(self.get_text("send_invitation", "Send Invitation"), id="invite-button-text"),
+                        Span(self.get_text("sending", "Sending..."), id="invite-button-loading", cls="hidden"),
+                        type="submit",
+                        id="invite-submit-btn",
+                        cls="w-full bg-[#3D2E7C] hover:bg-[#3D2E7C]/90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
+                    ),
+                    
+                    method="post",
+                    action="/dashboard/invite-user",
+                    id="invite-form"
                 ),
-                
-                cls="flex flex-col gap-4"
+                cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100"
             ),
-            id="invite-form",
-            method="post",
-            action="/dashboard/invite-user",
-            cls="",
-            role="form"
+            cls="max-w-md mx-auto"
+        )
+
+class ContactForm:
+    """Contact form component for contact us and services inquiries."""
+    
+    def __init__(self, translations=None, versioned_url=None):
+        """Initialize the contact form component."""
+        self.translations = translations or {}
+        self.versioned_url = versioned_url or (lambda x: x)
+    
+    def get_text(self, key: str, default: str = "") -> str:
+        """Get translated text for the given key."""
+        return self.translations.get(key, default)
+    
+    def render(self):
+        """Render the contact form popup."""
+        return Div(
+            # Modal backdrop
+            Div(
+                # Modal content
+                Div(
+                    # Modal header
+                    Div(
+                        H2(
+                            self.get_text("title", "Contact Us"),
+                            cls="text-2xl font-bold text-[#3D2E7C] mb-2",
+                            id="contact-form-title"
+                        ),
+                        Button(
+                            Img(
+                                src=self.versioned_url("/static/assets/close.svg"),
+                                alt="Close",
+                                cls="w-6 h-6 filter brightness-0"
+                            ),
+                            id="close-contact-popup",
+                            cls="text-gray-700 hover:text-gray-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded-lg"
+                        ),
+                        cls="flex justify-between items-center mb-6"
+                    ),
+                    
+                    # Modal body
+                    Div(
+                        P(
+                            self.get_text("subtitle", "Fill out the form below and we'll get back to you as soon as possible."),
+                            cls="text-gray-600 mb-6",
+                            id="contact-form-subtitle"
+                        ),
+                        
+                        # Error message container
+                        Div(
+                            id="contact-error",
+                            cls="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+                        ),
+                        
+                        # Success message container
+                        Div(
+                            id="contact-success",
+                            cls="hidden mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+                        ),
+                        
+                        # Contact form
+                        Form(
+                            # Hidden field for form type
+                            Input(
+                                type="hidden",
+                                id="form_type",
+                                name="form_type",
+                                value=""
+                            ),
+                            
+                            # First name field
+                            Div(
+                                Label(
+                                    self.get_text("first_name", "First Name"),
+                                    for_="contact_first_name",
+                                    cls="block text-sm font-medium text-gray-700 mb-1"
+                                ),
+                                Input(
+                                    type="text",
+                                    id="contact_first_name",
+                                    name="first_name",
+                                    required=True,
+                                    cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"
+                                ),
+                                cls="mb-4"
+                            ),
+                            
+                            # Last name field
+                            Div(
+                                Label(
+                                    self.get_text("last_name", "Last Name"),
+                                    for_="contact_last_name",
+                                    cls="block text-sm font-medium text-gray-700 mb-1"
+                                ),
+                                Input(
+                                    type="text",
+                                    id="contact_last_name",
+                                    name="last_name",
+                                    required=True,
+                                    cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"
+                                ),
+                                cls="mb-4"
+                            ),
+                            
+                            # Club name field
+                            Div(
+                                Label(
+                                    self.get_text("club_name", "Club Name"),
+                                    for_="contact_club_name",
+                                    cls="block text-sm font-medium text-gray-700 mb-1"
+                                ),
+                                Input(
+                                    type="text",
+                                    id="contact_club_name",
+                                    name="club_name",
+                                    required=True,
+                                    cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"
+                                ),
+                                cls="mb-4"
+                            ),
+                            
+                            # Email field
+                            Div(
+                                Label(
+                                    self.get_text("email", "Email"),
+                                    for_="contact_email",
+                                    cls="block text-sm font-medium text-gray-700 mb-1"
+                                ),
+                                Input(
+                                    type="email",
+                                    id="contact_email",
+                                    name="email",
+                                    required=True,
+                                    cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"
+                                ),
+                                cls="mb-4"
+                            ),
+                            
+                            # Phone number field
+                            Div(
+                                Label(
+                                    self.get_text("phone", "Phone Number"),
+                                    for_="contact_phone",
+                                    cls="block text-sm font-medium text-gray-700 mb-1"
+                                ),
+                                Input(
+                                    type="tel",
+                                    id="contact_phone",
+                                    name="phone",
+                                    required=True,
+                                    cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"
+                                ),
+                                cls="mb-6"
+                            ),
+                            
+                            # Submit button
+                            Button(
+                                Span(self.get_text("submit", "Send Message"), id="contact-button-text"),
+                                Span(self.get_text("sending", "Sending..."), id="contact-button-loading", cls="hidden"),
+                                type="submit",
+                                id="contact-submit-btn",
+                                disabled=True,
+                                cls="w-full bg-gray-400 cursor-not-allowed disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
+                            ),
+                            
+                            method="post",
+                            action="/contact",
+                            id="contact-form"
+                        ),
+                        cls=""
+                    ),
+                    
+                    cls="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-auto transform transition-all duration-300 ease-out scale-95 opacity-0"
+                ),
+                cls="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            ),
+            id="contact-popup",
+            cls="hidden"
         )

@@ -71,8 +71,12 @@ class LoginForm:
                     
                     Div(
                         self.get_text("no_account", "Don't have an account?") + " ",
-                        A(self.get_text("contact_us", "Contact us"), href="mailto:info@teambee.fit", aria_label="Contact us to create a new account",
-                          cls="text-[#3D2E7C] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded"),
+                        Button(self.get_text("contact_us", "Contact us"), 
+                               type="button", 
+                               id=self.get_id("contact-us-button"),
+                               data_form_type="ongoing",
+                               aria_label="Contact us to create a new account",
+                               cls="text-[#3D2E7C] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded bg-transparent border-none p-0 cursor-pointer underline"),
                         cls="text-center text-sm text-gray-500 mt-3"
                     ),
                     cls="flex flex-col"

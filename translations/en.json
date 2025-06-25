@@ -117,5 +117,22 @@
     "invalid_expired_title": "Invalid or Expired Reset Link",
     "invalid_expired_message": "This password reset link is invalid or has expired.",
     "request_new_link": "Request New Reset Link"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Fill out the form below and we'll get back to you as soon as possible.",
+    "services_title": "Request Information",
+    "services_subtitle": "Tell us about your club and we'll show you how Teambee can help you grow.",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "club_name": "Club Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "submit": "Send Message",
+    "sending": "Sending...",
+    "success_message": "Thank you for your message! We'll get back to you soon.",
+    "error_message": "Sorry, there was an error sending your message. Please try again.",
+    "all_fields_required": "All fields are required",
+    "invalid_email": "Please enter a valid email address"
   }
 } 

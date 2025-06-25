@@ -1,12 +1,15 @@
 from fasthtml.common import *
 from login_form import LoginForm
 from auth import AuthManager
-from forms import RegistrationForm, PasswordResetForm, DashboardLayout, AdminPanelLayout, ClubForm
+from forms import RegistrationForm, PasswordResetForm, DashboardLayout, AdminPanelLayout, ClubForm, ContactForm
 from database_manager import DatabaseManager
 from datetime import datetime
 import os
 import time
 import json
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from starlette.staticfiles import StaticFiles
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware import Middleware
@@ -977,6 +980,114 @@ class TeambeeApp:
                 return RedirectResponse(url="/admin/users?success=user_deleted", status_code=302)
             else:
                 return RedirectResponse(url=f"/admin/users?error={message}", status_code=302)
+        
+        # Contact form route
+        @rt("/contact", methods=["POST"])
+        async def contact_handler(request):
+            """Handle contact form submissions."""
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            
+            # Get current language for translations
+            self.request = request
+            current_lang = request.state.language
+            
+            try:
+                form = await request.form()
+                first_name = form.get("first_name", "").strip()
+                last_name = form.get("last_name", "").strip()
+                club_name = form.get("club_name", "").strip()
+                email = form.get("email", "").strip()
+                phone = form.get("phone", "").strip()
+                form_type = form.get("form_type", "").strip()
+                
+                # Validate required fields
+                if not all([first_name, last_name, club_name, email, phone]):
+                    error_msg = self.get_text("contact", "all_fields_required") or "All fields are required"
+                    if is_ajax:
+                        return {"success": False, "message": error_msg}
+                    else:
+                        return RedirectResponse(url="/?error=missing_fields", status_code=302)
+                
+                # Validate email format
+                if "@" not in email or "." not in email:
+                    error_msg = self.get_text("contact", "invalid_email") or "Please enter a valid email address"
+                    if is_ajax:
+                        return {"success": False, "message": error_msg}
+                    else:
+                        return RedirectResponse(url="/?error=invalid_email", status_code=302)
+                
+                # Determine form type identifier
+                identifier = "CRM" if form_type == "services" else "Ongoing"
+                
+                # Send email
+                success, message = self.send_contact_email(
+                    first_name, last_name, club_name, email, phone, identifier
+                )
+                
+                if is_ajax:
+                    if success:
+                        success_msg = self.get_text("contact", "success_message") or "Thank you for your message! We'll get back to you soon."
+                        return {"success": True, "message": success_msg}
+                    else:
+                        error_msg = self.get_text("contact", "error_message") or "Sorry, there was an error sending your message. Please try again."
+                        return {"success": False, "message": error_msg}
+                else:
+                    if success:
+                        return RedirectResponse(url="/?success=contact_sent", status_code=302)
+                    else:
+                        return RedirectResponse(url="/?error=contact_failed", status_code=302)
+                
+            except Exception as e:
+                print(f"Contact form error: {e}")
+                error_msg = self.get_text("contact", "error_message") or "Sorry, there was an error sending your message. Please try again."
+                if is_ajax:
+                    return {"success": False, "message": error_msg}
+                else:
+                    return RedirectResponse(url="/?error=contact_failed", status_code=302)
+    
+    def send_contact_email(self, first_name, last_name, club_name, email, phone, identifier):
+        """Send contact form email to info@teambee.fit."""
+        try:
+            # Use the same email configuration as auth system
+            email_user = os.getenv("EMAIL_USER")
+            email_password = os.getenv("EMAIL_PASSWORD")
+            from_email = os.getenv("FROM_EMAIL", email_user)
+            smtp_server = os.getenv("SMTP_SERVER")
+            smtp_port = int(os.getenv("SMTP_PORT"))
+            
+            # Create message
+            msg = MIMEMultipart()
+            msg['From'] = from_email
+            msg['To'] = "info@teambee.fit"
+            msg['Subject'] = f"New Contact Form Submission - {identifier}"
+            
+            # Email body
+            body = f"""
+New contact form submission:
+
+Name: {first_name} {last_name}
+Club: {club_name}
+Email: {email}
+Phone: {phone}
+Type: {identifier}
+
+---
+This message was sent from the Teambee website contact form.
+            """
+            
+            msg.attach(MIMEText(body, 'plain'))
+            
+            # Send email
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(email_user, email_password)
+                server.send_message(msg)
+            
+            return True, "Email sent successfully"
+            
+        except Exception as e:
+            print(f"Email sending error: {e}")
+            return False, f"Failed to send email: {str(e)}"
     
     def create_homepage(self):
         """Create the Teambee homepage."""
@@ -1034,6 +1145,9 @@ class TeambeeApp:
             
             # Login popup modal
             self._create_login_popup(),
+            
+            # Contact popup modal
+            self._create_contact_popup(),
             
             cls="flex min-h-screen flex-col relative"
         )
@@ -1145,7 +1259,7 @@ class TeambeeApp:
                                 "Our services",
                                 Span("→", cls="ml-2"),
                                 cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:-translate-y-2 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 animate-card",
-                                data_scroll_to="services"
+                                id="hero-services-button"
                             ),
                             cls="flex flex-col sm:flex-row gap-4"
                         ),
@@ -1307,7 +1421,8 @@ class TeambeeApp:
                                 Button(
                                     self.get_text("services", "cta"),
                                     cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
-                                    data_scroll_to="contact"
+                                    id="services-cta-button",
+                                    data_form_type="services"
                                 ),
                                 cls="text-center mt-4"
                             ),
@@ -1354,7 +1469,7 @@ class TeambeeApp:
                                 Button(
                                     self.get_text("services", "view_report"),
                                     cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
-                                    data_scroll_to="contact"
+                                    data_form_type="services"
                                 ),
                                 cls="text-center mt-4"
                             ),
@@ -1772,6 +1887,14 @@ class TeambeeApp:
             id="login-popup",
             cls="hidden"
         )
+    
+    def _create_contact_popup(self):
+        """Create the contact popup modal."""
+        # Get contact translations for the current language
+        contact_translations = self.translations.get(self.request.state.language, {}).get("contact", {})
+        contact_form = ContactForm(contact_translations, self.versioned_url)
+        
+        return contact_form.render()
     
     def _create_footer(self):
         """Create the footer section."""

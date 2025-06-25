@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             successDiv.textContent = result.message;
                             successDiv.classList.remove('hidden');
                         }
-                        setTimeout(hideContactPopup, 2000);
+                        setTimeout(hideContactPopup, 3000);
                     } else {
                         if (errorDiv) {
                             errorDiv.textContent = result.message;

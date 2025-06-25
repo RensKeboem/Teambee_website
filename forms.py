@@ -569,6 +569,16 @@ class PasswordUpdateForm:
     def render(self):
         """Render the password update form."""
         return Form(
+            # Hidden username field for accessibility (password managers need this)
+            Input(
+                type="text",
+                name="username",
+                autocomplete="username",
+                style="display: none;",
+                tabindex="-1",
+                aria_hidden="true"
+            ),
+            
             Div(
                 # Error message container
                 Div(
@@ -585,7 +595,7 @@ class PasswordUpdateForm:
                 Div(
                     Label(self.get_text("current_password", "Current Password"), for_="current_password", cls="block text-sm font-medium text-gray-700 mb-1"),
                     Input(type="password", id="current_password", name="current_password", 
-                          required=True, aria_required="true",
+                          required=True, aria_required="true", autocomplete="current-password",
                           cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
                     cls="flex flex-col gap-2"
                 ),
@@ -593,7 +603,7 @@ class PasswordUpdateForm:
                 Div(
                     Label(self.get_text("new_password", "New Password"), for_="new_password", cls="block text-sm font-medium text-gray-700 mb-1"),
                     Input(type="password", id="new_password", name="new_password", 
-                          required=True, aria_required="true", minlength="8",
+                          required=True, aria_required="true", minlength="8", autocomplete="new-password",
                           cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
                     Div(self.get_text("password_min_length", "Password must be at least 8 characters long"), cls="text-xs text-gray-500 mt-1"),
                     cls="flex flex-col gap-2"
@@ -602,7 +612,7 @@ class PasswordUpdateForm:
                 Div(
                     Label(self.get_text("confirm_new_password", "Confirm New Password"), for_="confirm_new_password", cls="block text-sm font-medium text-gray-700 mb-1"),
                     Input(type="password", id="confirm_new_password", name="confirm_new_password", 
-                          required=True, aria_required="true",
+                          required=True, aria_required="true", autocomplete="new-password",
                           cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
                     cls="flex flex-col gap-2"
                 ),

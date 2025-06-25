@@ -283,6 +283,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (result.success) {
                     showMessage('password-update-success', result.message);
                     passwordUpdateForm.reset();
+                    // Auto-close popup after 3 seconds
+                    setTimeout(() => {
+                        const passwordUpdatePopup = document.getElementById('password-update-popup');
+                        if (passwordUpdatePopup && !passwordUpdatePopup.classList.contains('hidden')) {
+                            closePopup(passwordUpdatePopup);
+                        }
+                    }, 3000);
                 } else {
                     showMessage('password-update-error', result.message);
                 }
@@ -303,6 +310,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Real-time form validation
         function validateInviteForm() {
+            if (!submitButton || !emailInput) return;
+            
             const email = emailInput.value.trim();
             const emailPattern = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
             

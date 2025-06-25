@@ -97,5 +97,25 @@
   },
   "language": {
     "switch_to": "English"
+  },
+  "password_reset": {
+    "title": "Wachtwoord Resetten",
+    "request_title": "Wachtwoord Resetten",
+    "request_subtitle": "Voer je e-mailadres in en we sturen je een link om je wachtwoord te resetten.",
+    "email_label": "E-mailadres",
+    "email_placeholder": "naam@voorbeeld.com",
+    "send_reset_link": "Reset Link Versturen",
+    "sending": "Versturen...",
+    "back_to_login": "Terug naar Inloggen",
+    "set_new_password_title": "Nieuw Wachtwoord Instellen",
+    "new_password_label": "Nieuw Wachtwoord",
+    "confirm_password_label": "Bevestig Nieuw Wachtwoord",
+    "password_min_length": "Wachtwoord moet minimaal 8 tekens lang zijn",
+    "passwords_mismatch": "Wachtwoorden komen niet overeen",
+    "reset_password_button": "Wachtwoord Resetten",
+    "resetting": "Resetten...",
+    "invalid_expired_title": "Ongeldige of Verlopen Reset Link",
+    "invalid_expired_message": "Deze wachtwoord reset link is ongeldig of verlopen.",
+    "request_new_link": "Nieuwe Reset Link Aanvragen"
   }
 } 

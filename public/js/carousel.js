@@ -91,10 +91,10 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Add event listeners
   function addEventListeners() {
-    // Touch events
-    slides.addEventListener('touchstart', touchStart);
-    slides.addEventListener('touchmove', touchMove);
-    slides.addEventListener('touchend', touchEnd);
+    // Touch events (passive for performance)
+    slides.addEventListener('touchstart', touchStart, { passive: false });
+    slides.addEventListener('touchmove', touchMove, { passive: true });
+    slides.addEventListener('touchend', touchEnd, { passive: true });
     
     // Mouse events
     slides.addEventListener('mousedown', touchStart);
@@ -120,9 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Pause autoplay on hover or touch
+    // Pause autoplay on hover or touch (passive for performance)
     slider.addEventListener('mouseenter', stopAutoplay);
-    slider.addEventListener('touchstart', stopAutoplay);
+    slider.addEventListener('touchstart', stopAutoplay, { passive: true });
     
     // Resume autoplay when mouse leaves
     slider.addEventListener('mouseleave', startAutoplay);

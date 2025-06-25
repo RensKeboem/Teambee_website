@@ -255,7 +255,7 @@ class AuthManager:
             self.logger.error(f"Error authenticating user: {e}")
             return False, None, f"Authentication error: {str(e)}"
     
-    def initiate_password_reset(self, email: str) -> Tuple[bool, str]:
+    def initiate_password_reset(self, email: str, language: str = "nl") -> Tuple[bool, str]:
         """Initiate password reset by sending email with reset link."""
         try:
             # Check if user exists
@@ -278,20 +278,21 @@ class AuthManager:
             with self.db.engine.connect() as conn:
                 conn.execute(
                     text("""
-                        INSERT INTO password_resets (user_id, token, expires_at)
-                        VALUES (:user_id, :token, :expires_at)
+                        INSERT INTO password_resets (user_id, token, expires_at, language)
+                        VALUES (:user_id, :token, :expires_at, :language)
                     """),
                     {
                         "user_id": user_id,
                         "token": token,
-                        "expires_at": expires_at
+                        "expires_at": expires_at,
+                        "language": language
                     }
                 )
                 conn.commit()
             
             # Send reset email
             reset_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/reset-password/{token}"
-            success = self._send_password_reset_email(user_email, reset_link)
+            success = self.send_password_reset_email(user_email, reset_link)
             
             if success:
                 return True, "If the email exists in our system, a reset link has been sent"
@@ -308,7 +309,7 @@ class AuthManager:
             # Verify token
             reset_data = self.db.fetch_one(
                 """
-                SELECT pr.user_id, pr.expires_at, pr.used_at
+                SELECT pr.user_id, pr.expires_at, pr.used_at, pr.language
                 FROM password_resets pr
                 WHERE pr.token = :token
                 """,
@@ -318,7 +319,7 @@ class AuthManager:
             if not reset_data:
                 return False, "Invalid or expired reset token"
             
-            user_id, expires_at, used_at = reset_data
+            user_id, expires_at, used_at, language = reset_data
             
             # Check if token is expired
             if datetime.now() > expires_at:
@@ -327,6 +328,25 @@ class AuthManager:
             # Check if token was already used
             if used_at:
                 return False, "Reset token has already been used"
+            
+            # Validate new password length
+            if len(new_password) < 8:
+                return False, "New password must be at least 8 characters long"
+            
+            # Get current password to check if new password is the same
+            user_data = self.db.fetch_one(
+                "SELECT password_hash, salt FROM users WHERE user_id = :user_id",
+                {"user_id": user_id}
+            )
+            
+            if not user_data:
+                return False, "User not found"
+            
+            current_password_hash, current_salt = user_data
+            
+            # Check if new password is the same as current password
+            if self._verify_password(new_password, current_password_hash, current_salt):
+                return False, "New password cannot be the same as your current password"
             
             # Hash new password
             password_hash, salt = self._hash_password(new_password)
@@ -367,6 +387,22 @@ class AuthManager:
         except Exception as e:
             self.logger.error(f"Error resetting password: {e}")
             return False, f"Error resetting password: {str(e)}"
+    
+    def get_reset_token_language(self, token: str) -> Optional[str]:
+        """Get the language for a password reset token."""
+        try:
+            reset_data = self.db.fetch_one(
+                "SELECT language FROM password_resets WHERE token = :token",
+                {"token": token}
+            )
+            
+            if reset_data:
+                return reset_data[0] or "nl"  # Default to Dutch if language is None
+            return "nl"  # Default fallback
+            
+        except Exception as e:
+            self.logger.error(f"Error getting reset token language: {e}")
+            return "nl"  # Default fallback
     
     def create_registration_token(self, club_id: int, expires_hours: int = 24) -> Optional[str]:
         """Create a single-use registration token for a specific club."""
@@ -631,6 +667,10 @@ class AuthManager:
             if len(new_password) < 8:
                 return False, "New password must be at least 8 characters long"
             
+            # Check if new password is the same as current password
+            if self._verify_password(new_password, stored_hash, salt):
+                return False, "New password cannot be the same as your current password"
+            
             # Hash new password
             new_password_hash, new_salt = self._hash_password(new_password)
             
@@ -703,19 +743,20 @@ class AuthManager:
             self.logger.error(f"Error inviting user to club: {e}")
             return False, "Error sending invitation"
     
-    def _send_password_reset_email(self, to_email: str, reset_link: str) -> bool:
+    def send_password_reset_email(self, to_email: str, reset_link: str) -> bool:
         """Send password reset email."""
         try:
             if not all([self.email_user, self.email_password, self.from_email]):
                 self.logger.warning("Email configuration incomplete, cannot send reset email")
                 return False
             
-            msg = MIMEMultipart()
+            msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
             msg['Subject'] = "Teambee - Password Reset Request"
             
-            body = f"""
+            # Plain text version
+            text_body = f"""
             Dear User,
             
             You requested a password reset for your Teambee account.
@@ -731,7 +772,78 @@ class AuthManager:
             The Teambee Team
             """
             
-            msg.attach(MIMEText(body, 'plain'))
+            # HTML version with styled button
+            html_body = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Teambee Password Reset</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+                    <div style="background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">Password Reset Request</h1>
+                        </div>
+                        
+                        <p style="font-size: 16px; margin-bottom: 20px;">Dear User,</p>
+                        
+                        <p style="font-size: 16px; margin-bottom: 25px;">
+                            You requested a password reset for your Teambee account. Click the button below to create a new password.
+                        </p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{reset_link}" 
+                               style="display: inline-block; 
+                                      background-color: #3D2E7C; 
+                                      color: white; 
+                                      text-decoration: none; 
+                                      padding: 15px 30px; 
+                                      border-radius: 8px; 
+                                      font-size: 16px; 
+                                      font-weight: bold;
+                                      transition: background-color 0.3s ease;">
+                                Reset My Password
+                            </a>
+                        </div>
+                        
+                        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin: 25px 0;">
+                            <p style="font-size: 14px; color: #856404; margin: 0;">
+                                <strong>⚠️ Important:</strong> This link will expire in <strong>1 hour</strong>. If you don't reset your password within this time, you'll need to request a new reset link.
+                            </p>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #666; margin-top: 20px;">
+                            If the button above doesn't work, you can copy and paste this link into your browser:<br>
+                            <a href="{reset_link}" style="color: #3D2E7C; word-break: break-all;">{reset_link}</a>
+                        </p>
+                        
+                        <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; margin: 25px 0;">
+                            <p style="font-size: 14px; color: #495057; margin: 0;">
+                                <strong>Didn't request this?</strong> If you did not request a password reset, please ignore this email. Your password will remain unchanged.
+                            </p>
+                        </div>
+                        
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                        
+                        <p style="font-size: 14px; color: #666; margin-bottom: 0;">
+                            Best regards,<br>
+                            <strong>The Teambee Team</strong>
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Attach both parts
+            text_part = MIMEText(text_body, 'plain')
+            html_part = MIMEText(html_body, 'html')
+            
+            msg.attach(text_part)
+            msg.attach(html_part)
             
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()
@@ -790,12 +902,13 @@ class AuthManager:
                 self.logger.warning("Email configuration incomplete, cannot send invitation email")
                 return False
             
-            msg = MIMEMultipart()
+            msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
             msg['Subject'] = f"Teambee - You're invited to join {club_name}"
             
-            body = f"""
+            # Plain text version
+            text_body = f"""
             Dear User,
             
             You have been invited by {inviter_email} to join {club_name} on Teambee.
@@ -809,7 +922,70 @@ class AuthManager:
             The Teambee Team
             """
             
-            msg.attach(MIMEText(body, 'plain'))
+            # HTML version with styled button
+            html_body = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Teambee Invitation</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+                    <div style="background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">You're Invited to Join {club_name}!</h1>
+                        </div>
+                        
+                        <p style="font-size: 16px; margin-bottom: 20px;">Dear User,</p>
+                        
+                        <p style="font-size: 16px; margin-bottom: 25px;">
+                            You have been invited by <strong>{inviter_email}</strong> to join <strong>{club_name}</strong> on Teambee.
+                        </p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{registration_link}" 
+                               style="display: inline-block; 
+                                      background-color: #94C46F; 
+                                      color: white; 
+                                      text-decoration: none; 
+                                      padding: 15px 30px; 
+                                      border-radius: 8px; 
+                                      font-size: 16px; 
+                                      font-weight: bold;
+                                      transition: background-color 0.3s ease;">
+                                Create Your Account
+                            </a>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #666; margin-top: 25px;">
+                            <strong>Note:</strong> This invitation will expire in 24 hours.
+                        </p>
+                        
+                        <p style="font-size: 14px; color: #666; margin-top: 20px;">
+                            If the button above doesn't work, you can copy and paste this link into your browser:<br>
+                            <a href="{registration_link}" style="color: #3D2E7C; word-break: break-all;">{registration_link}</a>
+                        </p>
+                        
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                        
+                        <p style="font-size: 14px; color: #666; margin-bottom: 0;">
+                            Best regards,<br>
+                            <strong>The Teambee Team</strong>
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # Attach both parts
+            text_part = MIMEText(text_body, 'plain')
+            html_part = MIMEText(html_body, 'html')
+            
+            msg.attach(text_part)
+            msg.attach(html_part)
             
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()

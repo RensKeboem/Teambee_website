@@ -36,6 +36,7 @@ class LoginForm:
                     Label(self.get_text("email_label", "Email"), for_=self.get_id("email"), cls="block text-sm font-medium text-gray-700 mb-1"),
                     Input(type="email", id=self.get_id("email"), name="email", placeholder=self.get_text("email_placeholder", "name@example.com"), 
                           required=True, aria_required="true", aria_describedby=self.get_id("email-hint"),
+                          autocomplete="username",
                           cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
                     Div(id=self.get_id("email-hint"), cls="sr-only", text="Please enter your email address"),
                     cls="flex flex-col gap-2"
@@ -52,6 +53,7 @@ class LoginForm:
                     ),
                     Input(type="password", id=self.get_id("password"), name="password", 
                           required=True, aria_required="true", aria_describedby=self.get_id("password-hint"),
+                          autocomplete="current-password",
                           cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
                     Div(id=self.get_id("password-hint"), cls="sr-only", text="Please enter your password"),
                     cls="flex flex-col gap-2"

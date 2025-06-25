@@ -148,6 +148,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // === CLUB LANGUAGE DROPDOWN ===
+    
+    function setupClubLanguageDropdown() {
+        const button = document.getElementById('club-language-dropdown-button');
+        const menu = document.getElementById('club-language-dropdown-menu');
+        const hiddenInput = document.getElementById('language');
+        const displaySpan = document.getElementById('language-display');
+        const languageOptions = menu ? menu.querySelectorAll('.language-option') : [];
+        
+        if (!button || !menu || !hiddenInput || !displaySpan) return;
+        
+        // Set up basic dropdown functionality
+        setupDropdown('club-language-dropdown-button', 'club-language-dropdown-menu');
+        
+        // Handle language option selection
+        languageOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const value = this.getAttribute('data-value');
+                const text = this.textContent.trim();
+                
+                // Update hidden input value
+                hiddenInput.value = value;
+                
+                // Update display text
+                displaySpan.textContent = text;
+                
+                // Close dropdown
+                menu.classList.add('hidden');
+                menu.classList.remove('visible');
+                button.setAttribute('aria-expanded', 'false');
+                
+                // Update selection styling
+                languageOptions.forEach(opt => {
+                    opt.classList.remove('text-[#3D2E7C]', 'font-semibold', 'bg-gray-50');
+                    opt.classList.add('text-gray-700');
+                });
+                this.classList.remove('text-gray-700');
+                this.classList.add('text-[#3D2E7C]', 'font-semibold', 'bg-gray-50');
+            });
+        });
+        
+        // Set initial selection styling for default value (Dutch/nl)
+        if (languageOptions.length > 0) {
+            const defaultOption = Array.from(languageOptions).find(opt => 
+                opt.getAttribute('data-value') === hiddenInput.value
+            );
+            if (defaultOption) {
+                defaultOption.classList.remove('text-gray-700');
+                defaultOption.classList.add('text-[#3D2E7C]', 'font-semibold', 'bg-gray-50');
+            }
+        }
+    }
+    
     // === SPECIFIC IMPLEMENTATIONS ===
     
     // Language dropdown
@@ -158,5 +214,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // User dropdown (if exists)
     setupDropdown('user-dropdown-button', 'user-dropdown-menu');
+    
+    // Club language dropdown (for create club form)
+    setupClubLanguageDropdown();
     
 }); 

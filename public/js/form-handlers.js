@@ -177,7 +177,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const originalText = forgotPasswordBtn.textContent;
                 forgotPasswordBtn.textContent = 'Sending...';
                 
-                fetch('/forgot-password', {
+                // Detect language from current page URL and build the correct action URL
+                const currentPath = window.location.pathname;
+                const isEnglish = currentPath.startsWith('/en');
+                const actionUrl = isEnglish ? '/en/forgot-password' : '/forgot-password';
+                
+                fetch(actionUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -244,5 +249,135 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorMsg.classList.add('hidden');
             }
         });
+    }
+    
+    // === PASSWORD RESET VALIDATION ===
+    const resetSubmitButton = document.getElementById('reset-password-submit-btn');
+    const resetForm = document.getElementById('reset-password-form');
+    const resetErrorContainer = document.getElementById('reset-error');
+    const resetSuccessContainer = document.getElementById('reset-success');
+    
+    if (resetSubmitButton && passwordField && confirmPasswordField && errorMsg) {
+        function validateResetForm() {
+            const password = passwordField.value;
+            const confirmPassword = confirmPasswordField.value;
+            let isValid = true;
+            
+            // Check password length
+            if (password.length < 8) {
+                isValid = false;
+            }
+            
+            // Check if passwords match
+            if (password && confirmPassword && password !== confirmPassword) {
+                confirmPasswordField.setCustomValidity('Passwords do not match');
+                errorMsg.classList.remove('hidden');
+                confirmPasswordField.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                confirmPasswordField.setCustomValidity('');
+                errorMsg.classList.add('hidden');
+                confirmPasswordField.classList.remove('border-red-500');
+            }
+            
+            // Check if both fields are filled
+            if (!password || !confirmPassword) {
+                isValid = false;
+            }
+            
+            // Update submit button state
+            if (isValid) {
+                resetSubmitButton.disabled = false;
+                resetSubmitButton.classList.remove('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+                resetSubmitButton.classList.add('bg-[#3D2E7C]', 'hover:bg-[#3D2E7C]/90');
+            } else {
+                resetSubmitButton.disabled = true;
+                resetSubmitButton.classList.add('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+                resetSubmitButton.classList.remove('hover:bg-[#3D2E7C]/90');
+            }
+            
+            return isValid;
+        }
+        
+        // Initial validation
+        validateResetForm();
+        
+        // Add real-time validation listeners
+        passwordField.addEventListener('input', validateResetForm);
+        confirmPasswordField.addEventListener('input', validateResetForm);
+        
+        // Enhanced blur validation
+        confirmPasswordField.addEventListener('blur', function() {
+            if (this.value && passwordField.value !== this.value) {
+                errorMsg.classList.remove('hidden');
+                this.classList.add('border-red-500');
+            }
+            validateResetForm();
+        });
+        
+        // Enhanced focus handling
+        confirmPasswordField.addEventListener('focus', function() {
+            this.classList.remove('border-red-500');
+            if (this.value === passwordField.value) {
+                errorMsg.classList.add('hidden');
+            }
+        });
+        
+        // Form submission handling
+        if (resetForm) {
+            resetForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!validateResetForm()) {
+                    showMessage(resetErrorContainer, 'Please fill in all fields correctly.');
+                    return;
+                }
+                
+                // Show loading state
+                resetSubmitButton.disabled = true;
+                resetSubmitButton.textContent = resetSubmitButton.dataset.loadingText || 'Resetting...';
+                hideMessage(resetErrorContainer);
+                hideMessage(resetSuccessContainer);
+                
+                try {
+                    const formData = new FormData(resetForm);
+                    
+                    const response = await fetch(window.location.pathname, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showMessage(resetSuccessContainer, result.message);
+                        resetForm.reset();
+                        
+                        // Redirect after a short delay to show success message
+                        if (result.redirect) {
+                            setTimeout(() => {
+                                window.location.href = result.redirect;
+                            }, 2000);
+                        }
+                    } else {
+                        showMessage(resetErrorContainer, result.message);
+                        
+                        // Clear password fields and focus on first field when there's an error
+                        if (passwordField) passwordField.value = '';
+                        if (confirmPasswordField) confirmPasswordField.value = '';
+                        if (passwordField) passwordField.focus();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage(resetErrorContainer, 'An error occurred. Please try again.');
+                } finally {
+                    resetSubmitButton.textContent = resetSubmitButton.dataset.defaultText || 'Reset Password';
+                    validateResetForm(); // Re-validate to restore button state
+                }
+            });
+        }
     }
 }); 

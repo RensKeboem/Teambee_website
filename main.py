@@ -490,8 +490,12 @@ class TeambeeApp:
             """Handle both GET and POST for forgot password."""
             if request.method == "GET":
                 # Show forgot password form
-                reset_form = PasswordResetForm()
-                return Title("Reset Password"), Div(
+                # Get current language from request state or URL
+                current_lang = getattr(request.state, 'language', 'nl')
+                password_reset_translations = self.translations.get(current_lang, {}).get("password_reset", {})
+                
+                reset_form = PasswordResetForm(password_reset_translations, current_lang)
+                return Title(password_reset_translations.get("title", "Reset Password")), Div(
                     reset_form.render_request_form(),
                     cls="min-h-screen flex items-center justify-center bg-gray-50 py-12"
                 )
@@ -509,13 +513,16 @@ class TeambeeApp:
                 form = await request.form()
                 email = form.get("email", "").strip()
                 
+                # Get current language from request state
+                current_lang = getattr(request.state, 'language', 'nl')
+                
                 if not email:
                     if is_ajax:
                         return {"success": False, "message": "Please enter your email address"}
                     else:
                         return RedirectResponse(url="/forgot-password?error=missing_email", status_code=302)
                 
-                success, message = self.auth.initiate_password_reset(email)
+                success, message = self.auth.initiate_password_reset(email, current_lang)
                 
                 if is_ajax:
                     if success:
@@ -539,6 +546,10 @@ class TeambeeApp:
             
             if request.method == "GET":
                 # Show password reset form
+                # Get the language for this reset token
+                reset_language = self.auth.get_reset_token_language(token)
+                password_reset_translations = self.translations.get(reset_language, {}).get("password_reset", {})
+                
                 # Validate token
                 reset_data = self.auth.db.fetch_one(
                     "SELECT user_id, expires_at, used_at FROM password_resets WHERE token = :token",
@@ -546,43 +557,79 @@ class TeambeeApp:
                 )
                 
                 if not reset_data or reset_data[2] or datetime.now() > reset_data[1]:  # used_at or expired
-                    return Title("Invalid Reset Link"), Div(
+                    return Title(password_reset_translations.get("invalid_expired_title", "Invalid Reset Link")), Div(
                         Div(
-                            H1("Invalid or Expired Reset Link", cls="text-3xl font-bold text-red-600 mb-4"),
-                            P("This password reset link is invalid or has expired.", cls="text-gray-600 mb-4"),
-                            A("Request New Reset Link", href="/forgot-password", cls="text-[#3D2E7C] hover:underline"),
+                            H1(password_reset_translations.get("invalid_expired_title", "Invalid or Expired Reset Link"), cls="text-3xl font-bold text-red-600 mb-4"),
+                            P(password_reset_translations.get("invalid_expired_message", "This password reset link is invalid or has expired."), cls="text-gray-600 mb-4"),
+                            A(password_reset_translations.get("request_new_link", "Request New Reset Link"), href="/forgot-password", cls="text-[#3D2E7C] hover:underline"),
                             cls="text-center"
                         ),
                         cls="min-h-screen flex items-center justify-center bg-gray-50"
                     )
                 
-                reset_form = PasswordResetForm()
-                return Title("Reset Password"), Div(
-                    reset_form.render_reset_form(),
-                    cls="min-h-screen flex items-center justify-center bg-gray-50 py-12"
+                reset_form = PasswordResetForm(password_reset_translations, reset_language)
+                return Html(
+                    Head(
+                        Title(password_reset_translations.get("title", "Reset Password")),
+                        Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
+                        Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
+                        Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
+                        Script(src=self.versioned_url("/static/js/form-handlers.js")),
+                    ),
+                    Body(
+                        Div(
+                            Div(
+                                reset_form.render_reset_form(),
+                                cls="w-full max-w-md"
+                            ),
+                            cls="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4"
+                        )
+                    )
                 )
             
             elif request.method == "POST":
                 # Handle password reset
+                is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                
                 form = await request.form()
                 password = form.get("password", "")
                 confirm_password = form.get("confirm_password", "")
                 
+                # Validate input
                 if not password or not confirm_password:
-                    return RedirectResponse(url=f"/reset-password/{token}?error=missing_fields", status_code=302)
+                    error_message = "Both password fields are required"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url=f"/reset-password/{token}?error=missing_fields", status_code=302)
                 
                 if password != confirm_password:
-                    return RedirectResponse(url=f"/reset-password/{token}?error=passwords_dont_match", status_code=302)
+                    error_message = "Passwords do not match"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url=f"/reset-password/{token}?error=passwords_dont_match", status_code=302)
                 
                 if len(password) < 8:
-                    return RedirectResponse(url=f"/reset-password/{token}?error=password_too_short", status_code=302)
+                    error_message = "Password must be at least 8 characters long"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url=f"/reset-password/{token}?error=password_too_short", status_code=302)
                 
+                # Try to reset password
                 success, message = self.auth.reset_password(token, password)
                 
-                if success:
-                    return RedirectResponse(url="/?success=password_reset", status_code=302)
+                if is_ajax:
+                    if success:
+                        return {"success": True, "message": "Password reset successfully! You can now log in with your new password.", "redirect": "/"}
+                    else:
+                        return {"success": False, "message": message}
                 else:
-                    return RedirectResponse(url=f"/reset-password/{token}?error={message}", status_code=302)
+                    if success:
+                        return RedirectResponse(url="/?success=password_reset", status_code=302)
+                    else:
+                        return RedirectResponse(url=f"/reset-password/{token}?error={message}", status_code=302)
         
         # Admin panel routes
         @rt("/admin")
@@ -600,7 +647,7 @@ class TeambeeApp:
                 return RedirectResponse(url="/", status_code=302)
             
             user_info = self.get_current_user(request)
-            admin_layout = AdminPanelLayout()
+            admin_layout = AdminPanelLayout(self.versioned_url)
             
             # Get all users
             users_df = self.auth.get_all_users()
@@ -699,7 +746,7 @@ class TeambeeApp:
                 return RedirectResponse(url="/", status_code=302)
             
             user_info = self.get_current_user(request)
-            admin_layout = AdminPanelLayout()
+            admin_layout = AdminPanelLayout(self.versioned_url)
             
             # Get all clubs
             clubs_df = self.auth.get_clubs()
@@ -788,8 +835,8 @@ class TeambeeApp:
             if request.method == "GET":
                 # Show the form
                 user_info = self.get_current_user(request)
-                admin_layout = AdminPanelLayout()
-                club_form = ClubForm()
+                admin_layout = AdminPanelLayout(self.versioned_url)
+                club_form = ClubForm(self.versioned_url)
                 
                 content = Div(
                     Div(
@@ -825,7 +872,7 @@ class TeambeeApp:
                             registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}"
                             
                             user_info = self.get_current_user(request)
-                            admin_layout = AdminPanelLayout()
+                            admin_layout = AdminPanelLayout(self.versioned_url)
                             
                             content = Div(
                                 Div(
@@ -883,7 +930,7 @@ class TeambeeApp:
                 registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}"
                 
                 user_info = self.get_current_user(request)
-                admin_layout = AdminPanelLayout()
+                admin_layout = AdminPanelLayout(self.versioned_url)
                 
                 content = Div(
                     Div(

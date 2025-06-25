@@ -97,5 +97,25 @@
   },
   "language": {
     "switch_to": "Nederlands"
+  },
+  "password_reset": {
+    "title": "Reset Password",
+    "request_title": "Reset Password",
+    "request_subtitle": "Enter your email address and we'll send you a link to reset your password.",
+    "email_label": "Email",
+    "email_placeholder": "name@example.com",
+    "send_reset_link": "Send Reset Link",
+    "sending": "Sending...",
+    "back_to_login": "Back to Login",
+    "set_new_password_title": "Set New Password",
+    "new_password_label": "New Password",
+    "confirm_password_label": "Confirm New Password",
+    "password_min_length": "Password must be at least 8 characters long",
+    "passwords_mismatch": "Passwords do not match",
+    "reset_password_button": "Reset Password",
+    "resetting": "Resetting...",
+    "invalid_expired_title": "Invalid or Expired Reset Link",
+    "invalid_expired_message": "This password reset link is invalid or has expired.",
+    "request_new_link": "Request New Reset Link"
   }
 } 

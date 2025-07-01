@@ -79,9 +79,13 @@ class TeambeeApp:
         self.version = str(int(time.time()))
         self.file_versions = {}
         
+        # Load translations first
+        self.translations = {}
+        self.load_translations()
+        
         # Initialize authentication manager
         try:
-            self.auth = AuthManager(DatabaseManager())
+            self.auth = AuthManager(DatabaseManager(), self.translations)
         except Exception as e:
             print(f"Warning: Could not initialize authentication: {e}")
             self.auth = None
@@ -96,10 +100,6 @@ class TeambeeApp:
         # Only add HTTPS redirect in production
         if os.environ.get("ENVIRONMENT", "development") == "production":
             middleware.append(Middleware(HTTPSRedirectMiddleware))
-        
-        # Load translations
-        self.translations = {}
-        self.load_translations()
             
         self.app = FastHTML(
             hdrs=[
@@ -1013,6 +1013,7 @@ class TeambeeApp:
                         return RedirectResponse(url="/admin/clubs?error=club_not_found", status_code=302)
                 
                 club_name = club_row.iloc[0]['name']
+                club_language = club_row.iloc[0].get('language', 'nl')
                 
                 # Create registration token
                 token = self.auth.create_registration_token(club_id)
@@ -1026,7 +1027,7 @@ class TeambeeApp:
                 
                 # Send registration email
                 registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}?email={email}"
-                success = self.auth.send_registration_email(email, registration_link, club_name)
+                success = self.auth.send_registration_email(email, registration_link, club_name, club_language)
                 
                 if success:
                     success_message = f"Registration link sent to {email}"
@@ -2115,7 +2116,7 @@ This message was sent from the Teambee website contact form.
                                     alt="Instagram",
                                     cls="w-6 h-6"
                                 ),
-                                href="https://www.instagram.com/keboemmastersinretention/",
+                                href="https://www.instagram.com/teamteambee/",
                                 target="_blank",
                                 rel="noopener noreferrer",
                                 aria_label="Follow us on Instagram",
@@ -2130,7 +2131,7 @@ This message was sent from the Teambee website contact form.
                                     alt="LinkedIn",
                                     cls="w-6 h-6"
                                 ),
-                                href="https://linkedin.com/company/keboem",
+                                href="https://www.linkedin.com/company/teambee-fit",
                                 target="_blank",
                                 rel="noopener noreferrer",
                                 aria_label="Connect with us on LinkedIn",

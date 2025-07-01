@@ -162,5 +162,47 @@
     "unexpected_error": "Unexpected error",
     "cannot_delete_self": "Cannot delete yourself",
     "contact_failed": "Contact failed"
+  },
+  "emails": {
+    "password_reset": {
+      "subject": "Teambee - Password Reset Request",
+      "title": "Password Reset Request",
+      "greeting": "Dear User,",
+      "message": "You requested a password reset for your Teambee account. Click the button below to create a new password.",
+      "button_text": "Reset Password",
+      "expiry_notice": "This link will expire in 1 hour.",
+      "fallback_text": "If the button above doesn't work, you can copy and paste this link into your browser:",
+      "ignore_notice": "Didn't request this?",
+      "ignore_message": "If you did not request a password reset, please ignore this email. Your password will remain unchanged.",
+      "signature": "Best regards,",
+      "team_name": "The Teambee Team",
+      "plain_text": "Dear User,\n\nYou requested a password reset for your Teambee account.\n\nPlease click the following link to reset your password:\n{reset_link}\n\nThis link will expire in 1 hour.\n\nIf you did not request this password reset, please ignore this email.\n\nBest regards,\nThe Teambee Team"
+    },
+    "registration": {
+      "subject": "Teambee - Registration Invitation for {club_name}",
+      "title": "Create Your Account for {club_name}",
+      "greeting": "Dear User,",
+      "message": "You have been invited to create an account for <strong>{club_name}</strong> on Teambee. Join our platform to access personalized fitness solutions and enhanced member experiences.",
+      "button_text": "Create Your Account",
+      "expiry_notice": "Important:",
+      "expiry_message": "This registration link will expire in 24 hours. Please complete your registration as soon as possible.",
+      "fallback_text": "If the button above doesn't work, you can copy and paste this link into your browser:",
+      "signature": "Best regards,",
+      "team_name": "The Teambee Team",
+      "plain_text": "Dear User,\n\nYou have been invited to create an account for {club_name} on Teambee.\n\nPlease click the following link to complete your registration:\n{registration_link}\n\nThis link will expire in 24 hours.\n\nBest regards,\nThe Teambee Team"
+    },
+    "invitation": {
+      "subject": "Teambee - You're invited to join {club_name}",
+      "title": "You're Invited to Join {club_name}!",
+      "greeting": "Dear User,",
+      "message": "You have been invited by <strong>{inviter_email}</strong> to join <strong>{club_name}</strong> on Teambee.",
+      "button_text": "Create Your Account",
+      "expiry_notice": "Note:",
+      "expiry_message": "This invitation will expire in 24 hours.",
+      "fallback_text": "If the button above doesn't work, you can copy and paste this link into your browser:",
+      "signature": "Best regards,",
+      "team_name": "The Teambee Team",
+      "plain_text": "Dear User,\n\nYou have been invited by {inviter_email} to join {club_name} on Teambee.\n\nPlease click the following link to create your account:\n{registration_link}\n\nThis invitation will expire in 24 hours.\n\nBest regards,\nThe Teambee Team"
+    }
   }
 } 

@@ -10,6 +10,7 @@ from sqlalchemy import text
 import logging
 import sys
 import pandas as pd
+from urllib.parse import quote
 
 # Import local database manager
 from database_manager import DatabaseManager
@@ -17,10 +18,11 @@ from database_manager import DatabaseManager
 class AuthManager:
     """Handles user authentication, registration, and password reset functionality."""
     
-    def __init__(self, db_manager: DatabaseManager = None):
-        """Initialize the AuthManager with database connection."""
+    def __init__(self, db_manager: DatabaseManager = None, translations: dict = None):
+        """Initialize the AuthManager with database connection and translations."""
         self.db = db_manager or DatabaseManager()
         self.logger = logging.getLogger(__name__)
+        self.translations = translations or {}
         
         # Email configuration - detect provider based on email domain
         self.email_user = os.getenv("EMAIL_USER")
@@ -36,6 +38,89 @@ class AuthManager:
             self.cleanup_expired_registration_data()
         except Exception as e:
             self.logger.warning(f"Initial cleanup failed: {e}")
+    
+    def get_email_text(self, language: str, email_type: str, key: str, default: str = "") -> str:
+        """Get translated email text for the given language, email type, and key."""
+        try:
+            return self.translations.get(language, {}).get("emails", {}).get(email_type, {}).get(key, default)
+        except (KeyError, AttributeError):
+            return default
+    
+    def _load_email_template(self, template_name: str, language: str = "en") -> Optional[str]:
+        """Load email template from file."""
+        try:
+            template_path = os.path.join("public", "email-templates", template_name, f"{template_name}-{language}.html")
+            
+            # Check if the language-specific template exists
+            if not os.path.exists(template_path):
+                # Fall back to English if the requested language doesn't exist
+                template_path = os.path.join("public", "email-templates", template_name, f"{template_name}-en.html")
+                
+                if not os.path.exists(template_path):
+                    self.logger.warning(f"Email template not found: {template_path}")
+                    return None
+            
+            with open(template_path, 'r', encoding='utf-8') as f:
+                return f.read()
+                
+        except Exception as e:
+            self.logger.error(f"Error loading email template {template_name}-{language}: {e}")
+            return None
+    
+    def _get_versioned_url(self, path: str) -> str:
+        """Generate versioned URL for static assets, similar to main.py implementation."""
+        if path.startswith("/static/"):
+            # Get file-specific version based on modification time
+            file_path = path.replace("/static/", "public/")
+            
+            try:
+                # Use last modification time for the file
+                if os.path.exists(file_path):
+                    version = str(int(os.path.getmtime(file_path)))
+                else:
+                    # Fallback to timestamp if file doesn't exist
+                    import time
+                    version = str(int(time.time()))
+            except:
+                # Fallback to timestamp
+                import time
+                version = str(int(time.time()))
+            
+            # URL encode the path to handle spaces and special characters
+            encoded_path = quote(path, safe='/:?=&')
+            return f"{encoded_path}?v={version}"
+        else:
+            return path
+    
+    def _process_email_template(self, template_content: str, placeholders: dict) -> str:
+        """Process email template by replacing placeholders."""
+        try:
+            processed_content = template_content
+            
+            # Get base URL from environment
+            base_url = os.getenv('BASE_URL', 'http://localhost:8000')
+            
+            # Generate versioned URLs for images
+            image_placeholders = {
+                'logo_url': f"{base_url}{self._get_versioned_url('/static/assets/Teambee logo donker.png')}",
+                'icon_url': f"{base_url}{self._get_versioned_url('/static/assets/password-reset.svg')}", 
+                'facebook_url': f"{base_url}{self._get_versioned_url('/static/assets/facebook-round.png')}",
+                'instagram_url': f"{base_url}{self._get_versioned_url('/static/assets/instagram-round.png')}",
+                'linkedin_url': f"{base_url}{self._get_versioned_url('/static/assets/linkedin-round.png')}"
+            }
+            
+            # Combine image placeholders with user-provided placeholders
+            all_placeholders = {**image_placeholders, **placeholders}
+            
+            # Replace all placeholders
+            for key, value in all_placeholders.items():
+                placeholder = f"{{{key}}}"
+                processed_content = processed_content.replace(placeholder, str(value))
+                
+            return processed_content
+        except Exception as e:
+            self.logger.error(f"Error processing email template: {e}")
+            return template_content
         
     def _hash_password(self, password: str, salt: str = None) -> Tuple[str, str]:
         """Hash password with salt."""
@@ -324,7 +409,7 @@ class AuthManager:
             
             # Send reset email
             reset_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/reset-password/{token}"
-            success = self.send_password_reset_email(user_email, reset_link)
+            success = self.send_password_reset_email(user_email, reset_link, language)
             
             if success:
                 return True, "If the email exists in our system, a reset link has been sent"
@@ -752,14 +837,14 @@ class AuthManager:
             
             # Check if club exists
             club = self.db.fetch_one(
-                "SELECT club_id, name FROM clubs WHERE club_id = :club_id",
+                "SELECT club_id, name, language FROM clubs WHERE club_id = :club_id",
                 {"club_id": club_id}
             )
             
             if not club:
                 return False, "Club not found"
             
-            club_id_db, club_name = club
+            club_id_db, club_name, club_language = club
             
             # Create registration token
             token = self.create_registration_token(club_id)
@@ -770,7 +855,7 @@ class AuthManager:
             # Send invitation email
             registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}?email={email}"
             
-            success = self.send_invitation_email(email, registration_link, club_name, inviter_email)
+            success = self.send_invitation_email(email, registration_link, club_name, inviter_email, club_language)
             
             if success:
                 return True, f"Invitation sent to {email}"
@@ -781,8 +866,8 @@ class AuthManager:
             self.logger.error(f"Error inviting user to club: {e}")
             return False, "Error sending invitation"
     
-    def send_password_reset_email(self, to_email: str, reset_link: str) -> bool:
-        """Send password reset email."""
+    def send_password_reset_email(self, to_email: str, reset_link: str, language: str = "nl") -> bool:
+        """Send password reset email using HTML template."""
         try:
             if not all([self.email_user, self.email_password, self.from_email]):
                 self.logger.warning("Email configuration incomplete, cannot send reset email")
@@ -791,90 +876,25 @@ class AuthManager:
             msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
-            msg['Subject'] = "Teambee - Password Reset Request"
+            msg['Subject'] = self.get_email_text(language, "password_reset", "subject", "Teambee - Password Reset Request")
             
             # Plain text version
-            text_body = f"""
-            Dear User,
+            text_body = self.get_email_text(language, "password_reset", "plain_text", 
+                "Dear User,\n\nYou requested a password reset for your Teambee account.\n\nPlease click the following link to reset your password:\n{reset_link}\n\nThis link will expire in 1 hour.\n\nIf you did not request this password reset, please ignore this email.\n\nBest regards,\nThe Teambee Team").format(reset_link=reset_link)
             
-            You requested a password reset for your Teambee account.
+            # Try to load HTML template
+            html_template = self._load_email_template("password-reset", language)
             
-            Please click the following link to reset your password:
-            {reset_link}
-            
-            This link will expire in 1 hour.
-            
-            If you did not request this password reset, please ignore this email.
-            
-            Best regards,
-            The Teambee Team
-            """
-            
-            # HTML version with styled button
-            html_body = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Teambee Password Reset</title>
-            </head>
-            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
-                    <div style="background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <div style="text-align: center; margin-bottom: 30px;">
-                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">Password Reset Request</h1>
-                        </div>
-                        
-                        <p style="font-size: 16px; margin-bottom: 20px;">Dear User,</p>
-                        
-                        <p style="font-size: 16px; margin-bottom: 25px;">
-                            You requested a password reset for your Teambee account. Click the button below to create a new password.
-                        </p>
-                        
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="{reset_link}" 
-                               style="display: inline-block; 
-                                      background-color: #3D2E7C; 
-                                      color: white; 
-                                      text-decoration: none; 
-                                      padding: 15px 30px; 
-                                      border-radius: 8px; 
-                                      font-size: 16px; 
-                                      font-weight: bold;
-                                      transition: background-color 0.3s ease;">
-                                Reset My Password
-                            </a>
-                        </div>
-                        
-                        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin: 25px 0;">
-                            <p style="font-size: 14px; color: #856404; margin: 0;">
-                                <strong>⚠️ Important:</strong> This link will expire in <strong>1 hour</strong>. If you don't reset your password within this time, you'll need to request a new reset link.
-                            </p>
-                        </div>
-                        
-                        <p style="font-size: 14px; color: #666; margin-top: 20px;">
-                            If the button above doesn't work, you can copy and paste this link into your browser:<br>
-                            <a href="{reset_link}" style="color: #3D2E7C; word-break: break-all;">{reset_link}</a>
-                        </p>
-                        
-                        <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; margin: 25px 0;">
-                            <p style="font-size: 14px; color: #495057; margin: 0;">
-                                <strong>Didn't request this?</strong> If you did not request a password reset, please ignore this email. Your password will remain unchanged.
-                            </p>
-                        </div>
-                        
-                        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                        
-                        <p style="font-size: 14px; color: #666; margin-bottom: 0;">
-                            Best regards,<br>
-                            <strong>The Teambee Team</strong>
-                        </p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
+            if html_template:
+                # Use the template and replace placeholders
+                placeholders = {
+                    "reset_link": reset_link
+                }
+                html_body = self._process_email_template(html_template, placeholders)
+            else:
+                # If template loading fails, return False to prevent sending malformed emails
+                self.logger.error(f"Could not load password reset template for {language}, email not sent")
+                return False
             
             # Attach both parts
             text_part = MIMEText(text_body, 'plain')
@@ -894,8 +914,8 @@ class AuthManager:
             self.logger.error(f"Error sending password reset email: {e}")
             return False
     
-    def send_registration_email(self, to_email: str, registration_link: str, club_name: str) -> bool:
-        """Send registration invitation email."""
+    def send_registration_email(self, to_email: str, registration_link: str, club_name: str, language: str = "nl") -> bool:
+        """Send registration invitation email with translation support."""
         try:
             if not all([self.email_user, self.email_password, self.from_email]):
                 self.logger.warning("Email configuration incomplete, cannot send registration email")
@@ -904,22 +924,11 @@ class AuthManager:
             msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
-            msg['Subject'] = f"Teambee - Registration Invitation for {club_name}"
+            msg['Subject'] = self.get_email_text(language, "registration", "subject", "Teambee - Registration Invitation for {club_name}").format(club_name=club_name)
 
             # Plain text version
-            text_body = f"""
-            Dear User,
-            
-            You have been invited to create an account for {club_name} on Teambee.
-            
-            Please click the following link to complete your registration:
-            {registration_link}
-            
-            This link will expire in 24 hours.
-            
-            Best regards,
-            The Teambee Team
-            """
+            text_body = self.get_email_text(language, "registration", "plain_text", 
+                "Dear User,\n\nYou have been invited to create an account for {club_name} on Teambee.\n\nPlease click the following link to complete your registration:\n{registration_link}\n\nThis link will expire in 24 hours.\n\nBest regards,\nThe Teambee Team").format(club_name=club_name, registration_link=registration_link)
 
             # HTML version with styled button
             html_body = f"""
@@ -934,13 +943,13 @@ class AuthManager:
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
                     <div style="background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                         <div style="text-align: center; margin-bottom: 30px;">
-                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">Create Your Account for {club_name}</h1>
+                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">{self.get_email_text(language, "registration", "title", "Create Your Account for {club_name}").format(club_name=club_name)}</h1>
                         </div>
                         
-                        <p style="font-size: 16px; margin-bottom: 20px;">Dear User,</p>
+                        <p style="font-size: 16px; margin-bottom: 20px;">{self.get_email_text(language, "registration", "greeting", "Dear User,")}</p>
                         
                         <p style="font-size: 16px; margin-bottom: 25px;">
-                            You have been invited to create an account for <strong>{club_name}</strong> on Teambee. Join our platform to access personalized fitness solutions and enhanced member experiences.
+                            {self.get_email_text(language, "registration", "message", "You have been invited to create an account for <strong>{club_name}</strong> on Teambee. Join our platform to access personalized fitness solutions and enhanced member experiences.").format(club_name=club_name)}
                         </p>
                         
                         <div style="text-align: center; margin: 30px 0;">
@@ -954,26 +963,26 @@ class AuthManager:
                                       font-size: 16px; 
                                       font-weight: bold;
                                       transition: background-color 0.3s ease;">
-                                Create Your Account
+                                {self.get_email_text(language, "registration", "button_text", "Create Your Account")}
                             </a>
                         </div>
                         
                         <div style="background-color: #f8f9fa; border-left: 4px solid #94C46F; padding: 15px; margin: 25px 0;">
                             <p style="font-size: 14px; color: #495057; margin: 0;">
-                                <strong>Important:</strong> This registration link will expire in 24 hours. Please complete your registration as soon as possible.
+                                <strong>{self.get_email_text(language, "registration", "expiry_notice", "Important:")}:</strong> {self.get_email_text(language, "registration", "expiry_message", "This registration link will expire in 24 hours. Please complete your registration as soon as possible.")}
                             </p>
                         </div>
                         
                         <p style="font-size: 14px; color: #666; margin-top: 20px;">
-                            If the button above doesn't work, you can copy and paste this link into your browser:<br>
+                            {self.get_email_text(language, "registration", "fallback_text", "If the button above doesn't work, you can copy and paste this link into your browser:")}<br>
                             <a href="{registration_link}" style="color: #3D2E7C; word-break: break-all;">{registration_link}</a>
                         </p>
                         
                         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
                         
                         <p style="font-size: 14px; color: #666; margin-bottom: 0;">
-                            Best regards,<br>
-                            <strong>The Teambee Team</strong>
+                            {self.get_email_text(language, "registration", "signature", "Best regards,")}<br>
+                            <strong>{self.get_email_text(language, "registration", "team_name", "The Teambee Team")}</strong>
                         </p>
                     </div>
                 </div>
@@ -999,8 +1008,8 @@ class AuthManager:
             self.logger.error(f"Error sending registration email: {e}")
             return False
     
-    def send_invitation_email(self, to_email: str, registration_link: str, club_name: str, inviter_email: str) -> bool:
-        """Send user invitation email."""
+    def send_invitation_email(self, to_email: str, registration_link: str, club_name: str, inviter_email: str, language: str = "nl") -> bool:
+        """Send user invitation email with translation support."""
         try:
             if not all([self.email_user, self.email_password, self.from_email]):
                 self.logger.warning("Email configuration incomplete, cannot send invitation email")
@@ -1009,22 +1018,11 @@ class AuthManager:
             msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
-            msg['Subject'] = f"Teambee - You're invited to join {club_name}"
+            msg['Subject'] = self.get_email_text(language, "invitation", "subject", "Teambee - You're invited to join {club_name}").format(club_name=club_name)
             
             # Plain text version
-            text_body = f"""
-            Dear User,
-            
-            You have been invited by {inviter_email} to join {club_name} on Teambee.
-            
-            Please click the following link to create your account:
-            {registration_link}
-            
-            This invitation will expire in 24 hours.
-            
-            Best regards,
-            The Teambee Team
-            """
+            text_body = self.get_email_text(language, "invitation", "plain_text", 
+                "Dear User,\n\nYou have been invited by {inviter_email} to join {club_name} on Teambee.\n\nPlease click the following link to create your account:\n{registration_link}\n\nThis invitation will expire in 24 hours.\n\nBest regards,\nThe Teambee Team").format(inviter_email=inviter_email, club_name=club_name, registration_link=registration_link)
             
             # HTML version with styled button
             html_body = f"""
@@ -1039,13 +1037,13 @@ class AuthManager:
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
                     <div style="background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                         <div style="text-align: center; margin-bottom: 30px;">
-                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">You're Invited to Join {club_name}!</h1>
+                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">{self.get_email_text(language, "invitation", "title", "You're Invited to Join {club_name}!").format(club_name=club_name)}</h1>
                         </div>
                         
-                        <p style="font-size: 16px; margin-bottom: 20px;">Dear User,</p>
+                        <p style="font-size: 16px; margin-bottom: 20px;">{self.get_email_text(language, "invitation", "greeting", "Dear User,")}</p>
                         
                         <p style="font-size: 16px; margin-bottom: 25px;">
-                            You have been invited by <strong>{inviter_email}</strong> to join <strong>{club_name}</strong> on Teambee.
+                            {self.get_email_text(language, "invitation", "message", "You have been invited by <strong>{inviter_email}</strong> to join <strong>{club_name}</strong> on Teambee.").format(inviter_email=inviter_email, club_name=club_name)}
                         </p>
                         
                         <div style="text-align: center; margin: 30px 0;">
@@ -1059,24 +1057,24 @@ class AuthManager:
                                       font-size: 16px; 
                                       font-weight: bold;
                                       transition: background-color 0.3s ease;">
-                                Create Your Account
+                                {self.get_email_text(language, "invitation", "button_text", "Create Your Account")}
                             </a>
                         </div>
                         
                         <p style="font-size: 14px; color: #666; margin-top: 25px;">
-                            <strong>Note:</strong> This invitation will expire in 24 hours.
+                            <strong>{self.get_email_text(language, "invitation", "expiry_notice", "Note:")}:</strong> {self.get_email_text(language, "invitation", "expiry_message", "This invitation will expire in 24 hours.")}
                         </p>
                         
                         <p style="font-size: 14px; color: #666; margin-top: 20px;">
-                            If the button above doesn't work, you can copy and paste this link into your browser:<br>
+                            {self.get_email_text(language, "invitation", "fallback_text", "If the button above doesn't work, you can copy and paste this link into your browser:")}<br>
                             <a href="{registration_link}" style="color: #3D2E7C; word-break: break-all;">{registration_link}</a>
                         </p>
                         
                         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
                         
                         <p style="font-size: 14px; color: #666; margin-bottom: 0;">
-                            Best regards,<br>
-                            <strong>The Teambee Team</strong>
+                            {self.get_email_text(language, "invitation", "signature", "Best regards,")}<br>
+                            <strong>{self.get_email_text(language, "invitation", "team_name", "The Teambee Team")}</strong>
                         </p>
                     </div>
                 </div>

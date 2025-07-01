@@ -162,5 +162,47 @@
     "unexpected_error": "Onverwachte fout",
     "cannot_delete_self": "Je kunt jezelf niet verwijderen",
     "contact_failed": "Contact mislukt"
+  },
+  "emails": {
+    "password_reset": {
+      "subject": "Teambee - Wachtwoord Reset Verzoek",
+      "title": "Wachtwoord Reset Verzoek",
+      "greeting": "Beste Gebruiker,",
+      "message": "Je hebt een wachtwoord reset aangevraagd voor je Teambee account. Klik op de onderstaande knop om een nieuw wachtwoord aan te maken.",
+      "button_text": "Wachtwoord Resetten",
+      "expiry_notice": "Deze link verloopt over 1 uur.",
+      "fallback_text": "Als de bovenstaande knop niet werkt, kun je deze link in je browser kopiëren en plakken:",
+      "ignore_notice": "Heb je dit niet aangevraagd?",
+      "ignore_message": "Als je geen wachtwoord reset hebt aangevraagd, kun je deze e-mail negeren. Je wachtwoord blijft ongewijzigd.",
+      "signature": "Met vriendelijke groet,",
+      "team_name": "Het Teambee Team",
+      "plain_text": "Beste Gebruiker,\n\nJe hebt een wachtwoord reset aangevraagd voor je Teambee account.\n\nKlik op de volgende link om je wachtwoord te resetten:\n{reset_link}\n\nDeze link verloopt over 1 uur.\n\nAls je geen wachtwoord reset hebt aangevraagd, kun je deze e-mail negeren.\n\nMet vriendelijke groet,\nHet Teambee Team"
+    },
+    "registration": {
+      "subject": "Teambee - Registratie Uitnodiging voor {club_name}",
+      "title": "Maak Je Account Aan voor {club_name}",
+      "greeting": "Beste Gebruiker,",
+      "message": "Je bent uitgenodigd om een account aan te maken voor <strong>{club_name}</strong> op Teambee. Word lid van ons platform voor toegang tot gepersonaliseerde fitnessoplossingen en verbeterde ledenervaringen.",
+      "button_text": "Account Aanmaken",
+      "expiry_notice": "Belangrijk:",
+      "expiry_message": "Deze registratielink verloopt over 24 uur. Voltooi je registratie zo snel mogelijk.",
+      "fallback_text": "Als de bovenstaande knop niet werkt, kun je deze link in je browser kopiëren en plakken:",
+      "signature": "Met vriendelijke groet,",
+      "team_name": "Het Teambee Team",
+      "plain_text": "Beste Gebruiker,\n\nJe bent uitgenodigd om een account aan te maken voor {club_name} op Teambee.\n\nKlik op de volgende link om je registratie te voltooien:\n{registration_link}\n\nDeze link verloopt over 24 uur.\n\nMet vriendelijke groet,\nHet Teambee Team"
+    },
+    "invitation": {
+      "subject": "Teambee - Je bent uitgenodigd om lid te worden van {club_name}",
+      "title": "Je bent Uitgenodigd om Lid te Worden van {club_name}!",
+      "greeting": "Beste Gebruiker,",
+      "message": "Je bent uitgenodigd door <strong>{inviter_email}</strong> om lid te worden van <strong>{club_name}</strong> op Teambee.",
+      "button_text": "Account Aanmaken",
+      "expiry_notice": "Let op:",
+      "expiry_message": "Deze uitnodiging verloopt over 24 uur.",
+      "fallback_text": "Als de bovenstaande knop niet werkt, kun je deze link in je browser kopiëren en plakken:",
+      "signature": "Met vriendelijke groet,",
+      "team_name": "Het Teambee Team",
+      "plain_text": "Beste Gebruiker,\n\nJe bent uitgenodigd door {inviter_email} om lid te worden van {club_name} op Teambee.\n\nKlik op de volgende link om je account aan te maken:\n{registration_link}\n\nDeze uitnodiging verloopt over 24 uur.\n\nMet vriendelijke groet,\nHet Teambee Team"
+    }
   }
 } 

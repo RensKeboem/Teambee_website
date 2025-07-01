@@ -134,5 +134,32 @@
     "error_message": "Sorry, there was an error sending your message. Please try again.",
     "all_fields_required": "All fields are required",
     "invalid_email": "Please enter a valid email address"
+  },
+  "messages": {
+    "auth_not_available": "Authentication service is currently unavailable",
+    "missing_credentials": "Please enter both email and password",
+    "invalid_credentials": "Invalid email or password. Please try again.",
+    "account_locked": "Your account has been temporarily locked due to multiple failed login attempts. Please try again later.",
+    "login_failed": "Login failed. Please try again.",
+    "authentication_required": "Authentication required",
+    "auth_service_unavailable": "Authentication service unavailable",
+    "all_fields_required": "All fields are required",
+    "passwords_no_match": "New passwords do not match",
+    "password_too_short": "New password must be at least 8 characters long",
+    "only_club_users_invite": "Only club users can invite new users",
+    "email_required": "Email address is required",
+    "valid_email_required": "Please enter a valid email address",
+    "enter_email_address": "Please enter your email address",
+    "password_reset_sent": "Password reset link has been sent to your email address if it exists in our system.",
+    "password_reset_success": "Password reset successfully! You can now log in with your new password.",
+    "both_passwords_required": "Both password fields are required",
+    "password_min_8_chars": "Password must be at least 8 characters long",
+    "missing_fields": "Missing fields",
+    "reset_failed": "Reset failed",
+    "missing_email": "Missing email",
+    "token_creation_failed": "Token creation failed",
+    "unexpected_error": "Unexpected error",
+    "cannot_delete_self": "Cannot delete yourself",
+    "contact_failed": "Contact failed"
   }
 } 

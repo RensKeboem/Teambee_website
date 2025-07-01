@@ -1,6 +1,25 @@
 // User dropdown and popup functionality
 
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // Translated messages for user dashboard forms
+    const userMessages = {
+        nl: {
+            passwordsNotMatch: 'Wachtwoorden komen niet overeen',
+            networkError: 'Er is een fout opgetreden. Probeer het opnieuw.',
+            sending: 'Versturen...',
+            updating: 'Bijwerken...'
+        },
+        en: {
+            passwordsNotMatch: 'Passwords do not match',
+            networkError: 'An error occurred. Please try again.',
+            sending: 'Sending...',
+            updating: 'Updating...'
+        }
+    };
+    
+    // Create translation function using shared utility
+    const getUserMessage = TeambeeUtils.createTranslationFunction(userMessages);
     const button = document.getElementById('user-dropdown-button');
     const menu = document.getElementById('user-dropdown-menu');
     
@@ -56,44 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const closePasswordButton = document.getElementById('close-password-popup');
     const closeInviteButton = document.getElementById('close-invite-popup');
     
-    // Function to prevent scrolling
-    function preventScroll(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-    
-    // Function to disable page scrolling
-    function disableScroll() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-        
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollTop}px`;
-        document.body.style.left = `-${scrollLeft}px`;
-        document.body.style.width = '100%';
-        
-        document.body.setAttribute('data-scroll-top', scrollTop);
-        document.body.setAttribute('data-scroll-left', scrollLeft);
-    }
-    
-    // Function to enable page scrolling
-    function enableScroll() {
-        const scrollTop = parseInt(document.body.getAttribute('data-scroll-top') || '0');
-        const scrollLeft = parseInt(document.body.getAttribute('data-scroll-left') || '0');
-        
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.width = '';
-        
-        window.scrollTo(scrollLeft, scrollTop);
-        
-        document.body.removeAttribute('data-scroll-top');
-        document.body.removeAttribute('data-scroll-left');
-    }
+
     
     // Open password update popup
     if (passwordUpdateOption && passwordUpdatePopup) {
@@ -106,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.setAttribute('aria-expanded', 'false');
             }
             
-            disableScroll();
+            TeambeeUtils.disableScroll();
             passwordUpdatePopup.classList.remove('hidden');
             
             setTimeout(() => {
@@ -130,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.setAttribute('aria-expanded', 'false');
             }
             
-            disableScroll();
+            TeambeeUtils.disableScroll();
             inviteUserPopup.classList.remove('hidden');
             
             setTimeout(() => {
@@ -191,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         setTimeout(() => {
             popup.classList.add('hidden');
-            enableScroll();
+            TeambeeUtils.enableScroll();
         }, 200);
     }
     
@@ -224,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Check password match
             if (confirmPassword && newPassword !== confirmPassword) {
-                confirmPasswordInput.setCustomValidity('Passwords do not match');
+                confirmPasswordInput.setCustomValidity(getUserMessage('passwordsNotMatch'));
                 confirmPasswordInput.classList.add('border-red-300');
                 isValid = false;
             } else {
@@ -257,15 +239,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Validate passwords match
             if (newPasswordInput.value !== confirmPasswordInput.value) {
-                showMessage('password-update-error', 'Passwords do not match');
+                TeambeeUtils.showMessage(document.getElementById('password-update-error'), getUserMessage('passwordsNotMatch'));
                 return;
             }
             
             // Show loading state
             submitButton.disabled = true;
-            submitButton.textContent = submitButton.dataset.updatingText || 'Updating...';
-            hideMessage('password-update-error');
-            hideMessage('password-update-success');
+            submitButton.textContent = submitButton.dataset.updatingText || getUserMessage('updating');
+            TeambeeUtils.hideMessage(document.getElementById('password-update-error'));
+            TeambeeUtils.hideMessage(document.getElementById('password-update-success'));
             
             try {
                 const formData = new FormData(passwordUpdateForm);
@@ -281,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage('password-update-success', result.message);
+                    TeambeeUtils.showMessage(document.getElementById('password-update-success'), result.message);
                     passwordUpdateForm.reset();
                     // Auto-close popup after 3 seconds
                     setTimeout(() => {
@@ -291,10 +273,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }, 3000);
                 } else {
-                    showMessage('password-update-error', result.message);
+                    TeambeeUtils.showMessage(document.getElementById('password-update-error'), result.message);
                 }
             } catch (error) {
-                showMessage('password-update-error', 'An error occurred. Please try again.');
+                TeambeeUtils.showMessage(document.getElementById('password-update-error'), getUserMessage('networkError'));
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = submitButton.dataset.defaultText || 'Update Password';
@@ -313,9 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!submitButton || !emailInput) return;
             
             const email = emailInput.value.trim();
-            const emailPattern = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
-            
-            const isValid = email && emailPattern.test(email);
+            const isValid = email && TeambeeUtils.validateEmail(email);
             
             // Update button state
             if (isValid) {
@@ -340,9 +320,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Show loading state
             submitButton.disabled = true;
-            submitButton.textContent = submitButton.dataset.sendingText || 'Sending...';
-            hideMessage('invite-error');
-            hideMessage('invite-success');
+            submitButton.textContent = submitButton.dataset.sendingText || getUserMessage('sending');
+            TeambeeUtils.hideMessage(document.getElementById('invite-error'));
+            TeambeeUtils.hideMessage(document.getElementById('invite-success'));
             
             try {
                 const formData = new FormData(inviteForm);
@@ -358,33 +338,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage('invite-success', result.message);
+                    TeambeeUtils.showMessage(document.getElementById('invite-success'), result.message);
                     inviteForm.reset();
                 } else {
-                    showMessage('invite-error', result.message);
+                    TeambeeUtils.showMessage(document.getElementById('invite-error'), result.message);
                 }
             } catch (error) {
-                showMessage('invite-error', 'An error occurred. Please try again.');
+                TeambeeUtils.showMessage(document.getElementById('invite-error'), getUserMessage('networkError'));
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = submitButton.dataset.defaultText || 'Send Invitation';
             }
         });
     }
-});
-
-function showMessage(elementId, message) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.textContent = message;
-        element.classList.remove('hidden');
-    }
-}
-
-function hideMessage(elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.classList.add('hidden');
-        element.textContent = '';
-    }
-} 
+}); 

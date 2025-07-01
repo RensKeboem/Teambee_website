@@ -3,42 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // === UTILITY FUNCTIONS ===
     
-    // Scroll prevention utilities
-    function preventScroll(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    }
-    
-    function disableScroll() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-        
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollTop}px`;
-        document.body.style.left = `-${scrollLeft}px`;
-        document.body.style.width = '100%';
-        
-        document.body.setAttribute('data-scroll-top', scrollTop);
-        document.body.setAttribute('data-scroll-left', scrollLeft);
-    }
-    
-    function enableScroll() {
-        const scrollTop = parseInt(document.body.getAttribute('data-scroll-top') || '0');
-        const scrollLeft = parseInt(document.body.getAttribute('data-scroll-left') || '0');
-        
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.width = '';
-        
-        window.scrollTo(scrollLeft, scrollTop);
-        
-        document.body.removeAttribute('data-scroll-top');
-        document.body.removeAttribute('data-scroll-left');
-    }
+
     
     // Generic dropdown handler
     function setupDropdown(buttonId, menuId) {
@@ -106,14 +71,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             setTimeout(() => {
                 popup.classList.add('hidden');
-                enableScroll();
+                TeambeeUtils.enableScroll();
             }, 200);
         }
         
         // Open popup
         openButton.addEventListener('click', function(e) {
             e.preventDefault();
-            disableScroll();
+            TeambeeUtils.disableScroll();
             popup.classList.remove('hidden');
             
             setTimeout(() => {
@@ -237,13 +202,22 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         // Get current language
-        function getCurrentLanguage() {
-            return window.location.pathname.startsWith('/en') ? 'en' : 'nl';
-        }
+        // Translated messages for contact form
+        const contactMessages = {
+            nl: {
+                networkError: 'Netwerkfout. Controleer je verbinding en probeer opnieuw.'
+            },
+            en: {
+                networkError: 'Network error. Please check your connection and try again.'
+            }
+        };
+        
+        // Create translation function using shared utility
+        const getContactMessage = TeambeeUtils.createTranslationFunction(contactMessages);
         
         // Show contact popup with form type
         function showContactPopup(formType = 'ongoing', fromPopup = false) {
-            const lang = getCurrentLanguage();
+            const lang = TeambeeUtils.getCurrentLanguage();
             const trans = translations[lang];
             const formTypeInput = document.getElementById('form_type');
             const contactFormTitle = document.getElementById('contact-form-title');
@@ -261,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Only disable scroll if not coming from another popup
             if (!fromPopup) {
-                disableScroll();
+                TeambeeUtils.disableScroll();
             }
             contactPopup.classList.remove('hidden');
             
@@ -291,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             setTimeout(() => {
                 contactPopup.classList.add('hidden');
-                enableScroll();
+                TeambeeUtils.enableScroll();
                 
                 // Reset form and validation state
                 if (contactForm) {
@@ -322,8 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 Object.entries(inputs).map(([key, input]) => [key, input.value.trim()])
             );
             
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const isEmailValid = emailRegex.test(values.email);
+            const isEmailValid = TeambeeUtils.validateEmail(values.email);
             const isFormValid = Object.values(values).every(Boolean) && isEmailValid;
             
             // Update submit button state
@@ -437,7 +410,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 try {
                     const formData = new FormData(contactForm);
-                    const response = await fetch('/contact', {
+                    
+                    // Detect language from current page URL and build the correct contact URL
+                    const isEnglish = TeambeeUtils.getCurrentLanguage() === 'en';
+                    const contactUrl = isEnglish ? '/en/contact' : '/contact';
+                    
+                    const response = await fetch(contactUrl, {
                         method: 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         body: formData
@@ -461,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Contact form error:', error);
                     if (errorDiv) {
                         // Use a generic error message - the server will provide translated messages for specific errors
-                        errorDiv.textContent = 'Network error. Please check your connection and try again.';
+                        errorDiv.textContent = getContactMessage('networkError');
                         errorDiv.classList.remove('hidden');
                     }
                 } finally {

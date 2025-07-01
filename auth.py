@@ -31,9 +31,6 @@ class AuthManager:
         self.smtp_server = os.getenv("SMTP_SERVER")
         self.smtp_port = int(os.getenv("SMTP_PORT")) if os.getenv("SMTP_PORT") else None
         
-        if not self.smtp_server or not self.smtp_port:
-            self._auto_configure_smtp()
-        
     def _hash_password(self, password: str, salt: str = None) -> Tuple[str, str]:
         """Hash password with salt."""
         if salt is None:
@@ -55,38 +52,6 @@ class AuthManager:
     def _generate_token(self, length: int = 32) -> str:
         """Generate a secure random token."""
         return secrets.token_urlsafe(length)
-    
-    def _auto_configure_smtp(self) -> None:
-        """Auto-configure SMTP settings based on email domain."""
-        if not self.email_user:
-            self.logger.warning("EMAIL_USER not configured, cannot auto-detect SMTP settings")
-            return
-        
-        domain = self.email_user.split('@')[-1].lower()
-        
-        # SMTP configurations for common email providers
-        smtp_configs = {
-            'gmail.com': ('smtp.gmail.com', 587),
-            'googlemail.com': ('smtp.gmail.com', 587),
-            'outlook.com': ('smtp-mail.outlook.com', 587),
-            'hotmail.com': ('smtp-mail.outlook.com', 587),
-            'live.com': ('smtp-mail.outlook.com', 587),
-            'msn.com': ('smtp-mail.outlook.com', 587),
-            'yahoo.com': ('smtp.mail.yahoo.com', 587),
-            'yahoo.co.uk': ('smtp.mail.yahoo.com', 587),
-            'icloud.com': ('smtp.mail.me.com', 587),
-            'me.com': ('smtp.mail.me.com', 587),
-            'mac.com': ('smtp.mail.me.com', 587),
-        }
-        
-        if domain in smtp_configs:
-            self.smtp_server, self.smtp_port = smtp_configs[domain]
-            self.logger.info(f"Auto-configured SMTP for {domain}: {self.smtp_server}:{self.smtp_port}")
-        else:
-            # Default fallback
-            self.smtp_server = "smtp.gmail.com"
-            self.smtp_port = 587
-            self.logger.warning(f"Unknown email domain {domain}, using Gmail defaults. Please set SMTP_SERVER and SMTP_PORT manually.")
     
     def create_user(self, email: str, password: str, club_id: int = None) -> Tuple[bool, str]:
         """Create a new user in the database."""
@@ -205,8 +170,8 @@ class AuthManager:
                 new_failed_attempts = failed_attempts + 1
                 lock_until = None
                 
-                # Lock account after 5 failed attempts for 30 minutes
-                if new_failed_attempts >= 5:
+                # Lock account after 10 failed attempts for 30 minutes
+                if new_failed_attempts >= 10:
                     lock_until = datetime.now() + timedelta(minutes=30)
                 
                 with self.db.engine.connect() as conn:

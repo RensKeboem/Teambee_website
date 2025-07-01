@@ -119,6 +119,7 @@ class TeambeeApp:
                 Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                 Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
                 # Scripts
+                Script(src=self.versioned_url("/static/js/shared-utils.js")),
                 Script(src=self.versioned_url("/static/js/ui-enhancements.js")),
                 Script(src=self.versioned_url("/static/js/popup-dropdown.js")),
                 Script(src=self.versioned_url("/static/js/form-handlers.js")),
@@ -161,6 +162,10 @@ class TeambeeApp:
                 return self.translations["nl"][section][key]
             except (KeyError, AttributeError):
                 return default
+    
+    def get_message(self, key, default=""):
+        """Get a translated message for the current language."""
+        return self.get_text("messages", key, default)
     
     def is_authenticated(self, request):
         """Check if user is authenticated."""
@@ -261,15 +266,15 @@ class TeambeeApp:
             else:
                 return RedirectResponse(url="/en", status_code=302)
         
-        # Authentication routes
-        @rt("/login", methods=["POST"])
-        async def login(request):
+        # Authentication routes - shared login handler
+        async def login_handler(request):
             """Handle login form submission."""
+            self.request = request  # Store request for translation context
             is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
             
             if not self.auth:
                 if is_ajax:
-                    return {"success": False, "message": "Authentication service is currently unavailable"}
+                    return {"success": False, "message": self.get_message("auth_not_available")}
                 else:
                     return RedirectResponse(url="/?error=auth_not_available", status_code=302)
             
@@ -279,7 +284,7 @@ class TeambeeApp:
             
             if not email or not password:
                 if is_ajax:
-                    return {"success": False, "message": "Please enter both email and password"}
+                    return {"success": False, "message": self.get_message("missing_credentials")}
                 else:
                     return RedirectResponse(url="/?error=missing_credentials", status_code=302)
             
@@ -295,23 +300,30 @@ class TeambeeApp:
                 else:
                     return RedirectResponse(url=redirect_url, status_code=302)
             else:
-                # Convert error codes to user-friendly messages
-                error_messages = {
-                    "Invalid email or password": "Invalid email or password. Please try again.",
-                    "missing_credentials": "Please enter both email and password",
-                    "auth_not_available": "Authentication service is currently unavailable"
-                }
-                
                 # Check if message contains account lock information
                 if "Account is locked until" in message:
-                    user_message = "Your account has been temporarily locked due to multiple failed login attempts. Please try again later."
+                    user_message = self.get_message("account_locked")
+                elif message == "Invalid email or password":
+                    user_message = self.get_message("invalid_credentials")
                 else:
-                    user_message = error_messages.get(message, "Login failed. Please try again.")
+                    user_message = self.get_message("login_failed")
                 
                 if is_ajax:
                     return {"success": False, "message": user_message}
                 else:
                     return RedirectResponse(url=f"/?error={message}", status_code=302)
+        
+        # Dutch login route
+        @rt("/login", methods=["POST"])
+        async def login_nl(request):
+            """Handle login form submission for Dutch site."""
+            return await login_handler(request)
+        
+        # English login route  
+        @rt("/en/login", methods=["POST"])
+        async def login_en(request):
+            """Handle login form submission for English site."""
+            return await login_handler(request)
         
         @rt("/logout")
         async def logout(request):
@@ -345,14 +357,16 @@ class TeambeeApp:
         @rt("/dashboard/update-password", methods=["POST"])
         async def update_password(request):
             """Handle password update for authenticated users."""
+            self.request = request  # Store request for translation context
+            
             if not self.is_authenticated(request):
-                return {"success": False, "message": "Authentication required"}
+                return {"success": False, "message": self.get_message("authentication_required")}
             
             user_info = self.get_current_user(request)
             is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
             
             if not self.auth:
-                return {"success": False, "message": "Authentication service unavailable"}
+                return {"success": False, "message": self.get_message("auth_service_unavailable")}
             
             form = await request.form()
             current_password = form.get("current_password", "")
@@ -361,13 +375,13 @@ class TeambeeApp:
             
             # Validate input
             if not all([current_password, new_password, confirm_new_password]):
-                return {"success": False, "message": "All fields are required"}
+                return {"success": False, "message": self.get_message("all_fields_required")}
             
             if new_password != confirm_new_password:
-                return {"success": False, "message": "New passwords do not match"}
+                return {"success": False, "message": self.get_message("passwords_no_match")}
             
             if len(new_password) < 8:
-                return {"success": False, "message": "New password must be at least 8 characters long"}
+                return {"success": False, "message": self.get_message("password_too_short")}
             
             # Update password
             success, message = self.auth.update_user_password(
@@ -381,27 +395,29 @@ class TeambeeApp:
         @rt("/dashboard/invite-user", methods=["POST"])
         async def invite_user(request):
             """Handle user invitation for authenticated users."""
+            self.request = request  # Store request for translation context
+            
             if not self.is_authenticated(request):
-                return {"success": False, "message": "Authentication required"}
+                return {"success": False, "message": self.get_message("authentication_required")}
             
             user_info = self.get_current_user(request)
             
             # Only club users can invite (not admins)
             if not user_info.get("club_id"):
-                return {"success": False, "message": "Only club users can invite new users"}
+                return {"success": False, "message": self.get_message("only_club_users_invite")}
             
             if not self.auth:
-                return {"success": False, "message": "Authentication service unavailable"}
+                return {"success": False, "message": self.get_message("auth_service_unavailable")}
             
             form = await request.form()
             invite_email = form.get("invite_email", "").strip()
             
             # Validate input
             if not invite_email:
-                return {"success": False, "message": "Email address is required"}
+                return {"success": False, "message": self.get_message("email_required")}
             
             if "@" not in invite_email:
-                return {"success": False, "message": "Please enter a valid email address"}
+                return {"success": False, "message": self.get_message("valid_email_required")}
             
             # Send invitation
             success, message = self.auth.invite_user_to_club(
@@ -488,12 +504,10 @@ class TeambeeApp:
                         cls="min-h-screen flex items-center justify-center bg-gray-50"
                     )
         
-        @rt("/forgot-password", methods=["GET", "POST"])
-        async def forgot_password_handler(request):
+        # Forgot password routes - shared handler
+        async def forgot_password_shared_handler(request):
             """Handle both GET and POST for forgot password."""
             if request.method == "GET":
-                # Show forgot password form
-                # Get current language from request state or URL
                 current_lang = getattr(request.state, 'language', 'nl')
                 password_reset_translations = self.translations.get(current_lang, {}).get("password_reset", {})
                 
@@ -505,11 +519,12 @@ class TeambeeApp:
             
             elif request.method == "POST":
                 # Handle forgot password request
+                self.request = request  # Store request for translation context
                 is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
                 
                 if not self.auth:
                     if is_ajax:
-                        return {"success": False, "message": "Authentication service is currently unavailable"}
+                        return {"success": False, "message": self.get_message("auth_not_available")}
                     else:
                         return RedirectResponse(url="/?error=auth_not_available", status_code=302)
                 
@@ -521,7 +536,7 @@ class TeambeeApp:
                 
                 if not email:
                     if is_ajax:
-                        return {"success": False, "message": "Please enter your email address"}
+                        return {"success": False, "message": self.get_message("enter_email_address")}
                     else:
                         return RedirectResponse(url="/forgot-password?error=missing_email", status_code=302)
                 
@@ -529,15 +544,27 @@ class TeambeeApp:
                 
                 if is_ajax:
                     if success:
-                        return {"success": True, "message": "Password reset link has been sent to your email address if it exists in our system."}
+                        return {"success": True, "message": self.get_message("password_reset_sent")}
                     else:
                         # For security, always show success message to prevent email enumeration
-                        return {"success": True, "message": "Password reset link has been sent to your email address if it exists in our system."}
+                        return {"success": True, "message": self.get_message("password_reset_sent")}
                 else:
                     if success:
                         return RedirectResponse(url="/?success=reset_email_sent", status_code=302)
                     else:
                         return RedirectResponse(url="/forgot-password?error=reset_failed", status_code=302)
+        
+        # Dutch forgot password route
+        @rt("/forgot-password", methods=["GET", "POST"])
+        async def forgot_password_nl(request):
+            """Handle forgot password for Dutch site."""
+            return await forgot_password_shared_handler(request)
+        
+        # English forgot password route
+        @rt("/en/forgot-password", methods=["GET", "POST"])
+        async def forgot_password_en(request):
+            """Handle forgot password for English site."""
+            return await forgot_password_shared_handler(request)
         
         @rt("/reset-password/{token}", methods=["GET", "POST"])
         async def reset_password_handler(request):
@@ -548,8 +575,6 @@ class TeambeeApp:
             token = request.path_params["token"]
             
             if request.method == "GET":
-                # Show password reset form
-                # Get the language for this reset token
                 reset_language = self.auth.get_reset_token_language(token)
                 password_reset_translations = self.translations.get(reset_language, {}).get("password_reset", {})
                 
@@ -592,6 +617,7 @@ class TeambeeApp:
             
             elif request.method == "POST":
                 # Handle password reset
+                self.request = request  # Store request for translation context
                 is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
                 
                 form = await request.form()
@@ -600,21 +626,21 @@ class TeambeeApp:
                 
                 # Validate input
                 if not password or not confirm_password:
-                    error_message = "Both password fields are required"
+                    error_message = self.get_message("both_passwords_required")
                     if is_ajax:
                         return {"success": False, "message": error_message}
                     else:
                         return RedirectResponse(url=f"/reset-password/{token}?error=missing_fields", status_code=302)
                 
                 if password != confirm_password:
-                    error_message = "Passwords do not match"
+                    error_message = self.get_message("passwords_no_match")
                     if is_ajax:
                         return {"success": False, "message": error_message}
                     else:
                         return RedirectResponse(url=f"/reset-password/{token}?error=passwords_dont_match", status_code=302)
                 
                 if len(password) < 8:
-                    error_message = "Password must be at least 8 characters long"
+                    error_message = self.get_message("password_min_8_chars")
                     if is_ajax:
                         return {"success": False, "message": error_message}
                     else:
@@ -625,7 +651,7 @@ class TeambeeApp:
                 
                 if is_ajax:
                     if success:
-                        return {"success": True, "message": "Password reset successfully! You can now log in with your new password.", "redirect": "/"}
+                        return {"success": True, "message": self.get_message("password_reset_success"), "redirect": "/"}
                     else:
                         return {"success": False, "message": message}
                 else:
@@ -981,9 +1007,8 @@ class TeambeeApp:
             else:
                 return RedirectResponse(url=f"/admin/users?error={message}", status_code=302)
         
-        # Contact form route
-        @rt("/contact", methods=["POST"])
-        async def contact_handler(request):
+        # Contact form routes - shared handler
+        async def contact_form_handler(request):
             """Handle contact form submissions."""
             is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
             
@@ -1044,6 +1069,18 @@ class TeambeeApp:
                     return {"success": False, "message": error_msg}
                 else:
                     return RedirectResponse(url="/?error=contact_failed", status_code=302)
+        
+        # Dutch contact route
+        @rt("/contact", methods=["POST"])
+        async def contact_nl(request):
+            """Handle contact form submissions for Dutch site."""
+            return await contact_form_handler(request)
+        
+        # English contact route
+        @rt("/en/contact", methods=["POST"])
+        async def contact_en(request):
+            """Handle contact form submissions for English site."""
+            return await contact_form_handler(request)
     
     def send_contact_email(self, first_name, last_name, club_name, email, phone, identifier):
         """Send contact form email to info@teambee.fit."""

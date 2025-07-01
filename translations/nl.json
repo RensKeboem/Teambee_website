@@ -134,5 +134,32 @@
     "error_message": "Sorry, er is een fout opgetreden bij het versturen van je bericht. Probeer het opnieuw.",
     "all_fields_required": "Alle velden zijn verplicht",
     "invalid_email": "Voer een geldig e-mailadres in"
+  },
+  "messages": {
+    "auth_not_available": "Authenticatieservice is momenteel niet beschikbaar",
+    "missing_credentials": "Voer zowel e-mailadres als wachtwoord in",
+    "invalid_credentials": "Ongeldig e-mailadres of wachtwoord. Probeer het opnieuw.",
+    "account_locked": "Je account is tijdelijk vergrendeld vanwege meerdere mislukte inlogpogingen. Probeer het later opnieuw.",
+    "login_failed": "Inloggen mislukt. Probeer het opnieuw.",
+    "authentication_required": "Authenticatie vereist",
+    "auth_service_unavailable": "Authenticatieservice niet beschikbaar",
+    "all_fields_required": "Alle velden zijn verplicht",
+    "passwords_no_match": "Nieuwe wachtwoorden komen niet overeen",
+    "password_too_short": "Nieuw wachtwoord moet minimaal 8 tekens lang zijn",
+    "only_club_users_invite": "Alleen clubgebruikers kunnen nieuwe gebruikers uitnodigen",
+    "email_required": "E-mailadres is verplicht",
+    "valid_email_required": "Voer een geldig e-mailadres in",
+    "enter_email_address": "Voer je e-mailadres in",
+    "password_reset_sent": "Wachtwoord reset link is verzonden naar je e-mailadres als deze bestaat in ons systeem.",
+    "password_reset_success": "Wachtwoord succesvol gereset! Je kunt nu inloggen met je nieuwe wachtwoord.",
+    "both_passwords_required": "Beide wachtwoordvelden zijn verplicht",
+    "password_min_8_chars": "Wachtwoord moet minimaal 8 tekens lang zijn",
+    "missing_fields": "Ontbrekende velden",
+    "reset_failed": "Reset mislukt",
+    "missing_email": "Ontbrekend e-mailadres",
+    "token_creation_failed": "Token aanmaken mislukt",
+    "unexpected_error": "Onverwachte fout",
+    "cannot_delete_self": "Je kunt jezelf niet verwijderen",
+    "contact_failed": "Contact mislukt"
   }
 } 

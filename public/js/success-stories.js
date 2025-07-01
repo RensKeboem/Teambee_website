@@ -31,11 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Get current language from URL or default to Dutch
-        function getCurrentLanguage() {
-            const path = window.location.pathname;
-            return path.startsWith('/en') ? 'en' : 'nl';
-        }
+
 
         // Get version from script tag
         const scriptTag = document.querySelector('script[src*="success-stories.js"]');
@@ -52,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     largeReviewsContainer.innerHTML = '';
                     
                     // Get current language
-                    const currentLang = getCurrentLanguage();
+                    const currentLang = TeambeeUtils.getCurrentLanguage();
                     
                     // Create cards for each success story
                     successStories.forEach((story, index) => {

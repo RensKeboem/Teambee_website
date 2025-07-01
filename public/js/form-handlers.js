@@ -1,26 +1,34 @@
 // Form handling functionality - Combined login, forgot password, and registration validation
 document.addEventListener('DOMContentLoaded', function() {
     
-    // === UTILITY FUNCTIONS ===
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    function showMessage(element, message) {
-        if (element) {
-            element.textContent = message;
-            element.classList.remove('hidden');
+    // === TRANSLATED MESSAGES ===
+    const messages = {
+        nl: {
+            enterEmailFirst: 'Voer eerst je e-mailadres in.',
+            enterValidEmail: 'Voer een geldig e-mailadres in.',
+            enterEmailAndPassword: 'Voer een geldig e-mailadres en wachtwoord in.',
+            networkError: 'Netwerkfout. Controleer je verbinding en probeer opnieuw.',
+            fillAllFields: 'Vul alle velden correct in.',
+            passwordsNotMatch: 'Wachtwoorden komen niet overeen',
+            resetting: 'Bezig met resetten...',
+            sending: 'Versturen...',
+            resetPassword: 'Wachtwoord Resetten'
+        },
+        en: {
+            enterEmailFirst: 'Please enter your email address first.',
+            enterValidEmail: 'Please enter a valid email address.',
+            enterEmailAndPassword: 'Please enter a valid email address and password.',
+            networkError: 'Network error. Please check your connection and try again.',
+            fillAllFields: 'Please fill in all fields correctly.',
+            passwordsNotMatch: 'Passwords do not match',
+            resetting: 'Resetting...',
+            sending: 'Sending...',
+            resetPassword: 'Reset Password'
         }
-    }
+    };
     
-    function hideMessage(element) {
-        if (element) {
-            element.classList.add('hidden');
-            element.textContent = '';
-        }
-    }
-    
-    function validateEmail(email) {
-        return email && emailRegex.test(email);
-    }
+    // Create translation function using shared utility
+    const getMessage = TeambeeUtils.createTranslationFunction(messages);
     
     // === LOGIN FORM HANDLING ===
     const formPrefixes = ['main', 'popup'];
@@ -43,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function validateLoginForm() {
             const email = emailInput ? emailInput.value.trim() : '';
             const password = passwordInput ? passwordInput.value.trim() : '';
-            const isEmailValid = validateEmail(email);
+            const isEmailValid = TeambeeUtils.validateEmail(email);
             const isPasswordValid = password.length > 0;
             const isFormValid = isEmailValid && isPasswordValid;
             
@@ -75,21 +83,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add real-time validation listeners
         if (emailInput) {
             emailInput.addEventListener('input', function() {
-                hideMessage(errorContainer);
+                TeambeeUtils.hideMessage(errorContainer);
                 validateLoginForm();
             });
             
             emailInput.addEventListener('blur', function() {
                 const email = emailInput.value.trim();
-                if (email && !validateEmail(email)) {
-                    showMessage(errorContainer, 'Please enter a valid email address.');
+                if (email && !TeambeeUtils.validateEmail(email)) {
+                    TeambeeUtils.showMessage(errorContainer, getMessage('enterValidEmail'));
                 }
             });
         }
         
         if (passwordInput) {
             passwordInput.addEventListener('input', function() {
-                hideMessage(errorContainer);
+                TeambeeUtils.hideMessage(errorContainer);
                 validateLoginForm();
             });
         }
@@ -103,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             
             if (!validateLoginForm()) {
-                showMessage(errorContainer, 'Please enter a valid email address and password.');
+                TeambeeUtils.showMessage(errorContainer, getMessage('enterEmailAndPassword'));
                 return;
             }
             
@@ -111,12 +119,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (submitButton) submitButton.disabled = true;
             if (buttonText) buttonText.classList.add('hidden');
             if (buttonLoading) buttonLoading.classList.remove('hidden');
-            hideMessage(errorContainer);
+            TeambeeUtils.hideMessage(errorContainer);
             
             try {
                 const formData = new FormData(loginForm);
                 
-                const response = await fetch('/login', {
+                // Detect language from current page URL and build the correct login URL
+                const currentPath = window.location.pathname;
+                const isEnglish = currentPath.startsWith('/en');
+                const loginUrl = isEnglish ? '/en/login' : '/login';
+                
+                const response = await fetch(loginUrl, {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -134,13 +147,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = result.redirect_url;
                 } else {
                     if (passwordInput) passwordInput.value = '';
-                    showMessage(errorContainer, result.message);
+                    TeambeeUtils.showMessage(errorContainer, result.message);
                     if (passwordInput) passwordInput.focus();
                     validateLoginForm();
                 }
-            } catch (error) {
+                            } catch (error) {
                 if (passwordInput) passwordInput.value = '';
-                showMessage(errorContainer, 'An unexpected error occurred. Please try again.');
+                TeambeeUtils.showMessage(errorContainer, getMessage('networkError'));
                 if (passwordInput) passwordInput.focus();
                 validateLoginForm();
             } finally {
@@ -155,19 +168,19 @@ document.addEventListener('DOMContentLoaded', function() {
             forgotPasswordBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                hideMessage(errorContainer);
-                hideMessage(infoDiv);
+                TeambeeUtils.hideMessage(errorContainer);
+                TeambeeUtils.hideMessage(infoDiv);
                 
                 const email = emailInput ? emailInput.value.trim() : '';
                 
                 if (!email) {
-                    showMessage(errorContainer, 'Please enter your email address first.');
+                    TeambeeUtils.showMessage(errorContainer, getMessage('enterEmailFirst'));
                     if (emailInput) emailInput.focus();
                     return;
                 }
                 
-                if (!validateEmail(email)) {
-                    showMessage(errorContainer, 'Please enter a valid email address.');
+                if (!TeambeeUtils.validateEmail(email)) {
+                    TeambeeUtils.showMessage(errorContainer, getMessage('enterValidEmail'));
                     if (emailInput) emailInput.focus();
                     return;
                 }
@@ -175,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show loading state
                 forgotPasswordBtn.disabled = true;
                 const originalText = forgotPasswordBtn.textContent;
-                forgotPasswordBtn.textContent = 'Sending...';
+                forgotPasswordBtn.textContent = getMessage('sending');
                 
                 // Detect language from current page URL and build the correct action URL
                 const currentPath = window.location.pathname;
@@ -193,16 +206,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showMessage(infoDiv, data.message || 'Password reset link has been sent to your email address.');
+                        TeambeeUtils.showMessage(infoDiv, data.message);
                         if (emailInput) emailInput.value = '';
                         if (passwordInput) passwordInput.value = '';
                     } else {
-                        showMessage(errorContainer, data.message || 'Failed to send reset email. Please try again.');
+                        TeambeeUtils.showMessage(errorContainer, data.message);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showMessage(errorContainer, 'An error occurred. Please try again later.');
+                    TeambeeUtils.showMessage(errorContainer, getMessage('networkError'));
                 })
                 .finally(() => {
                     forgotPasswordBtn.disabled = false;
@@ -220,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (passwordField && confirmPasswordField && errorMsg) {
         function validatePasswords() {
             if (confirmPasswordField.value && passwordField.value !== confirmPasswordField.value) {
-                confirmPasswordField.setCustomValidity('Passwords do not match');
+                confirmPasswordField.setCustomValidity(getMessage('passwordsNotMatch'));
                 errorMsg.classList.remove('hidden');
                 confirmPasswordField.classList.add('border-red-500');
             } else {
@@ -270,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Check if passwords match
             if (password && confirmPassword && password !== confirmPassword) {
-                confirmPasswordField.setCustomValidity('Passwords do not match');
+                confirmPasswordField.setCustomValidity(getMessage('passwordsNotMatch'));
                 errorMsg.classList.remove('hidden');
                 confirmPasswordField.classList.add('border-red-500');
                 isValid = false;
@@ -329,15 +342,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 
                 if (!validateResetForm()) {
-                    showMessage(resetErrorContainer, 'Please fill in all fields correctly.');
+                    TeambeeUtils.showMessage(resetErrorContainer, getMessage('fillAllFields'));
                     return;
                 }
                 
                 // Show loading state
                 resetSubmitButton.disabled = true;
-                resetSubmitButton.textContent = resetSubmitButton.dataset.loadingText || 'Resetting...';
-                hideMessage(resetErrorContainer);
-                hideMessage(resetSuccessContainer);
+                resetSubmitButton.textContent = resetSubmitButton.dataset.loadingText || getMessage('resetting');
+                TeambeeUtils.hideMessage(resetErrorContainer);
+                TeambeeUtils.hideMessage(resetSuccessContainer);
                 
                 try {
                     const formData = new FormData(resetForm);
@@ -353,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     
                     if (result.success) {
-                        showMessage(resetSuccessContainer, result.message);
+                        TeambeeUtils.showMessage(resetSuccessContainer, result.message);
                         resetForm.reset();
                         
                         // Redirect after a short delay to show success message
@@ -363,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             }, 2000);
                         }
                     } else {
-                        showMessage(resetErrorContainer, result.message);
+                        TeambeeUtils.showMessage(resetErrorContainer, result.message);
                         
                         // Clear password fields and focus on first field when there's an error
                         if (passwordField) passwordField.value = '';
@@ -372,9 +385,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showMessage(resetErrorContainer, 'An error occurred. Please try again.');
+                    TeambeeUtils.showMessage(resetErrorContainer, getMessage('networkError'));
                 } finally {
-                    resetSubmitButton.textContent = resetSubmitButton.dataset.defaultText || 'Reset Password';
+                    resetSubmitButton.textContent = resetSubmitButton.dataset.defaultText || getMessage('resetPassword');
                     validateResetForm(); // Re-validate to restore button state
                 }
             });

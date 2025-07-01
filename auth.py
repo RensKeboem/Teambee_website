@@ -31,6 +31,12 @@ class AuthManager:
         self.smtp_server = os.getenv("SMTP_SERVER")
         self.smtp_port = int(os.getenv("SMTP_PORT")) if os.getenv("SMTP_PORT") else None
         
+        # Clean up expired registration data on startup
+        try:
+            self.cleanup_expired_registration_data()
+        except Exception as e:
+            self.logger.warning(f"Initial cleanup failed: {e}")
+        
     def _hash_password(self, password: str, salt: str = None) -> Tuple[str, str]:
         """Hash password with salt."""
         if salt is None:
@@ -52,6 +58,67 @@ class AuthManager:
     def _generate_token(self, length: int = 32) -> str:
         """Generate a secure random token."""
         return secrets.token_urlsafe(length)
+    
+    def cleanup_expired_registration_data(self) -> int:
+        """Clean up expired registration tokens and temporary users."""
+        try:
+            cleaned_count = 0
+            
+            with self.db.engine.connect() as conn:
+                # First, get all expired registration tokens with their temporary users
+                expired_data = conn.execute(
+                    text("""
+                        SELECT pr.user_id, pr.token, u.email
+                        FROM password_resets pr
+                        JOIN users u ON pr.user_id = u.user_id
+                        WHERE pr.expires_at < NOW()
+                        AND u.email LIKE 'registration_token_%@temp.teambee.internal'
+                        AND pr.used_at IS NULL
+                    """)
+                ).fetchall()
+                
+                if expired_data:
+                    # Delete expired temporary users
+                    user_ids = [row[0] for row in expired_data]
+                    tokens = [row[1] for row in expired_data]
+                    
+                    # Delete temporary users
+                    for user_id in user_ids:
+                        conn.execute(
+                            text("DELETE FROM users WHERE user_id = :user_id"),
+                            {"user_id": user_id}
+                        )
+                    
+                    # Delete expired password reset entries
+                    for token in tokens:
+                        conn.execute(
+                            text("DELETE FROM password_resets WHERE token = :token"),
+                            {"token": token}
+                        )
+                    
+                    cleaned_count = len(expired_data)
+                
+                # Also clean up old used registration tokens (older than 7 days)
+                old_used_data = conn.execute(
+                    text("""
+                        DELETE pr FROM password_resets pr
+                        JOIN users u ON pr.user_id = u.user_id
+                        WHERE pr.used_at IS NOT NULL
+                        AND pr.used_at < DATE_SUB(NOW(), INTERVAL 7 DAY)
+                        AND u.email LIKE 'registration_token_%@temp.teambee.internal'
+                    """)
+                )
+                
+                conn.commit()
+                
+            if cleaned_count > 0:
+                self.logger.info(f"Cleaned up {cleaned_count} expired registration tokens and temporary users")
+                
+            return cleaned_count
+            
+        except Exception as e:
+            self.logger.error(f"Error cleaning up expired registration data: {e}")
+            return 0
     
     def create_user(self, email: str, password: str, club_id: int = None) -> Tuple[bool, str]:
         """Create a new user in the database."""
@@ -372,6 +439,9 @@ class AuthManager:
     def create_registration_token(self, club_id: int, expires_hours: int = 24) -> Optional[str]:
         """Create a single-use registration token for a specific club."""
         try:
+            # Clean up expired registration data first
+            self.cleanup_expired_registration_data()
+            
             # Check if club exists
             club = self.db.fetch_one(
                 "SELECT club_id FROM clubs WHERE club_id = :club_id",
@@ -440,6 +510,9 @@ class AuthManager:
     def validate_registration_token(self, token: str) -> Optional[int]:
         """Validate registration token and return club_id."""
         try:
+            # Clean up expired registration data periodically
+            self.cleanup_expired_registration_data()
+            
             reset_data = self.db.fetch_one(
                 """
                 SELECT pr.user_id, pr.expires_at, pr.used_at, u.club_id, u.email
@@ -827,13 +900,14 @@ class AuthManager:
             if not all([self.email_user, self.email_password, self.from_email]):
                 self.logger.warning("Email configuration incomplete, cannot send registration email")
                 return False
-            
-            msg = MIMEMultipart()
+
+            msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
             msg['Subject'] = f"Teambee - Registration Invitation for {club_name}"
-            
-            body = f"""
+
+            # Plain text version
+            text_body = f"""
             Dear User,
             
             You have been invited to create an account for {club_name} on Teambee.
@@ -846,16 +920,81 @@ class AuthManager:
             Best regards,
             The Teambee Team
             """
-            
-            msg.attach(MIMEText(body, 'plain'))
-            
+
+            # HTML version with styled button
+            html_body = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Teambee Registration Invitation</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
+                    <div style="background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">Create Your Account for {club_name}</h1>
+                        </div>
+                        
+                        <p style="font-size: 16px; margin-bottom: 20px;">Dear User,</p>
+                        
+                        <p style="font-size: 16px; margin-bottom: 25px;">
+                            You have been invited to create an account for <strong>{club_name}</strong> on Teambee. Join our platform to access personalized fitness solutions and enhanced member experiences.
+                        </p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{registration_link}"
+                               style="display: inline-block; 
+                                      background-color: #94C46F; 
+                                      color: white; 
+                                      text-decoration: none; 
+                                      padding: 15px 30px; 
+                                      border-radius: 8px; 
+                                      font-size: 16px; 
+                                      font-weight: bold;
+                                      transition: background-color 0.3s ease;">
+                                Create Your Account
+                            </a>
+                        </div>
+                        
+                        <div style="background-color: #f8f9fa; border-left: 4px solid #94C46F; padding: 15px; margin: 25px 0;">
+                            <p style="font-size: 14px; color: #495057; margin: 0;">
+                                <strong>Important:</strong> This registration link will expire in 24 hours. Please complete your registration as soon as possible.
+                            </p>
+                        </div>
+                        
+                        <p style="font-size: 14px; color: #666; margin-top: 20px;">
+                            If the button above doesn't work, you can copy and paste this link into your browser:<br>
+                            <a href="{registration_link}" style="color: #3D2E7C; word-break: break-all;">{registration_link}</a>
+                        </p>
+                        
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                        
+                        <p style="font-size: 14px; color: #666; margin-bottom: 0;">
+                            Best regards,<br>
+                            <strong>The Teambee Team</strong>
+                        </p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+
+            # Attach both parts
+            text_part = MIMEText(text_body, 'plain')
+            html_part = MIMEText(html_body, 'html')
+
+            msg.attach(text_part)
+            msg.attach(html_part)
+
             with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()
                 server.login(self.email_user, self.email_password)
                 server.send_message(msg)
-            
+
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error sending registration email: {e}")
             return False

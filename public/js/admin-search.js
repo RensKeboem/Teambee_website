@@ -85,7 +85,7 @@ class TablePagination {
             this.filteredRows = [...this.allRows];
         } else {
             this.filteredRows = this.allRows.filter(row => {
-                const searchCell = this.tableType === 'users' ? row.cells[1] : row.cells[1]; // Email for users, Name for clubs
+                const searchCell = row.cells[0]; // Email for users, Name for clubs (both now at index 0)
                 const text = searchCell.textContent.toLowerCase();
                 return text.includes(this.searchTerm);
             });
@@ -204,6 +204,108 @@ class TablePagination {
 let usersPagination;
 let clubsPagination;
 
+// Admin invite popup functionality
+function openAdminInvitePopup(button) {
+    const clubId = button.getAttribute('data-club-id');
+    const clubName = button.getAttribute('data-club-name');
+    
+    const popup = document.getElementById('admin-invite-popup');
+    const clubIdInput = document.getElementById('admin_invite_club_id');
+    const emailInput = document.getElementById('admin_invite_email');
+    const title = document.getElementById('admin-invite-form-title');
+    const subtitle = document.getElementById('admin-invite-form-subtitle');
+    
+    if (!popup || !clubIdInput || !emailInput) return;
+    
+    // Set club ID
+    clubIdInput.value = clubId;
+    
+    // Update title and subtitle with club name
+    if (title) title.textContent = `Send Registration Link for ${clubName}`;
+    if (subtitle) subtitle.textContent = `Enter the email address where the registration link for ${clubName} should be sent.`;
+    
+    // Clear previous values and messages
+    emailInput.value = '';
+    const errorDiv = document.getElementById('admin-invite-error');
+    const successDiv = document.getElementById('admin-invite-success');
+    if (errorDiv) errorDiv.classList.add('hidden');
+    if (successDiv) successDiv.classList.add('hidden');
+    
+    // Show popup
+    TeambeeUtils.disableScroll();
+    popup.classList.remove('hidden');
+    
+    setTimeout(() => {
+        const modalContent = popup.querySelector('.bg-white');
+        if (modalContent) {
+            modalContent.style.transform = 'scale(1)';
+            modalContent.style.opacity = '1';
+        }
+    }, 10);
+    
+    // Focus email input and setup validation
+    setTimeout(() => {
+        emailInput.focus();
+        validateAdminInviteForm();
+    }, 100);
+}
+
+function closeAdminInvitePopup() {
+    const popup = document.getElementById('admin-invite-popup');
+    if (!popup) return;
+    
+    const modalContent = popup.querySelector('.bg-white');
+    if (modalContent) {
+        modalContent.style.transform = 'scale(0.95)';
+        modalContent.style.opacity = '0';
+    }
+    
+    setTimeout(() => {
+        popup.classList.add('hidden');
+        TeambeeUtils.enableScroll();
+        
+        // Reset form
+        const form = document.getElementById('admin-invite-form');
+        if (form) {
+            form.reset();
+            const errorDiv = document.getElementById('admin-invite-error');
+            const successDiv = document.getElementById('admin-invite-success');
+            if (errorDiv) errorDiv.classList.add('hidden');
+            if (successDiv) successDiv.classList.add('hidden');
+            setTimeout(validateAdminInviteForm, 10);
+        }
+    }, 200);
+}
+
+function validateAdminInviteForm() {
+    const emailInput = document.getElementById('admin_invite_email');
+    const submitBtn = document.getElementById('admin-invite-submit-btn');
+    
+    if (!emailInput || !submitBtn) return;
+    
+    const email = emailInput.value.trim();
+    const isEmailValid = TeambeeUtils.validateEmail(email);
+    
+    // Update submit button state
+    submitBtn.disabled = !isEmailValid;
+    if (isEmailValid) {
+        submitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitBtn.classList.add('bg-[#3D2E7C]', 'hover:bg-[#3D2E7C]/90');
+    } else {
+        submitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+        submitBtn.classList.remove('bg-[#3D2E7C]', 'hover:bg-[#3D2E7C]/90');
+    }
+    
+    // Email field visual feedback
+    if (email && !isEmailValid) {
+        emailInput.classList.add('border-red-500');
+        emailInput.classList.remove('border-gray-300');
+    } else {
+        emailInput.classList.remove('border-red-500');
+        emailInput.classList.add('border-gray-300');
+    }
+}
+
 // Initialize search and pagination functionality when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize users pagination if users table exists
@@ -230,5 +332,110 @@ document.addEventListener('DOMContentLoaded', function() {
                 clubsPagination.filter(event.target.value);
             });
         }
+    }
+    
+    // Setup admin invite popup functionality
+    const adminInvitePopup = document.getElementById('admin-invite-popup');
+    const adminInviteForm = document.getElementById('admin-invite-form');
+    const closeAdminInviteBtn = document.getElementById('close-admin-invite-popup');
+    
+    // Setup click handlers for invite trigger buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('admin-invite-trigger')) {
+            e.preventDefault();
+            openAdminInvitePopup(e.target);
+        }
+    });
+    
+    if (adminInvitePopup && adminInviteForm) {
+        // Setup close button
+        if (closeAdminInviteBtn) {
+            closeAdminInviteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                closeAdminInvitePopup();
+            });
+        }
+        
+        // Close popup when clicking outside
+        adminInvitePopup.addEventListener('click', function(e) {
+            if (e.target === adminInvitePopup || e.target.classList.contains('backdrop-blur-sm')) {
+                closeAdminInvitePopup();
+            }
+        });
+        
+        // Close popup when pressing Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && adminInvitePopup && !adminInvitePopup.classList.contains('hidden')) {
+                closeAdminInvitePopup();
+            }
+        });
+        
+        // Setup form validation
+        const emailInput = document.getElementById('admin_invite_email');
+        if (emailInput) {
+            emailInput.addEventListener('input', validateAdminInviteForm);
+            emailInput.addEventListener('blur', validateAdminInviteForm);
+        }
+        
+        // Setup form submission
+        adminInviteForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('admin-invite-submit-btn');
+            const buttonText = document.getElementById('admin-invite-button-text');
+            const buttonLoading = document.getElementById('admin-invite-button-loading');
+            const errorDiv = document.getElementById('admin-invite-error');
+            const successDiv = document.getElementById('admin-invite-success');
+            
+            if (!submitBtn || !buttonText || !buttonLoading) return;
+            
+            // Hide previous messages
+            if (errorDiv) errorDiv.classList.add('hidden');
+            if (successDiv) successDiv.classList.add('hidden');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            buttonText.classList.add('hidden');
+            buttonLoading.classList.remove('hidden');
+            
+            try {
+                const formData = new FormData(adminInviteForm);
+                
+                const response = await fetch('/admin/send-registration-link', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (successDiv) {
+                        successDiv.textContent = result.message;
+                        successDiv.classList.remove('hidden');
+                    }
+                    // Auto-close popup after 3 seconds
+                    setTimeout(closeAdminInvitePopup, 3000);
+                } else {
+                    if (errorDiv) {
+                        errorDiv.textContent = result.message;
+                        errorDiv.classList.remove('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error('Admin invite form error:', error);
+                if (errorDiv) {
+                    errorDiv.textContent = 'Network error. Please check your connection and try again.';
+                    errorDiv.classList.remove('hidden');
+                }
+            } finally {
+                buttonText.classList.remove('hidden');
+                buttonLoading.classList.add('hidden');
+                validateAdminInviteForm();
+            }
+        });
+        
+        // Initial validation
+        validateAdminInviteForm();
     }
 }); 

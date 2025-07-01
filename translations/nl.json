@@ -152,6 +152,7 @@
     "enter_email_address": "Voer je e-mailadres in",
     "password_reset_sent": "Wachtwoord reset link is verzonden naar je e-mailadres als deze bestaat in ons systeem.",
     "password_reset_success": "Wachtwoord succesvol gereset! Je kunt nu inloggen met je nieuwe wachtwoord.",
+    "registration_success": "Registratie succesvol voltooid! Je kunt nu inloggen met je nieuwe account.",
     "both_passwords_required": "Beide wachtwoordvelden zijn verplicht",
     "password_min_8_chars": "Wachtwoord moet minimaal 8 tekens lang zijn",
     "missing_fields": "Ontbrekende velden",

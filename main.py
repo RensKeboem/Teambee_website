@@ -1,7 +1,7 @@
 from fasthtml.common import *
 from login_form import LoginForm
 from auth import AuthManager
-from forms import RegistrationForm, PasswordResetForm, DashboardLayout, AdminPanelLayout, ClubForm, ContactForm
+from forms import RegistrationForm, PasswordResetForm, DashboardLayout, AdminPanelLayout, ClubForm, ContactForm, AdminInviteForm
 from database_manager import DatabaseManager
 from datetime import datetime
 import os
@@ -240,13 +240,17 @@ class TeambeeApp:
         async def home(request):
             """Render the home page in Dutch (default)."""
             self.request = request  # Store request for translation context
-            return Title("Teambee"), self.create_homepage()
+            # Check for success message in session and clear it
+            success_message = request.session.pop("success_message", None)
+            return Title("Teambee"), self.create_homepage(success_message)
         
         @rt("/en")
         async def home_en(request):
             """Render the home page in English."""
             self.request = request  # Store request for translation context
-            return Title("Teambee"), self.create_homepage()
+            # Check for success message in session and clear it
+            success_message = request.session.pop("success_message", None)
+            return Title("Teambee"), self.create_homepage(success_message)
         
         @rt("/en/")
         async def home_en_slash(request):
@@ -469,6 +473,7 @@ class TeambeeApp:
                         Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
                         Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                         Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
+                        Script(src=self.versioned_url("/static/js/shared-utils.js")),
                         Script(src=self.versioned_url("/static/js/form-handlers.js"))
                     ),
                     Body(
@@ -491,7 +496,9 @@ class TeambeeApp:
                 success, message = self.auth.complete_registration(token, email, password)
                 
                 if success:
-                    return RedirectResponse(url="/?success=registration_complete", status_code=302)
+                    # Store success message in session to show on homepage
+                    request.session["success_message"] = self.get_message("registration_success") or "Registration completed successfully! You can now log in with your new account."
+                    return RedirectResponse(url="/", status_code=302)
                 else:
                     # Show error page for database/server errors
                     return Title("Registration Error"), Div(
@@ -602,6 +609,7 @@ class TeambeeApp:
                         Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
                         Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
                         Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
+                        Script(src=self.versioned_url("/static/js/shared-utils.js")),
                         Script(src=self.versioned_url("/static/js/form-handlers.js")),
                     ),
                     Body(
@@ -682,13 +690,12 @@ class TeambeeApp:
             users_df = self.auth.get_all_users()
             
             if users_df is None or users_df.empty:
-                user_rows = [Tr(Td("No users found", colspan="7", cls="text-center text-gray-500 py-4"))]
+                user_rows = [Tr(Td("No users found", colspan="6", cls="text-center text-gray-500 py-4"))]
             else:
                 user_rows = []
                 for _, user in users_df.iterrows():
                     user_rows.append(
                         Tr(
-                            Td(str(user['user_id']), cls="px-4 py-2 text-sm"),
                             Td(user['email'], cls="px-4 py-2 text-sm"),
                             Td(user['user_type'], cls="px-4 py-2 text-sm"),
                             Td(user['club_name'] if user['club_name'] else 'N/A', cls="px-4 py-2 text-sm"),
@@ -734,7 +741,6 @@ class TeambeeApp:
                         Table(
                             Thead(
                                 Tr(
-                                    Th("ID", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
                                     Th("Email", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
                                     Th("Type", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
                                     Th("Club", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
@@ -781,20 +787,23 @@ class TeambeeApp:
             clubs_df = self.auth.get_clubs()
             
             if clubs_df is None or clubs_df.empty:
-                club_rows = [Tr(Td("No clubs found", colspan="6", cls="text-center text-gray-500 py-8"))]
+                club_rows = [Tr(Td("No clubs found", colspan="5", cls="text-center text-gray-500 py-8"))]
             else:
                 club_rows = []
                 for _, club in clubs_df.iterrows():
                     club_rows.append(
                         Tr(
-                            Td(str(club['club_id']), cls="px-4 py-3 text-sm"),
                             Td(club['name'], cls="px-4 py-3 text-sm font-medium"),
                             Td(club['system_prefix'], cls="px-4 py-3 text-sm"),
                             Td(club['language'].upper(), cls="px-4 py-3 text-sm"),
                             Td(str(club['created_at']), cls="px-4 py-3 text-sm text-gray-500"),
                             Td(
-                                A("Generate Link", href=f"/admin/generate-link/{club['club_id']}", 
-                                  cls="text-[#3D2E7C] hover:underline text-sm"),
+                                Button(
+                                    "Send Invitation",
+                                    cls="text-[#3D2E7C] border border-[#3D2E7C] hover:bg-[#3D2E7C] hover:text-white transition-colors px-1 py-1 rounded text-sm admin-invite-trigger",
+                                    data_club_id=str(club['club_id']),
+                                    data_club_name=club['name']
+                                ),
                                 cls="px-4 py-3 text-sm"
                             ),
                             cls="border-b hover:bg-gray-50 club-row"
@@ -822,7 +831,6 @@ class TeambeeApp:
                         Table(
                             Thead(
                                 Tr(
-                                    Th("ID", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
                                     Th("Name", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
                                     Th("System Prefix", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
                                     Th("Language", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
@@ -851,6 +859,9 @@ class TeambeeApp:
                     
                     cls="container mx-auto px-4"
                 ),
+                
+                # Admin invite popup
+                AdminInviteForm(self.versioned_url).render(),
             )
             
             return admin_layout.render(user_info, content)
@@ -942,47 +953,107 @@ class TeambeeApp:
                 except Exception as e:
                     return RedirectResponse(url="/admin/create-club?error=unexpected_error", status_code=302)
         
-        @rt("/admin/generate-link/{club_id}")
-        async def admin_generate_link(request):
-            """Generate registration link for existing club."""
+        @rt("/admin/send-registration-link", methods=["POST"])
+        async def admin_send_registration_link(request):
+            """Send registration link via email to specified address."""
             if not self.require_admin(request):
-                return RedirectResponse(url="/", status_code=302)
+                return {"success": False, "message": "Access denied"}
             
-            club_id = int(request.path_params["club_id"])
+            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
             
             if not self.auth:
-                return RedirectResponse(url="/admin/clubs?error=auth_not_available", status_code=302)
+                error_message = "Authentication service is not available"
+                if is_ajax:
+                    return {"success": False, "message": error_message}
+                else:
+                    return RedirectResponse(url="/admin/clubs?error=auth_not_available", status_code=302)
             
-            token = self.auth.create_registration_token(club_id)
-            
-            if token:
-                registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}"
+            try:
+                form = await request.form()
+                club_id = int(form.get("club_id", 0))
+                email = form.get("email", "").strip()
                 
-                user_info = self.get_current_user(request)
-                admin_layout = AdminPanelLayout(self.versioned_url)
+                # Validate input
+                if not club_id:
+                    error_message = "Club ID is required"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url="/admin/clubs?error=missing_club_id", status_code=302)
                 
-                content = Div(
-                    Div(
-                        H1("Registration Link Generated", cls="text-3xl font-bold text-green-600 mb-6"),
-                        
-                        Div(
-                            H3("Registration Link:", cls="text-lg font-semibold mb-4"),
-                            Code(registration_link, cls="block p-4 bg-gray-100 rounded mb-4 break-all text-sm"),
-                            P("Share this link with the club administrator to create their account.", cls="text-sm text-gray-600 mb-6"),
-                            
-                            A("Back to Clubs", href="/admin/clubs", 
-                              cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90"),
-                            
-                            cls="bg-white p-6 rounded-lg shadow-sm border"
-                        ),
-                        
-                        cls="container mx-auto px-4"
-                    )
-                )
+                if not email:
+                    error_message = "Email address is required"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url="/admin/clubs?error=missing_email", status_code=302)
                 
-                return admin_layout.render(user_info, content)
-            else:
-                return RedirectResponse(url="/admin/clubs?error=token_creation_failed", status_code=302)
+                if "@" not in email or "." not in email:
+                    error_message = "Please enter a valid email address"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url="/admin/clubs?error=invalid_email", status_code=302)
+                
+                # Get club info
+                clubs_df = self.auth.get_clubs()
+                if clubs_df is None or clubs_df.empty:
+                    error_message = "No clubs found"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url="/admin/clubs?error=no_clubs", status_code=302)
+                
+                club_row = clubs_df[clubs_df['club_id'] == club_id]
+                if club_row.empty:
+                    error_message = "Club not found"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url="/admin/clubs?error=club_not_found", status_code=302)
+                
+                club_name = club_row.iloc[0]['name']
+                
+                # Create registration token
+                token = self.auth.create_registration_token(club_id)
+                
+                if not token:
+                    error_message = "Failed to create registration token"
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url="/admin/clubs?error=token_creation_failed", status_code=302)
+                
+                # Send registration email
+                registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}?email={email}"
+                success = self.auth.send_registration_email(email, registration_link, club_name)
+                
+                if success:
+                    success_message = f"Registration link sent to {email}"
+                    if is_ajax:
+                        return {"success": True, "message": success_message}
+                    else:
+                        return RedirectResponse(url="/admin/clubs?success=email_sent", status_code=302)
+                else:
+                    error_message = "Failed to send email. Please try again."
+                    if is_ajax:
+                        return {"success": False, "message": error_message}
+                    else:
+                        return RedirectResponse(url="/admin/clubs?error=email_send_failed", status_code=302)
+                
+            except ValueError:
+                error_message = "Invalid club ID"
+                if is_ajax:
+                    return {"success": False, "message": error_message}
+                else:
+                    return RedirectResponse(url="/admin/clubs?error=invalid_club_id", status_code=302)
+            except Exception as e:
+                print(f"Admin send registration link error: {e}")
+                error_message = "An unexpected error occurred. Please try again."
+                if is_ajax:
+                    return {"success": False, "message": error_message}
+                else:
+                    return RedirectResponse(url="/admin/clubs?error=unexpected_error", status_code=302)
         
         @rt("/admin/delete-user/{user_id}", methods=["POST"])
         async def admin_delete_user(request):
@@ -1126,8 +1197,36 @@ This message was sent from the Teambee website contact form.
             print(f"Email sending error: {e}")
             return False, f"Failed to send email: {str(e)}"
     
-    def create_homepage(self):
+    def create_homepage(self, success_message=None):
         """Create the Teambee homepage."""
+        # Success message container (initially hidden)
+        success_notification = Div(
+            Div(
+                Div(
+                    Img(
+                        src=self.versioned_url("/static/assets/check.svg"),
+                        alt="Success",
+                        cls="w-6 h-6 mr-3"
+                    ),
+                    Span(success_message or "", id="success-message-text"),
+                                         Button(
+                         Img(
+                             src=self.versioned_url("/static/assets/close.svg"),
+                             alt="Close",
+                             cls="w-5 h-5 filter brightness-0"
+                         ),
+                         id="close-success-notification",
+                         cls="ml-auto text-green-700 hover:text-green-900 transition-colors"
+                     ),
+                    cls="flex items-center bg-green-50 border border-green-200 rounded-lg p-4 shadow-sm"
+                ),
+                cls="container mx-auto px-4"
+            ),
+            cls="success-notification fixed top-20 left-0 right-0 z-40 animate-slide-down",
+            style=f"display: {'block' if success_message else 'none'}",
+            id="success-notification"
+        ) if success_message else Div(id="success-notification", cls="success-notification fixed top-20 left-0 right-0 z-40 animate-slide-down", style="display: none")
+        
         return Div(
             # Honeycomb pattern background
             Div(
@@ -1138,6 +1237,9 @@ This message was sent from the Teambee website contact form.
                 ),
                 cls="fixed top-0 left-0 right-0 w-full h-screen"
             ),
+            
+            # Success notification
+            success_notification,
             
             # Header
             self._create_header(),
@@ -1185,6 +1287,8 @@ This message was sent from the Teambee website contact form.
             
             # Contact popup modal
             self._create_contact_popup(),
+            
+
             
             cls="flex min-h-screen flex-col relative"
         )

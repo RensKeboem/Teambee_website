@@ -152,6 +152,7 @@
     "enter_email_address": "Please enter your email address",
     "password_reset_sent": "Password reset link has been sent to your email address if it exists in our system.",
     "password_reset_success": "Password reset successfully! You can now log in with your new password.",
+    "registration_success": "Registration completed successfully! You can now log in with your new account.",
     "both_passwords_required": "Both password fields are required",
     "password_min_8_chars": "Password must be at least 8 characters long",
     "missing_fields": "Missing fields",

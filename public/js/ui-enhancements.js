@@ -173,6 +173,11 @@ document.addEventListener('DOMContentLoaded', function() {
     animateOnScroll();
     updateParallax();
     
+    // Initialize success notification if available
+    if (typeof TeambeeUtils !== 'undefined' && TeambeeUtils.initSuccessNotification) {
+        TeambeeUtils.initSuccessNotification();
+    }
+    
     // Add scroll event listener
     window.addEventListener('scroll', throttledScrollHandler, { passive: true });
     

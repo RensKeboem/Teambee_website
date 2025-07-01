@@ -74,6 +74,56 @@ window.TeambeeUtils = (function() {
         };
     }
     
+    // === SUCCESS NOTIFICATION UTILITIES ===
+    function initSuccessNotification() {
+        const notification = document.getElementById('success-notification');
+        const closeBtn = document.getElementById('close-success-notification');
+        
+        // Function to smoothly hide notification
+        function hideNotification() {
+            if (notification) {
+                // Add transition if not already present
+                if (!notification.style.transition) {
+                    notification.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                }
+                
+                // Start fade out animation
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-20px)';
+                
+                // Actually hide the element after animation completes
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 500); // Match transition duration
+            }
+        }
+        
+        if (notification) {
+            // Check if notification is visible (either display: block or not display: none)
+            const isVisible = notification.style.display === 'block' || 
+                             (notification.style.display !== 'none' && !notification.classList.contains('hidden'));
+            
+            // Set initial state for animation
+            if (isVisible) {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateY(0)';
+                notification.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                
+                // Auto-hide after 5 seconds with smooth animation
+                setTimeout(() => {
+                    hideNotification();
+                }, 5000);
+            }
+            
+            // Setup close button with smooth animation
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    hideNotification();
+                });
+            }
+        }
+    }
+    
     // Public API
     return {
         getCurrentLanguage,
@@ -83,6 +133,7 @@ window.TeambeeUtils = (function() {
         enableScroll,
         showMessage,
         hideMessage,
-        createTranslationFunction
+        createTranslationFunction,
+        initSuccessNotification
     };
 })(); 

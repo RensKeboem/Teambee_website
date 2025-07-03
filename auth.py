@@ -2,6 +2,8 @@ import hashlib
 import secrets
 import smtplib
 import os
+import time
+import jwt
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -92,7 +94,7 @@ class AuthManager:
         else:
             return path
     
-    def _process_email_template(self, template_content: str, placeholders: dict) -> str:
+    def _process_email_template(self, template_content: str, placeholders: dict, template_type: str = "password-reset") -> str:
         """Process email template by replacing placeholders."""
         try:
             processed_content = template_content
@@ -100,10 +102,17 @@ class AuthManager:
             # Get base URL from environment
             base_url = os.getenv('BASE_URL', 'http://localhost:8000')
             
+            # Select appropriate icon based on template type
+            icon_map = {
+                'password-reset': '/static/assets/password-reset.svg',
+                'registration': '/static/assets/user-pen.svg'
+            }
+            icon_path = icon_map.get(template_type, '/static/assets/password-reset.svg')
+            
             # Generate versioned URLs for images
             image_placeholders = {
                 'logo_url': f"{base_url}{self._get_versioned_url('/static/assets/Teambee logo donker.png')}",
-                'icon_url': f"{base_url}{self._get_versioned_url('/static/assets/password-reset.svg')}", 
+                'icon_url': f"{base_url}{self._get_versioned_url(icon_path)}", 
                 'facebook_url': f"{base_url}{self._get_versioned_url('/static/assets/facebook-round.png')}",
                 'instagram_url': f"{base_url}{self._get_versioned_url('/static/assets/instagram-round.png')}",
                 'linkedin_url': f"{base_url}{self._get_versioned_url('/static/assets/linkedin-round.png')}"
@@ -890,7 +899,7 @@ class AuthManager:
                 placeholders = {
                     "reset_link": reset_link
                 }
-                html_body = self._process_email_template(html_template, placeholders)
+                html_body = self._process_email_template(html_template, placeholders, "password-reset")
             else:
                 # If template loading fails, return False to prevent sending malformed emails
                 self.logger.error(f"Could not load password reset template for {language}, email not sent")
@@ -915,7 +924,7 @@ class AuthManager:
             return False
     
     def send_registration_email(self, to_email: str, registration_link: str, club_name: str, language: str = "nl") -> bool:
-        """Send registration invitation email with translation support."""
+        """Send registration invitation email using HTML template."""
         try:
             if not all([self.email_user, self.email_password, self.from_email]):
                 self.logger.warning("Email configuration incomplete, cannot send registration email")
@@ -930,65 +939,19 @@ class AuthManager:
             text_body = self.get_email_text(language, "registration", "plain_text", 
                 "Dear User,\n\nYou have been invited to create an account for {club_name} on Teambee.\n\nPlease click the following link to complete your registration:\n{registration_link}\n\nThis link will expire in 24 hours.\n\nBest regards,\nThe Teambee Team").format(club_name=club_name, registration_link=registration_link)
 
-            # HTML version with styled button
-            html_body = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Teambee Registration Invitation</title>
-            </head>
-            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
-                    <div style="background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <div style="text-align: center; margin-bottom: 30px;">
-                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">{self.get_email_text(language, "registration", "title", "Create Your Account for {club_name}").format(club_name=club_name)}</h1>
-                        </div>
-                        
-                        <p style="font-size: 16px; margin-bottom: 20px;">{self.get_email_text(language, "registration", "greeting", "Dear User,")}</p>
-                        
-                        <p style="font-size: 16px; margin-bottom: 25px;">
-                            {self.get_email_text(language, "registration", "message", "You have been invited to create an account for <strong>{club_name}</strong> on Teambee. Join our platform to access personalized fitness solutions and enhanced member experiences.").format(club_name=club_name)}
-                        </p>
-                        
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="{registration_link}"
-                               style="display: inline-block; 
-                                      background-color: #94C46F; 
-                                      color: white; 
-                                      text-decoration: none; 
-                                      padding: 15px 30px; 
-                                      border-radius: 8px; 
-                                      font-size: 16px; 
-                                      font-weight: bold;
-                                      transition: background-color 0.3s ease;">
-                                {self.get_email_text(language, "registration", "button_text", "Create Your Account")}
-                            </a>
-                        </div>
-                        
-                        <div style="background-color: #f8f9fa; border-left: 4px solid #94C46F; padding: 15px; margin: 25px 0;">
-                            <p style="font-size: 14px; color: #495057; margin: 0;">
-                                <strong>{self.get_email_text(language, "registration", "expiry_notice", "Important:")}:</strong> {self.get_email_text(language, "registration", "expiry_message", "This registration link will expire in 24 hours. Please complete your registration as soon as possible.")}
-                            </p>
-                        </div>
-                        
-                        <p style="font-size: 14px; color: #666; margin-top: 20px;">
-                            {self.get_email_text(language, "registration", "fallback_text", "If the button above doesn't work, you can copy and paste this link into your browser:")}<br>
-                            <a href="{registration_link}" style="color: #3D2E7C; word-break: break-all;">{registration_link}</a>
-                        </p>
-                        
-                        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                        
-                        <p style="font-size: 14px; color: #666; margin-bottom: 0;">
-                            {self.get_email_text(language, "registration", "signature", "Best regards,")}<br>
-                            <strong>{self.get_email_text(language, "registration", "team_name", "The Teambee Team")}</strong>
-                        </p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
+            # Try to load HTML template
+            html_template = self._load_email_template("registration", language)
+            
+            if html_template:
+                # Use the template and replace placeholders
+                placeholders = {
+                    "registration_link": registration_link
+                }
+                html_body = self._process_email_template(html_template, placeholders, "registration")
+            else:
+                # If template loading fails, return False to prevent sending malformed emails
+                self.logger.error(f"Could not load registration template for {language}, email not sent")
+                return False
 
             # Attach both parts
             text_part = MIMEText(text_body, 'plain')
@@ -1009,7 +972,7 @@ class AuthManager:
             return False
     
     def send_invitation_email(self, to_email: str, registration_link: str, club_name: str, inviter_email: str, language: str = "nl") -> bool:
-        """Send user invitation email with translation support."""
+        """Send user invitation email using the same registration template."""
         try:
             if not all([self.email_user, self.email_password, self.from_email]):
                 self.logger.warning("Email configuration incomplete, cannot send invitation email")
@@ -1018,69 +981,25 @@ class AuthManager:
             msg = MIMEMultipart('alternative')
             msg['From'] = self.from_email
             msg['To'] = to_email
-            msg['Subject'] = self.get_email_text(language, "invitation", "subject", "Teambee - You're invited to join {club_name}").format(club_name=club_name)
+            msg['Subject'] = self.get_email_text(language, "registration", "subject", "Teambee - Registration Invitation for {club_name}").format(club_name=club_name)
             
             # Plain text version
-            text_body = self.get_email_text(language, "invitation", "plain_text", 
-                "Dear User,\n\nYou have been invited by {inviter_email} to join {club_name} on Teambee.\n\nPlease click the following link to create your account:\n{registration_link}\n\nThis invitation will expire in 24 hours.\n\nBest regards,\nThe Teambee Team").format(inviter_email=inviter_email, club_name=club_name, registration_link=registration_link)
+            text_body = self.get_email_text(language, "registration", "plain_text", 
+                "Dear User,\n\nYou have been invited to create an account for {club_name} on Teambee.\n\nPlease click the following link to complete your registration:\n{registration_link}\n\nThis link will expire in 24 hours.\n\nBest regards,\nThe Teambee Team").format(club_name=club_name, registration_link=registration_link)
             
-            # HTML version with styled button
-            html_body = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Teambee Invitation</title>
-            </head>
-            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
-                    <div style="background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <div style="text-align: center; margin-bottom: 30px;">
-                            <h1 style="color: #3D2E7C; margin: 0; font-size: 28px; font-weight: bold;">{self.get_email_text(language, "invitation", "title", "You're Invited to Join {club_name}!").format(club_name=club_name)}</h1>
-                        </div>
-                        
-                        <p style="font-size: 16px; margin-bottom: 20px;">{self.get_email_text(language, "invitation", "greeting", "Dear User,")}</p>
-                        
-                        <p style="font-size: 16px; margin-bottom: 25px;">
-                            {self.get_email_text(language, "invitation", "message", "You have been invited by <strong>{inviter_email}</strong> to join <strong>{club_name}</strong> on Teambee.").format(inviter_email=inviter_email, club_name=club_name)}
-                        </p>
-                        
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="{registration_link}" 
-                               style="display: inline-block; 
-                                      background-color: #94C46F; 
-                                      color: white; 
-                                      text-decoration: none; 
-                                      padding: 15px 30px; 
-                                      border-radius: 8px; 
-                                      font-size: 16px; 
-                                      font-weight: bold;
-                                      transition: background-color 0.3s ease;">
-                                {self.get_email_text(language, "invitation", "button_text", "Create Your Account")}
-                            </a>
-                        </div>
-                        
-                        <p style="font-size: 14px; color: #666; margin-top: 25px;">
-                            <strong>{self.get_email_text(language, "invitation", "expiry_notice", "Note:")}:</strong> {self.get_email_text(language, "invitation", "expiry_message", "This invitation will expire in 24 hours.")}
-                        </p>
-                        
-                        <p style="font-size: 14px; color: #666; margin-top: 20px;">
-                            {self.get_email_text(language, "invitation", "fallback_text", "If the button above doesn't work, you can copy and paste this link into your browser:")}<br>
-                            <a href="{registration_link}" style="color: #3D2E7C; word-break: break-all;">{registration_link}</a>
-                        </p>
-                        
-                        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                        
-                        <p style="font-size: 14px; color: #666; margin-bottom: 0;">
-                            {self.get_email_text(language, "invitation", "signature", "Best regards,")}<br>
-                            <strong>{self.get_email_text(language, "invitation", "team_name", "The Teambee Team")}</strong>
-                        </p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
+            # Try to load HTML template (same as registration)
+            html_template = self._load_email_template("registration", language)
+            
+            if html_template:
+                # Use the template and replace placeholders
+                placeholders = {
+                    "registration_link": registration_link
+                }
+                html_body = self._process_email_template(html_template, placeholders, "registration")
+            else:
+                # If template loading fails, return False to prevent sending malformed emails
+                self.logger.error(f"Could not load registration template for {language}, email not sent")
+                return False
             
             # Attach both parts
             text_part = MIMEText(text_body, 'plain')
@@ -1098,4 +1017,32 @@ class AuthManager:
             
         except Exception as e:
             self.logger.error(f"Error sending invitation email: {e}")
-            return False 
+            return False
+    
+    def generate_dashboard_token(self, user_info: dict) -> str:
+        """Generate a temporary JWT token for dashboard authentication."""
+        try:
+            # Get user's language from their club or default to Dutch
+            user_lang = "nl"  # Default language
+            if user_info.get("club_id"):
+                clubs_df = self.get_clubs()
+                if clubs_df is not None and not clubs_df.empty:
+                    club_row = clubs_df[clubs_df['club_id'] == user_info["club_id"]]
+                    if not club_row.empty:
+                        user_lang = club_row.iloc[0]['language']
+            
+            payload = {
+                'user_id': user_info['user_id'],
+                'club_id': user_info['club_id'], 
+                'email': user_info['email'],
+                'club_name': user_info.get('club_name', ''),
+                'language': user_lang,
+                'exp': int(time.time()) + 300  # 5 minute expiry
+            }
+            
+            secret = os.getenv("JWT_SECRET", "teambee-dashboard-secret-change-in-production")
+            return jwt.encode(payload, secret, algorithm='HS256')
+            
+        except Exception as e:
+            self.logger.error(f"Error generating dashboard token: {e}")
+            return None 

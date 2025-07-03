@@ -9,3 +9,8 @@ healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 
 [nixpacks]
+
+# Environment Variables Required:
+# JWT_SECRET - Secret key for dashboard authentication tokens
+# DASHBOARD_URL - URL of the dashboard service (e.g., https://dashboard-service.railway.app)
+# All existing environment variables (DATABASE_URL, EMAIL_*, etc.) are still required

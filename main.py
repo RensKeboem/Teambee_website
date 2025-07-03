@@ -296,8 +296,18 @@ class TeambeeApp:
             
             if success:
                 self.login_user(request, user_info)
-                # Redirect to admin panel if user is admin, otherwise to dashboard
-                redirect_url = "/admin" if self.auth.is_admin(user_info) else "/dashboard"
+                # Redirect to admin panel if user is admin, otherwise to dashboard service
+                if self.auth.is_admin(user_info):
+                    redirect_url = "/admin"
+                else:
+                    # Generate JWT token and redirect to dashboard service
+                    dashboard_token = self.auth.generate_dashboard_token(user_info)
+                    if dashboard_token:
+                        dashboard_url = os.getenv("DASHBOARD_URL", "http://localhost:8001")
+                        redirect_url = f"{dashboard_url}/auth?token={dashboard_token}"
+                    else:
+                        # Fallback to local dashboard if token generation fails
+                        redirect_url = "/dashboard"
                 
                 if is_ajax:
                     return {"success": True, "redirect_url": redirect_url}

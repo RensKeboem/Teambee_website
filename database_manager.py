@@ -20,10 +20,10 @@ class DatabaseManager:
             if not self.db_url:
                 raise ValueError("Test database URL not specified. Set TEST_DB_URL in your .env file.")
         else:
-            # Use regular database
-            self.db_url = os.getenv("DB_URL")
+            # Use regular database - check both DB_URL and MYSQL_URL (Railway)
+            self.db_url = os.getenv("DB_URL") or os.getenv("MYSQL_URL")
             if not self.db_url:
-                raise ValueError("Database URL not specified. Set DB_URL in your .env file or pass it to DatabaseManager.")
+                raise ValueError("Database URL not specified. Set DB_URL or MYSQL_URL in your environment variables.")
         
         self.engine = create_engine(self.db_url)
         self.logger = logger or logging.getLogger(__name__)

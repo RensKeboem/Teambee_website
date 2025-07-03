@@ -4,7 +4,7 @@ buildCommand = "npm install && npm run build:css"
 
 [deploy]
 startCommand = "python main.py"
-healthcheckPath = "/"
+healthcheckPath = "/healthz"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 

@@ -211,6 +211,10 @@ class TeambeeApp:
                 return RedirectResponse(url="/", status_code=302)
             else:
                 return RedirectResponse(url="/en", status_code=302)
+            
+        @rt("/healthz")
+        async def healthz(request):
+            return "OK"  # Or: return Response("OK", status_code=200)
     
     def create_homepage(self):
         """Create the Teambee homepage."""

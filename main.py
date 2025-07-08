@@ -125,6 +125,7 @@ class TeambeeApp:
                 Script(src=self.versioned_url("/static/js/form-handlers.js")),
                 Script(src=self.versioned_url("/static/js/carousel.js")),
                 Script(src=self.versioned_url("/static/js/success-stories.js")),
+                Script(src=self.versioned_url("/static/js/auto-open-success-stories.js")),
             ],
             middleware=middleware
         )
@@ -166,6 +167,10 @@ class TeambeeApp:
     def get_message(self, key, default=""):
         """Get a translated message for the current language."""
         return self.get_text("messages", key, default)
+    
+    def get_language_root_url(self, request):
+        """Get the root URL for the current language."""
+        return "/en" if request.state.language == "en" else "/"
     
     def is_authenticated(self, request):
         """Check if user is authenticated."""
@@ -297,7 +302,12 @@ class TeambeeApp:
             if success:
                 self.login_user(request, user_info)
                 # Redirect to admin panel if user is admin, otherwise to dashboard
-                redirect_url = "/admin" if self.auth.is_admin(user_info) else "/dashboard"
+                if self.auth.is_admin(user_info):
+                    redirect_url = "/admin"
+                else:
+                    # Redirect to dashboard in the current language
+                    current_lang = getattr(request.state, 'language', 'nl')
+                    redirect_url = "/en/dashboard" if current_lang == "en" else "/dashboard"
                 
                 if is_ajax:
                     return {"success": True, "redirect_url": redirect_url}
@@ -333,7 +343,10 @@ class TeambeeApp:
         async def logout(request):
             """Handle user logout."""
             self.logout_user(request)
-            return RedirectResponse(url="/", status_code=302)
+            # Redirect to homepage in the current language
+            current_lang = getattr(request.state, 'language', 'nl')
+            redirect_url = "/en" if current_lang == "en" else "/"
+            return RedirectResponse(url=redirect_url, status_code=302)
         
         @rt("/dashboard")
         async def dashboard(request):
@@ -341,25 +354,42 @@ class TeambeeApp:
             if not self.is_authenticated(request):
                 return RedirectResponse(url="/", status_code=302)
             
+            # Store request for translation context
+            self.request = request
+            
             user_info = self.get_current_user(request)
             
-            # Get user's language preference from their club or default to Dutch
-            user_lang = "nl"  # Default language
-            if user_info.get("club_id") and self.auth:
-                clubs_df = self.auth.get_clubs()
-                if clubs_df is not None and not clubs_df.empty:
-                    club_row = clubs_df[clubs_df['club_id'] == user_info["club_id"]]
-                    if not club_row.empty:
-                        user_lang = club_row.iloc[0]['language']
+            # Use URL language (default is Dutch)
+            current_lang = getattr(request.state, 'language', 'nl')
             
-            # Get dashboard translations for the user's language
-            dashboard_translations = self.translations.get(user_lang, {}).get("dashboard", {})
+            # Get dashboard translations for the current language
+            dashboard_translations = self.translations.get(current_lang, {}).get("dashboard", {})
             
-            dashboard_layout = DashboardLayout(dashboard_translations)
+            dashboard_layout = DashboardLayout(dashboard_translations, self.versioned_url, current_lang)
             return dashboard_layout.render(user_info)
         
-        @rt("/dashboard/update-password", methods=["POST"])
-        async def update_password(request):
+        @rt("/en/dashboard")
+        async def dashboard_en(request):
+            """Render the dashboard for authenticated users in English."""
+            if not self.is_authenticated(request):
+                return RedirectResponse(url="/en", status_code=302)
+            
+            # Store request for translation context
+            self.request = request
+            
+            user_info = self.get_current_user(request)
+            
+            # Use English language from URL
+            current_lang = "en"
+            
+            # Get dashboard translations for English
+            dashboard_translations = self.translations.get(current_lang, {}).get("dashboard", {})
+            
+            dashboard_layout = DashboardLayout(dashboard_translations, self.versioned_url, current_lang)
+            return dashboard_layout.render(user_info)
+        
+        # Password update routes - shared handler
+        async def password_update_handler(request):
             """Handle password update for authenticated users."""
             self.request = request  # Store request for translation context
             
@@ -396,8 +426,18 @@ class TeambeeApp:
             
             return {"success": success, "message": message}
         
-        @rt("/dashboard/invite-user", methods=["POST"])
-        async def invite_user(request):
+        @rt("/dashboard/update-password", methods=["POST"])
+        async def update_password(request):
+            """Handle password update for authenticated users (Dutch)."""
+            return await password_update_handler(request)
+        
+        @rt("/en/dashboard/update-password", methods=["POST"])
+        async def update_password_en(request):
+            """Handle password update for authenticated users (English)."""
+            return await password_update_handler(request)
+        
+        # User invitation routes - shared handler
+        async def invite_user_handler(request):
             """Handle user invitation for authenticated users."""
             self.request = request  # Store request for translation context
             
@@ -431,6 +471,16 @@ class TeambeeApp:
             )
             
             return {"success": success, "message": message}
+        
+        @rt("/dashboard/invite-user", methods=["POST"])
+        async def invite_user(request):
+            """Handle user invitation for authenticated users (Dutch)."""
+            return await invite_user_handler(request)
+        
+        @rt("/en/dashboard/invite-user", methods=["POST"])
+        async def invite_user_en(request):
+            """Handle user invitation for authenticated users (English)."""
+            return await invite_user_handler(request)
         
         @rt("/register/{token}", methods=["GET", "POST"])
         async def registration_handler(request):
@@ -1153,6 +1203,30 @@ class TeambeeApp:
         async def contact_en(request):
             """Handle contact form submissions for English site."""
             return await contact_form_handler(request)
+        
+        # Success stories direct link routes
+        @rt("/success-stories")
+        async def success_stories(request):
+            """Render the home page with success stories panel automatically opened.
+            
+            This route works for both Dutch (/success-stories) and English (/en/success-stories) URLs.
+            The LanguageMiddleware strips the /en prefix, so both URLs hit this single route.
+            """
+            self.request = request  # Store request for translation context
+            
+            # Check for success message in session and clear it
+            success_message = request.session.pop("success_message", None)
+            
+            # Get the appropriate root URL for the current language
+            target_url = self.get_language_root_url(request)
+            
+            homepage_content = self.create_homepage(
+                success_message, 
+                auto_open_success_stories=True, 
+                target_url=target_url
+            )
+            
+            return Title("Teambee"), homepage_content
     
     def send_contact_email(self, first_name, last_name, club_name, email, phone, identifier):
         """Send contact form email to info@teambee.fit."""
@@ -1198,7 +1272,7 @@ This message was sent from the Teambee website contact form.
             print(f"Email sending error: {e}")
             return False, f"Failed to send email: {str(e)}"
     
-    def create_homepage(self, success_message=None):
+    def create_homepage(self, success_message=None, auto_open_success_stories=False, target_url=None):
         """Create the Teambee homepage."""
         # Success message container (initially hidden)
         success_notification = Div(
@@ -1228,6 +1302,16 @@ This message was sent from the Teambee website contact form.
             id="success-notification"
         ) if success_message else Div(id="success-notification", cls="success-notification fixed top-20 left-0 right-0 z-40 animate-slide-down", style="display: none")
         
+        # Prepare container attributes
+        container_attrs = {
+            "cls": "flex min-h-screen flex-col relative"
+        }
+        
+        # Add auto-open data attributes if needed
+        if auto_open_success_stories and target_url:
+            container_attrs["data-auto-open-success-stories"] = "true"
+            container_attrs["data-target-url"] = target_url
+
         return Div(
             # Honeycomb pattern background
             Div(
@@ -1289,9 +1373,7 @@ This message was sent from the Teambee website contact form.
             # Contact popup modal
             self._create_contact_popup(),
             
-
-            
-            cls="flex min-h-screen flex-col relative"
+            **container_attrs
         )
     
     def _create_header(self):

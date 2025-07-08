@@ -74,6 +74,27 @@ window.TeambeeUtils = (function() {
         };
     }
     
+    // === DROPDOWN UTILITIES ===
+    function closeAllDropdowns() {
+        const dropdownMenus = [
+            { menuId: 'user-dropdown-menu', buttonId: 'user-dropdown-button' },
+            { menuId: 'language-dropdown-menu', buttonId: 'language-dropdown-button' }
+        ];
+        
+        dropdownMenus.forEach(({ menuId, buttonId }) => {
+            const menu = document.getElementById(menuId);
+            const button = document.getElementById(buttonId);
+            
+            if (menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                menu.classList.remove('visible');
+                if (button) {
+                    button.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+    }
+    
     // === SUCCESS NOTIFICATION UTILITIES ===
     function initSuccessNotification() {
         const notification = document.getElementById('success-notification');
@@ -134,6 +155,7 @@ window.TeambeeUtils = (function() {
         showMessage,
         hideMessage,
         createTranslationFunction,
+        closeAllDropdowns,
         initSuccessNotification
     };
 })(); 

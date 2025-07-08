@@ -8,26 +8,136 @@ document.addEventListener('DOMContentLoaded', function() {
             passwordsNotMatch: 'Wachtwoorden komen niet overeen',
             networkError: 'Er is een fout opgetreden. Probeer het opnieuw.',
             sending: 'Versturen...',
-            updating: 'Bijwerken...'
+            updating: 'Bijwerken...',
+            allFieldsRequired: 'Alle velden zijn verplicht',
+            passwordTooShort: 'Wachtwoord moet minimaal 8 tekens bevatten',
+            authenticationRequired: 'Authenticatie vereist',
+            authServiceUnavailable: 'Authenticatieservice niet beschikbaar',
+            invalidCredentials: 'Ongeldig huidige wachtwoord',
+            passwordUpdated: 'Wachtwoord succesvol bijgewerkt',
+            emailRequired: 'E-mailadres is verplicht',
+            validEmailRequired: 'Voer een geldig e-mailadres in',
+            onlyClubUsersInvite: 'Alleen clubgebruikers kunnen uitnodigen',
+            invitationSent: 'Uitnodiging succesvol verzonden',
+            userAlreadyExists: 'Een gebruiker met dit e-mailadres bestaat al'
         },
         en: {
             passwordsNotMatch: 'Passwords do not match',
             networkError: 'An error occurred. Please try again.',
             sending: 'Sending...',
-            updating: 'Updating...'
+            updating: 'Updating...',
+            allFieldsRequired: 'All fields are required',
+            passwordTooShort: 'Password must be at least 8 characters long',
+            authenticationRequired: 'Authentication required',
+            authServiceUnavailable: 'Authentication service unavailable',
+            invalidCredentials: 'Invalid current password',
+            passwordUpdated: 'Password updated successfully',
+            emailRequired: 'Email address is required',
+            validEmailRequired: 'Please enter a valid email address',
+            onlyClubUsersInvite: 'Only club users can send invitations',
+            invitationSent: 'Invitation sent successfully',
+            userAlreadyExists: 'A user with this email address already exists'
         }
     };
     
+    // Utility function to close other dropdowns
+    function closeOtherDropdowns(excludeMenuId) {
+        const dropdownMenus = [
+            { menuId: 'user-dropdown-menu', buttonId: 'user-dropdown-button' },
+            { menuId: 'language-dropdown-menu', buttonId: 'language-dropdown-button' }
+        ];
+        
+        dropdownMenus.forEach(({ menuId, buttonId }) => {
+            if (menuId !== excludeMenuId) {
+                const menu = document.getElementById(menuId);
+                const button = document.getElementById(buttonId);
+                
+                if (menu && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                    menu.classList.remove('visible');
+                    if (button) {
+                        button.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            }
+        });
+    }
+    
     // Create translation function using shared utility
     const getUserMessage = TeambeeUtils.createTranslationFunction(userMessages);
+    
+    // Utility function to update button state (DRY principle)
+    function updateButtonState(button, isValid) {
+        if (!button) return;
+        
+        button.disabled = !isValid;
+        
+        if (isValid) {
+            button.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+            button.classList.add('hover:bg-[#3D2E7C]/90', 'bg-[#3D2E7C]');
+        } else {
+            button.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+            button.classList.remove('hover:bg-[#3D2E7C]/90', 'bg-[#3D2E7C]');
+        }
+    }
+    
+    // Function to translate common server error messages
+    function translateServerMessage(serverMessage) {
+        if (!serverMessage) return null;
+        
+        // More maintainable approach: map specific known server messages to translation keys
+        // This avoids duplication and focuses on actual server responses
+        const serverMessageToTranslationKey = {
+            // Authentication & Password errors
+            'Current password is incorrect': 'invalidCredentials',
+            'Invalid current password': 'invalidCredentials',
+            'Password updated successfully': 'passwordUpdated',
+            'New password must be at least 8 characters long': 'passwordTooShort',
+            'New passwords do not match': 'passwordsNotMatch',
+            'Authentication required': 'authenticationRequired',
+            'Authentication service unavailable': 'authServiceUnavailable',
+            'User not found': 'authenticationRequired',
+            
+            // Form validation errors
+            'All fields are required': 'allFieldsRequired',
+            'Email address is required': 'emailRequired',
+            'Please enter a valid email address': 'validEmailRequired',
+            
+            // User invitation errors
+            'Only club users can invite new users': 'onlyClubUsersInvite',
+            'A user with this email already exists': 'userAlreadyExists',
+            'Failed to send invitation email': 'networkError'
+        };
+        
+        // Direct lookup first (most common case)
+        const translationKey = serverMessageToTranslationKey[serverMessage];
+        if (translationKey) {
+            return getUserMessage(translationKey);
+        }
+        
+        // Fallback: check for partial matches (for variations in server messages)
+        const lowerMessage = serverMessage.toLowerCase();
+        for (const [pattern, key] of Object.entries(serverMessageToTranslationKey)) {
+            if (lowerMessage.includes(pattern.toLowerCase())) {
+                return getUserMessage(key);
+            }
+        }
+        
+        return null; // No translation found, use original message
+    }
     const button = document.getElementById('user-dropdown-button');
     const menu = document.getElementById('user-dropdown-menu');
     
-    // Dropdown functionality (based on language-dropdown.js)
+    // Dropdown functionality with exclusive behavior
     if (button && menu) {
         // Toggle dropdown when button is clicked
         button.addEventListener('click', function(event) {
             event.stopPropagation();
+            
+            // Close other dropdowns first
+            closeOtherDropdowns('user-dropdown-menu');
+            
+            // Then toggle this dropdown
             menu.classList.toggle('hidden');
             button.setAttribute('aria-expanded', !menu.classList.contains('hidden'));
             
@@ -77,51 +187,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
 
     
-    // Open password update popup
+    // Setup popup triggers using the utility function
     if (passwordUpdateOption && passwordUpdatePopup) {
         passwordUpdateOption.addEventListener('click', function(e) {
             e.preventDefault();
-            // Close dropdown first
-            if (menu) {
-                menu.classList.add('hidden');
-                menu.classList.remove('visible');
-                button.setAttribute('aria-expanded', 'false');
-            }
-            
-            TeambeeUtils.disableScroll();
-            passwordUpdatePopup.classList.remove('hidden');
-            
-            setTimeout(() => {
-                const modalContent = passwordUpdatePopup.querySelector('.bg-white');
-                if (modalContent) {
-                    modalContent.style.transform = 'scale(1)';
-                    modalContent.style.opacity = '1';
-                }
-            }, 10);
+            openPopup(passwordUpdatePopup);
         });
     }
     
-    // Open invite user popup
     if (inviteUserOption && inviteUserPopup) {
         inviteUserOption.addEventListener('click', function(e) {
             e.preventDefault();
-            // Close dropdown first
-            if (menu) {
-                menu.classList.add('hidden');
-                menu.classList.remove('visible');
-                button.setAttribute('aria-expanded', 'false');
-            }
-            
-            TeambeeUtils.disableScroll();
-            inviteUserPopup.classList.remove('hidden');
-            
-            setTimeout(() => {
-                const modalContent = inviteUserPopup.querySelector('.bg-white');
-                if (modalContent) {
-                    modalContent.style.transform = 'scale(1)';
-                    modalContent.style.opacity = '1';
-                }
-            }, 10);
+            openPopup(inviteUserPopup);
         });
     }
     
@@ -164,7 +241,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Utility function for popup management
+    function openPopup(popup) {
+        if (!popup) return;
+        
+        TeambeeUtils.closeAllDropdowns();
+        TeambeeUtils.disableScroll();
+        popup.classList.remove('hidden');
+        
+        setTimeout(() => {
+            const modalContent = popup.querySelector('.bg-white');
+            if (modalContent) {
+                modalContent.style.transform = 'scale(1)';
+                modalContent.style.opacity = '1';
+            }
+        }, 10);
+    }
+    
     function closePopup(popup) {
+        if (!popup) return;
+        
         const modalContent = popup.querySelector('.bg-white');
         if (modalContent) {
             modalContent.style.transform = 'scale(0.95)';
@@ -188,42 +284,32 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Real-time form validation
         function validatePasswordForm() {
-            const currentPassword = currentPasswordInput.value.trim();
-            const newPassword = newPasswordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
+            if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput || !submitButton) return;
             
-            let isValid = true;
+            const values = {
+                current: currentPasswordInput.value.trim(),
+                new: newPasswordInput.value,
+                confirm: confirmPasswordInput.value
+            };
             
-            // Check if all fields are filled
-            if (!currentPassword || !newPassword || !confirmPassword) {
-                isValid = false;
-            }
+            // Validation rules
+            const isFieldsComplete = Object.values(values).every(val => val);
+            const isPasswordLongEnough = !values.new || values.new.length >= 8;
+            const isPasswordsMatch = !values.confirm || values.new === values.confirm;
             
-            // Check new password length
-            if (newPassword && newPassword.length < 8) {
-                isValid = false;
-            }
+            const isValid = isFieldsComplete && isPasswordLongEnough && isPasswordsMatch;
             
-            // Check password match
-            if (confirmPassword && newPassword !== confirmPassword) {
+            // Handle password match visual feedback
+            if (values.confirm && !isPasswordsMatch) {
                 confirmPasswordInput.setCustomValidity(getUserMessage('passwordsNotMatch'));
                 confirmPasswordInput.classList.add('border-red-300');
-                isValid = false;
             } else {
                 confirmPasswordInput.setCustomValidity('');
                 confirmPasswordInput.classList.remove('border-red-300');
             }
             
-            // Update button state
-            if (isValid) {
-                submitButton.disabled = false;
-                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                submitButton.classList.add('hover:bg-[#3D2E7C]/90');
-            } else {
-                submitButton.disabled = true;
-                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
-                submitButton.classList.remove('hover:bg-[#3D2E7C]/90');
-            }
+            // Update submit button state
+            updateButtonState(submitButton, isValid);
         }
         
         // Initial validation
@@ -252,33 +338,39 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const formData = new FormData(passwordUpdateForm);
                 
-                const response = await fetch('/dashboard/update-password', {
+                // Detect current language and use appropriate endpoint
+                const isEnglish = TeambeeUtils.getCurrentLanguage() === 'en';
+                const updatePasswordUrl = isEnglish ? '/en/dashboard/update-password' : '/dashboard/update-password';
+                
+                const response = await fetch(updatePasswordUrl, {
                     method: 'POST',
                     body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    TeambeeUtils.showMessage(document.getElementById('password-update-success'), result.message);
+                    const successMessage = translateServerMessage(result.message) || getUserMessage('passwordUpdated') || result.message;
+                    TeambeeUtils.showMessage(document.getElementById('password-update-success'), successMessage);
                     passwordUpdateForm.reset();
+                    validatePasswordForm(); // Reset validation state
+                    
                     // Auto-close popup after 3 seconds
-                    setTimeout(() => {
-                        const passwordUpdatePopup = document.getElementById('password-update-popup');
-                        if (passwordUpdatePopup && !passwordUpdatePopup.classList.contains('hidden')) {
-                            closePopup(passwordUpdatePopup);
-                        }
-                    }, 3000);
+                    setTimeout(() => closePopup(passwordUpdatePopup), 3000);
                 } else {
-                    TeambeeUtils.showMessage(document.getElementById('password-update-error'), result.message);
+                    const errorMessage = translateServerMessage(result.message) || result.message;
+                    TeambeeUtils.showMessage(document.getElementById('password-update-error'), errorMessage);
                 }
             } catch (error) {
+                console.error('Password update error:', error);
                 TeambeeUtils.showMessage(document.getElementById('password-update-error'), getUserMessage('networkError'));
             } finally {
-                submitButton.disabled = false;
+                updateButtonState(submitButton, true); // Re-enable button
                 submitButton.textContent = submitButton.dataset.defaultText || 'Update Password';
             }
         });
@@ -287,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // User invitation form handling
     const inviteForm = document.getElementById('invite-form');
     if (inviteForm) {
-        const submitButton = inviteForm.querySelector('#invite-btn');
+        const submitButton = inviteForm.querySelector('#invite-submit-btn');
         const emailInput = inviteForm.querySelector('#invite_email');
         
         // Real-time form validation
@@ -297,16 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const email = emailInput.value.trim();
             const isValid = email && TeambeeUtils.validateEmail(email);
             
-            // Update button state
-            if (isValid) {
-                submitButton.disabled = false;
-                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                submitButton.classList.add('hover:bg-[#94C46F]/90');
-            } else {
-                submitButton.disabled = true;
-                submitButton.classList.add('opacity-50', 'cursor-not-allowed');
-                submitButton.classList.remove('hover:bg-[#94C46F]/90');
-            }
+            updateButtonState(submitButton, isValid);
         }
         
         // Initial validation
@@ -327,26 +410,36 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const formData = new FormData(inviteForm);
                 
-                const response = await fetch('/dashboard/invite-user', {
+                // Detect current language and use appropriate endpoint
+                const isEnglish = TeambeeUtils.getCurrentLanguage() === 'en';
+                const inviteUserUrl = isEnglish ? '/en/dashboard/invite-user' : '/dashboard/invite-user';
+                
+                const response = await fetch(inviteUserUrl, {
                     method: 'POST',
                     body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    TeambeeUtils.showMessage(document.getElementById('invite-success'), result.message);
+                    const successMessage = translateServerMessage(result.message) || getUserMessage('invitationSent') || result.message;
+                    TeambeeUtils.showMessage(document.getElementById('invite-success'), successMessage);
                     inviteForm.reset();
+                    validateInviteForm(); // Reset validation state
                 } else {
-                    TeambeeUtils.showMessage(document.getElementById('invite-error'), result.message);
+                    const errorMessage = translateServerMessage(result.message) || result.message;
+                    TeambeeUtils.showMessage(document.getElementById('invite-error'), errorMessage);
                 }
             } catch (error) {
+                console.error('Invite user error:', error);
                 TeambeeUtils.showMessage(document.getElementById('invite-error'), getUserMessage('networkError'));
             } finally {
-                submitButton.disabled = false;
+                updateButtonState(submitButton, true); // Re-enable button
                 submitButton.textContent = submitButton.dataset.defaultText || 'Send Invitation';
             }
         });

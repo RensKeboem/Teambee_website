@@ -5,7 +5,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
 
     
-    // Generic dropdown handler
+    // Utility function to close other dropdowns
+    function closeOtherDropdowns(excludeMenuId) {
+        const dropdownMenus = [
+            { menuId: 'user-dropdown-menu', buttonId: 'user-dropdown-button' },
+            { menuId: 'language-dropdown-menu', buttonId: 'language-dropdown-button' }
+        ];
+        
+        dropdownMenus.forEach(({ menuId, buttonId }) => {
+            if (menuId !== excludeMenuId) {
+                const menu = document.getElementById(menuId);
+                const button = document.getElementById(buttonId);
+                
+                if (menu && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                    menu.classList.remove('visible');
+                    if (button) {
+                        button.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            }
+        });
+    }
+    
+    // Generic dropdown handler with exclusive behavior
     function setupDropdown(buttonId, menuId) {
         const button = document.getElementById(buttonId);
         const menu = document.getElementById(menuId);
@@ -15,6 +38,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Toggle dropdown when button is clicked
         button.addEventListener('click', function(event) {
             event.stopPropagation();
+            
+            // Close other dropdowns first
+            closeOtherDropdowns(menuId);
+            
+            // Then toggle this dropdown
             menu.classList.toggle('hidden');
             button.setAttribute('aria-expanded', !menu.classList.contains('hidden'));
             
@@ -217,6 +245,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show contact popup with form type
         function showContactPopup(formType = 'ongoing', fromPopup = false) {
+            // Close all dropdowns first
+            TeambeeUtils.closeAllDropdowns();
+            
             const lang = TeambeeUtils.getCurrentLanguage();
             const trans = translations[lang];
             const formTypeInput = document.getElementById('form_type');
@@ -485,8 +516,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Contact popup with multiple trigger buttons
     setupContactPopup();
     
-    // User dropdown (if exists)
-    setupDropdown('user-dropdown-button', 'user-dropdown-menu');
+    // User dropdown - only setup if not on dashboard (dashboard has its own handler)
+    if (!window.location.pathname.includes('/dashboard')) {
+        setupDropdown('user-dropdown-button', 'user-dropdown-menu');
+    }
     
     // Club language dropdown (for create club form)
     setupClubLanguageDropdown();

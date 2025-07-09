@@ -277,8 +277,6 @@ class DashboardLayout:
                             cls="flex items-center"
                         ),
                         Div(
-                            Span(f"{self.get_text('welcome', 'Welcome,')} {user_info.get('email', '')}", cls="text-gray-700 mr-4"),
-                            
                             # Language selector dropdown
                             Div(
                                 Button(

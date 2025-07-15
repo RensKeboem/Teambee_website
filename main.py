@@ -11,11 +11,30 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from starlette.staticfiles import StaticFiles
-from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, PlainTextResponse
 from starlette.middleware.sessions import SessionMiddleware
+
+class CustomHTTPSRedirectMiddleware(BaseHTTPMiddleware):
+    """Custom HTTPS redirect middleware that excludes health check endpoints."""
+    
+    def __init__(self, app, exclude_paths=None):
+        super().__init__(app)
+        self.exclude_paths = exclude_paths or ["/health"]
+    
+    async def dispatch(self, request, call_next):
+        # Check if this path should be excluded from HTTPS redirect
+        if request.url.path in self.exclude_paths:
+            return await call_next(request)
+        
+        # Only redirect if the request is HTTP (not HTTPS)
+        if request.url.scheme == "http":
+            # Build the HTTPS URL
+            https_url = request.url.replace(scheme="https")
+            return RedirectResponse(url=str(https_url), status_code=301)
+        
+        return await call_next(request)
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware to add security headers to all responses."""
@@ -99,7 +118,7 @@ class TeambeeApp:
         
         # Only add HTTPS redirect in production
         if os.environ.get("ENVIRONMENT", "development") == "production":
-            middleware.append(Middleware(HTTPSRedirectMiddleware))
+            middleware.append(Middleware(CustomHTTPSRedirectMiddleware))
             
         self.app = FastHTML(
             hdrs=[
@@ -240,7 +259,12 @@ class TeambeeApp:
     def setup_routes(self):
         """Set up the application routes."""
         rt = self.app.route
-        
+
+        @rt("/health")
+        async def health(request):
+            """Health check endpoint."""
+            return PlainTextResponse("OK", status_code=200)
+
         @rt("/")
         async def home(request):
             """Render the home page in Dutch (default)."""
@@ -959,7 +983,7 @@ class TeambeeApp:
                         token = self.auth.create_registration_token(club_id)
                         
                         if token:
-                            registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}"
+                            registration_link = f"{os.getenv('RAILWAY_PUBLIC_DOMAIN', 'http://localhost:8000')}/register/{token}"
                             
                             user_info = self.get_current_user(request)
                             admin_layout = AdminPanelLayout(self.versioned_url)
@@ -1076,7 +1100,7 @@ class TeambeeApp:
                         return RedirectResponse(url="/admin/clubs?error=token_creation_failed", status_code=302)
                 
                 # Send registration email
-                registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}?email={email}"
+                registration_link = f"{os.getenv('RAILWAY_PUBLIC_DOMAIN', 'http://localhost:8000')}/register/{token}?email={email}"
                 success = self.auth.send_registration_email(email, registration_link, club_name, club_language)
                 
                 if success:
@@ -1246,17 +1270,17 @@ class TeambeeApp:
             
             # Email body
             body = f"""
-New contact form submission:
+                    New contact form submission:
 
-Name: {first_name} {last_name}
-Club: {club_name}
-Email: {email}
-Phone: {phone}
-Type: {identifier}
+                    Name: {first_name} {last_name}
+                    Club: {club_name}
+                    Email: {email}
+                    Phone: {phone}
+                    Type: {identifier}
 
----
-This message was sent from the Teambee website contact form.
-            """
+                    ---
+                    This message was sent from the Teambee website contact form.
+                    """
             
             msg.attach(MIMEText(body, 'plain'))
             

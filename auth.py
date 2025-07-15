@@ -98,7 +98,7 @@ class AuthManager:
             processed_content = template_content
             
             # Get base URL from environment
-            base_url = os.getenv('BASE_URL', 'http://localhost:8000')
+            base_url = os.getenv('RAILWAY_PUBLIC_DOMAIN', 'http://localhost:8000')
             
             # Replace image sources with actual asset URLs
             image_replacements = {
@@ -419,7 +419,7 @@ class AuthManager:
                 conn.commit()
             
             # Send reset email
-            reset_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/reset-password/{token}"
+            reset_link = f"{os.getenv('RAILWAY_PUBLIC_DOMAIN', 'http://localhost:8000')}/reset-password/{token}"
             success = self.send_password_reset_email(user_email, reset_link, language)
             
             if success:
@@ -864,7 +864,7 @@ class AuthManager:
                 return False, "Failed to create registration token"
             
             # Send invitation email
-            registration_link = f"{os.getenv('BASE_URL', 'http://localhost:8000')}/register/{token}?email={email}"
+            registration_link = f"{os.getenv('RAILWAY_PUBLIC_DOMAIN', 'http://localhost:8000')}/register/{token}?email={email}"
             
             success = self.send_invitation_email(email, registration_link, club_name, inviter_email, club_language)
             

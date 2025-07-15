@@ -21,8 +21,12 @@ class CustomHTTPSRedirectMiddleware(BaseHTTPMiddleware):
         if request.url.path in self.exclude_paths:
             return await call_next(request)
         
-        # Only redirect if the request is HTTP (not HTTPS)
-        if request.url.scheme == "http":
+        # Check if the original request was HTTP by looking at the X-Forwarded-Proto header
+        # This is needed because proxies/load balancers (like Railway's) terminate SSL
+        forwarded_proto = request.headers.get("x-forwarded-proto", "").lower()
+        
+        # Only redirect if the original request was HTTP (not HTTPS)
+        if forwarded_proto == "http" or (not forwarded_proto and request.url.scheme == "http"):
             # Build the HTTPS URL
             https_url = request.url.replace(scheme="https")
             return RedirectResponse(url=str(https_url), status_code=301)

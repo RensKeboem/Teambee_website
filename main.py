@@ -1,93 +1,34 @@
 from fasthtml.common import *
-from login_form import LoginForm
-from auth import AuthManager
-from forms import RegistrationForm, PasswordResetForm, DashboardLayout, AdminPanelLayout, ClubForm, ContactForm, AdminInviteForm
-from database_manager import DatabaseManager
+from app.components.forms.login_form import LoginForm
+from app.components.forms.contact_form import ContactForm
+from app.components.forms.password_reset_popup import PasswordResetPopup
+from app.components.forms.registration_popup import RegistrationPopup
+from app.services.auth_service import AuthService
+from app.services.email_service import EmailService
+from app.services.session_service import SessionService
+from app.components.ui.hero_section import HeroSection
+from app.components.ui.about_section import AboutSection
+from app.components.ui.services_section import ServicesSection
+from app.components.ui.benefits_section import BenefitsSection
+from app.components.ui.reviews_section import ReviewsSection
+from app.components.ui.login_section import LoginSection
+from app.routes.auth import AuthRoutes
+from app.routes.public import PublicRoutes
+from app.routes.dashboard import DashboardRoutes
+from app.routes.admin import AdminRoutes
+from app.models.base import DatabaseManager
+from app.config import config
+from app.middleware.security import CustomHTTPSRedirectMiddleware, SecurityHeadersMiddleware
+from app.middleware.language import LanguageMiddleware
 from datetime import datetime
 import os
 import time
 import json
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+
 from starlette.staticfiles import StaticFiles
 from starlette.middleware import Middleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import RedirectResponse, PlainTextResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-class CustomHTTPSRedirectMiddleware(BaseHTTPMiddleware):
-    """Custom HTTPS redirect middleware that excludes health check endpoints."""
-    
-    def __init__(self, app, exclude_paths=None):
-        super().__init__(app)
-        self.exclude_paths = exclude_paths or ["/health"]
-    
-    async def dispatch(self, request, call_next):
-        # Check if this path should be excluded from HTTPS redirect
-        if request.url.path in self.exclude_paths:
-            return await call_next(request)
-        
-        # Only redirect if the request is HTTP (not HTTPS)
-        if request.url.scheme == "http":
-            # Build the HTTPS URL
-            https_url = request.url.replace(scheme="https")
-            return RedirectResponse(url=str(https_url), status_code=301)
-        
-        return await call_next(request)
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Middleware to add security headers to all responses."""
-    
-    async def dispatch(self, request, call_next):
-        response = await call_next(request)
-        
-        # Content Security Policy
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' https://unpkg.com https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:; "
-            "font-src 'self'; "
-            "connect-src 'self'; "
-            "frame-src 'self'; "
-            "object-src 'none'; "
-            "base-uri 'self'; "
-            "form-action 'self';"
-        )
-        
-        # Security Headers
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        
-        # HSTS (HTTP Strict Transport Security)
-        # Only in production environment to avoid issues in development
-        if os.environ.get("ENVIRONMENT", "development") == "production":
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-            
-        return response
-
-class LanguageMiddleware(BaseHTTPMiddleware):
-    """Middleware to handle language routing and detection."""
-    
-    async def dispatch(self, request, call_next):
-        # Get the path
-        path = request.url.path
-        
-        # Determine language from path
-        if path.startswith("/en"):
-            request.state.language = "en"
-            # Strip language prefix for internal routing if it's not just /en
-            if path != "/en" and path != "/en/":
-                request.scope["path"] = path[3:]
-        else:
-            request.state.language = "nl"
-        
-        response = await call_next(request)
-        return response
 
 class TeambeeApp:
     """Main application class for the Teambee website."""
@@ -102,12 +43,14 @@ class TeambeeApp:
         self.translations = {}
         self.load_translations()
         
-        # Initialize authentication manager
+        # Initialize services
         try:
-            self.auth = AuthManager(DatabaseManager(), self.translations)
+            self.auth = AuthService(DatabaseManager(), self.translations)
+            self.email_service = EmailService()
         except Exception as e:
-            print(f"Warning: Could not initialize authentication: {e}")
+            print(f"Warning: Could not initialize services: {e}")
             self.auth = None
+            self.email_service = None
         
         # Define middleware
         middleware = [
@@ -144,6 +87,8 @@ class TeambeeApp:
                 Script(src=self.versioned_url("/static/js/form-handlers.js")),
                 Script(src=self.versioned_url("/static/js/carousel.js")),
                 Script(src=self.versioned_url("/static/js/success-stories.js")),
+                Script(src=self.versioned_url("/static/js/password-reset-popup.js")),
+                Script(src=self.versioned_url("/static/js/registration-popup.js")),
                 Script(src=self.versioned_url("/static/js/auto-open-success-stories.js")),
             ],
             middleware=middleware
@@ -193,38 +138,23 @@ class TeambeeApp:
     
     def is_authenticated(self, request):
         """Check if user is authenticated."""
-        return request.session.get("user_id") is not None
+        return SessionService.is_authenticated(request)
     
     def get_current_user(self, request):
         """Get current user from session."""
-        user_id = request.session.get("user_id")
-        if not user_id:
-            return None
-        
-        return {
-            "user_id": user_id,
-            "club_id": request.session.get("club_id"),
-            "email": request.session.get("email"),
-            "club_name": request.session.get("club_name")
-        }
+        return SessionService.get_current_user(request)
     
     def login_user(self, request, user_info):
         """Log in user by storing info in session."""
-        request.session["user_id"] = user_info["user_id"]
-        request.session["club_id"] = user_info["club_id"]
-        request.session["email"] = user_info["email"]
-        request.session["club_name"] = user_info["club_name"]
+        SessionService.login_user(request, user_info)
     
     def logout_user(self, request):
         """Log out user by clearing session."""
-        request.session.clear()
+        SessionService.logout_user(request)
     
     def require_admin(self, request):
         """Check if user is authenticated and is admin."""
-        if not self.is_authenticated(request):
-            return False
-        user_info = self.get_current_user(request)
-        return self.auth and self.auth.is_admin(user_info)
+        return SessionService.require_admin(request, self.auth)
     
     def versioned_url(self, path):
         """Add version parameter to URL for cache busting.
@@ -260,973 +190,20 @@ class TeambeeApp:
         """Set up the application routes."""
         rt = self.app.route
 
-        @rt("/health")
-        async def health(request):
-            """Health check endpoint."""
-            return PlainTextResponse("OK", status_code=200)
+        # Initialize route handlers
+        auth_routes = AuthRoutes(self)
+        public_routes = PublicRoutes(self)
+        dashboard_routes = DashboardRoutes(self)
+        admin_routes = AdminRoutes(self)
+        
+        # Setup route groups
+        auth_routes.setup_routes(rt)
+        public_routes.setup_routes(rt)
+        dashboard_routes.setup_routes(rt)
+        admin_routes.setup_routes(rt)
 
-        @rt("/")
-        async def home(request):
-            """Render the home page in Dutch (default)."""
-            self.request = request  # Store request for translation context
-            # Check for success message in session and clear it
-            success_message = request.session.pop("success_message", None)
-            return Title("Teambee"), self.create_homepage(success_message)
-        
-        @rt("/en")
-        async def home_en(request):
-            """Render the home page in English."""
-            self.request = request  # Store request for translation context
-            # Check for success message in session and clear it
-            success_message = request.session.pop("success_message", None)
-            return Title("Teambee"), self.create_homepage(success_message)
-        
-        @rt("/en/")
-        async def home_en_slash(request):
-            """Redirect /en/ to /en."""
-            return RedirectResponse(url="/en", status_code=301)
-        
-        # Add a route to detect browser language and redirect accordingly
-        @rt("/detect-language")
-        async def detect_language(request):
-            """Detect browser language and redirect to appropriate version."""
-            accept_language = request.headers.get("accept-language", "")
-            browser_lang = accept_language.split(",")[0].split("-")[0] if accept_language else "en"
-            
-            # Default to English unless browser language is Dutch
-            if browser_lang == "nl":
-                return RedirectResponse(url="/", status_code=302)
-            else:
-                return RedirectResponse(url="/en", status_code=302)
-        
-        # Authentication routes - shared login handler
-        async def login_handler(request):
-            """Handle login form submission."""
-            self.request = request  # Store request for translation context
-            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-            
-            if not self.auth:
-                if is_ajax:
-                    return {"success": False, "message": self.get_message("auth_not_available")}
-                else:
-                    return RedirectResponse(url="/?error=auth_not_available", status_code=302)
-            
-            form = await request.form()
-            email = form.get("email", "").strip()
-            password = form.get("password", "")
-            
-            if not email or not password:
-                if is_ajax:
-                    return {"success": False, "message": self.get_message("missing_credentials")}
-                else:
-                    return RedirectResponse(url="/?error=missing_credentials", status_code=302)
-            
-            success, user_info, message = self.auth.authenticate_user(email, password)
-            
-            if success:
-                self.login_user(request, user_info)
-                # Redirect to admin panel if user is admin, otherwise to dashboard
-                if self.auth.is_admin(user_info):
-                    redirect_url = "/admin"
-                else:
-                    # Redirect to dashboard in the current language
-                    current_lang = getattr(request.state, 'language', 'nl')
-                    redirect_url = "/en/dashboard" if current_lang == "en" else "/dashboard"
-                
-                if is_ajax:
-                    return {"success": True, "redirect_url": redirect_url}
-                else:
-                    return RedirectResponse(url=redirect_url, status_code=302)
-            else:
-                # Check if message contains account lock information
-                if "Account is locked until" in message:
-                    user_message = self.get_message("account_locked")
-                elif message == "Invalid email or password":
-                    user_message = self.get_message("invalid_credentials")
-                else:
-                    user_message = self.get_message("login_failed")
-                
-                if is_ajax:
-                    return {"success": False, "message": user_message}
-                else:
-                    return RedirectResponse(url=f"/?error={message}", status_code=302)
-        
-        # Dutch login route
-        @rt("/login", methods=["POST"])
-        async def login_nl(request):
-            """Handle login form submission for Dutch site."""
-            return await login_handler(request)
-        
-        # English login route  
-        @rt("/en/login", methods=["POST"])
-        async def login_en(request):
-            """Handle login form submission for English site."""
-            return await login_handler(request)
-        
-        @rt("/logout")
-        async def logout(request):
-            """Handle user logout."""
-            self.logout_user(request)
-            # Redirect to homepage in the current language
-            current_lang = getattr(request.state, 'language', 'nl')
-            redirect_url = "/en" if current_lang == "en" else "/"
-            return RedirectResponse(url=redirect_url, status_code=302)
-        
-        @rt("/dashboard")
-        async def dashboard(request):
-            """Render the dashboard for authenticated users."""
-            if not self.is_authenticated(request):
-                return RedirectResponse(url="/", status_code=302)
-            
-            # Store request for translation context
-            self.request = request
-            
-            user_info = self.get_current_user(request)
-            
-            # Use URL language (default is Dutch)
-            current_lang = getattr(request.state, 'language', 'nl')
-            
-            # Get dashboard translations for the current language
-            dashboard_translations = self.translations.get(current_lang, {}).get("dashboard", {})
-            
-            dashboard_layout = DashboardLayout(dashboard_translations, self.versioned_url, current_lang)
-            return dashboard_layout.render(user_info)
-        
-        @rt("/en/dashboard")
-        async def dashboard_en(request):
-            """Render the dashboard for authenticated users in English."""
-            if not self.is_authenticated(request):
-                return RedirectResponse(url="/en", status_code=302)
-            
-            # Store request for translation context
-            self.request = request
-            
-            user_info = self.get_current_user(request)
-            
-            # Use English language from URL
-            current_lang = "en"
-            
-            # Get dashboard translations for English
-            dashboard_translations = self.translations.get(current_lang, {}).get("dashboard", {})
-            
-            dashboard_layout = DashboardLayout(dashboard_translations, self.versioned_url, current_lang)
-            return dashboard_layout.render(user_info)
-        
-        # Password update routes - shared handler
-        async def password_update_handler(request):
-            """Handle password update for authenticated users."""
-            self.request = request  # Store request for translation context
-            
-            if not self.is_authenticated(request):
-                return {"success": False, "message": self.get_message("authentication_required")}
-            
-            user_info = self.get_current_user(request)
-            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-            
-            if not self.auth:
-                return {"success": False, "message": self.get_message("auth_service_unavailable")}
-            
-            form = await request.form()
-            current_password = form.get("current_password", "")
-            new_password = form.get("new_password", "")
-            confirm_new_password = form.get("confirm_new_password", "")
-            
-            # Validate input
-            if not all([current_password, new_password, confirm_new_password]):
-                return {"success": False, "message": self.get_message("all_fields_required")}
-            
-            if new_password != confirm_new_password:
-                return {"success": False, "message": self.get_message("passwords_no_match")}
-            
-            if len(new_password) < 8:
-                return {"success": False, "message": self.get_message("password_too_short")}
-            
-            # Update password
-            success, message = self.auth.update_user_password(
-                user_info["user_id"], 
-                current_password, 
-                new_password
-            )
-            
-            return {"success": success, "message": message}
-        
-        @rt("/dashboard/update-password", methods=["POST"])
-        async def update_password(request):
-            """Handle password update for authenticated users (Dutch)."""
-            return await password_update_handler(request)
-        
-        @rt("/en/dashboard/update-password", methods=["POST"])
-        async def update_password_en(request):
-            """Handle password update for authenticated users (English)."""
-            return await password_update_handler(request)
-        
-        # User invitation routes - shared handler
-        async def invite_user_handler(request):
-            """Handle user invitation for authenticated users."""
-            self.request = request  # Store request for translation context
-            
-            if not self.is_authenticated(request):
-                return {"success": False, "message": self.get_message("authentication_required")}
-            
-            user_info = self.get_current_user(request)
-            
-            # Only club users can invite (not admins)
-            if not user_info.get("club_id"):
-                return {"success": False, "message": self.get_message("only_club_users_invite")}
-            
-            if not self.auth:
-                return {"success": False, "message": self.get_message("auth_service_unavailable")}
-            
-            form = await request.form()
-            invite_email = form.get("invite_email", "").strip()
-            
-            # Validate input
-            if not invite_email:
-                return {"success": False, "message": self.get_message("email_required")}
-            
-            if "@" not in invite_email:
-                return {"success": False, "message": self.get_message("valid_email_required")}
-            
-            # Send invitation
-            success, message = self.auth.invite_user_to_club(
-                user_info["club_id"],
-                invite_email,
-                user_info["email"]
-            )
-            
-            return {"success": success, "message": message}
-        
-        @rt("/dashboard/invite-user", methods=["POST"])
-        async def invite_user(request):
-            """Handle user invitation for authenticated users (Dutch)."""
-            return await invite_user_handler(request)
-        
-        @rt("/en/dashboard/invite-user", methods=["POST"])
-        async def invite_user_en(request):
-            """Handle user invitation for authenticated users (English)."""
-            return await invite_user_handler(request)
-        
-        @rt("/register/{token}", methods=["GET", "POST"])
-        async def registration_handler(request):
-            """Handle both GET and POST for user registration."""
-            if not self.auth:
-                return RedirectResponse(url="/?error=auth_not_available", status_code=302)
-            
-            token = request.path_params["token"]
-            
-            if request.method == "GET":
-                # Show registration form
-                club_id = self.auth.validate_registration_token(token)
-                
-                if not club_id:
-                    return Title("Invalid Registration Link"), Div(
-                        Div(
-                            H1("Invalid or Expired Registration Link", cls="text-3xl font-bold text-red-600 mb-4"),
-                            P("This registration link is invalid or has expired.", cls="text-gray-600 mb-4"),
-                            A("Go to Home", href="/", cls="text-[#3D2E7C] hover:underline"),
-                            cls="text-center"
-                        ),
-                        cls="min-h-screen flex items-center justify-center bg-gray-50"
-                    )
-                
-                # Get club name
-                clubs_df = self.auth.get_clubs()
-                club_name = ""
-                if clubs_df is not None and not clubs_df.empty:
-                    club_row = clubs_df[clubs_df['club_id'] == club_id]
-                    if not club_row.empty:
-                        club_name = club_row.iloc[0]['name']
-                
-                # Check for pre-filled email from invitation
-                pre_filled_email = request.query_params.get("email", "")
-                
-                registration_form = RegistrationForm()
-                return Title("Create Account"), Html(
-                    Head(
-                        Title("Create Account"),
-                        Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
-                        Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
-                        Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
-                        Script(src=self.versioned_url("/static/js/shared-utils.js")),
-                        Script(src=self.versioned_url("/static/js/form-handlers.js"))
-                    ),
-                    Body(
-                        Div(
-                            registration_form.render(club_name, pre_filled_email),
-                            cls="min-h-screen flex items-center justify-center bg-gray-50 py-12"
-                        )
-                    )
-                )
-            
-            elif request.method == "POST":
-                # Handle user registration
-                form = await request.form()
-                email = form.get("email", "").strip()
-                password = form.get("password", "")
-                confirm_password = form.get("confirm_password", "")
-                
-                # Client-side validation prevents invalid submissions
-                
-                success, message = self.auth.complete_registration(token, email, password)
-                
-                if success:
-                    # Store success message in session to show on homepage
-                    request.session["success_message"] = self.get_message("registration_success") or "Registration completed successfully! You can now log in with your new account."
-                    return RedirectResponse(url="/", status_code=302)
-                else:
-                    # Show error page for database/server errors
-                    return Title("Registration Error"), Div(
-                        Div(
-                            H1("Registration Error", cls="text-3xl font-bold text-red-600 mb-4"),
-                            P(f"Registration failed: {message}", cls="text-gray-600 mb-4"),
-                            A("Go Back", href=f"/register/{token}", cls="text-[#3D2E7C] hover:underline"),
-                            cls="text-center"
-                        ),
-                        cls="min-h-screen flex items-center justify-center bg-gray-50"
-                    )
-        
-        # Forgot password routes - shared handler
-        async def forgot_password_shared_handler(request):
-            """Handle both GET and POST for forgot password."""
-            if request.method == "GET":
-                current_lang = getattr(request.state, 'language', 'nl')
-                password_reset_translations = self.translations.get(current_lang, {}).get("password_reset", {})
-                
-                reset_form = PasswordResetForm(password_reset_translations, current_lang)
-                return Title(password_reset_translations.get("title", "Reset Password")), Div(
-                    reset_form.render_request_form(),
-                    cls="min-h-screen flex items-center justify-center bg-gray-50 py-12"
-                )
-            
-            elif request.method == "POST":
-                # Handle forgot password request
-                self.request = request  # Store request for translation context
-                is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-                
-                if not self.auth:
-                    if is_ajax:
-                        return {"success": False, "message": self.get_message("auth_not_available")}
-                    else:
-                        return RedirectResponse(url="/?error=auth_not_available", status_code=302)
-                
-                form = await request.form()
-                email = form.get("email", "").strip()
-                
-                # Get current language from request state
-                current_lang = getattr(request.state, 'language', 'nl')
-                
-                if not email:
-                    if is_ajax:
-                        return {"success": False, "message": self.get_message("enter_email_address")}
-                    else:
-                        return RedirectResponse(url="/forgot-password?error=missing_email", status_code=302)
-                
-                success, message = self.auth.initiate_password_reset(email, current_lang)
-                
-                if is_ajax:
-                    if success:
-                        return {"success": True, "message": self.get_message("password_reset_sent")}
-                    else:
-                        # For security, always show success message to prevent email enumeration
-                        return {"success": True, "message": self.get_message("password_reset_sent")}
-                else:
-                    if success:
-                        return RedirectResponse(url="/?success=reset_email_sent", status_code=302)
-                    else:
-                        return RedirectResponse(url="/forgot-password?error=reset_failed", status_code=302)
-        
-        # Dutch forgot password route
-        @rt("/forgot-password", methods=["GET", "POST"])
-        async def forgot_password_nl(request):
-            """Handle forgot password for Dutch site."""
-            return await forgot_password_shared_handler(request)
-        
-        # English forgot password route
-        @rt("/en/forgot-password", methods=["GET", "POST"])
-        async def forgot_password_en(request):
-            """Handle forgot password for English site."""
-            return await forgot_password_shared_handler(request)
-        
-        @rt("/reset-password/{token}", methods=["GET", "POST"])
-        async def reset_password_handler(request):
-            """Handle both GET and POST for password reset."""
-            if not self.auth:
-                return RedirectResponse(url="/?error=auth_not_available", status_code=302)
-            
-            token = request.path_params["token"]
-            
-            if request.method == "GET":
-                reset_language = self.auth.get_reset_token_language(token)
-                password_reset_translations = self.translations.get(reset_language, {}).get("password_reset", {})
-                
-                # Validate token
-                reset_data = self.auth.db.fetch_one(
-                    "SELECT user_id, expires_at, used_at FROM password_resets WHERE token = :token",
-                    {"token": token}
-                )
-                
-                if not reset_data or reset_data[2] or datetime.now() > reset_data[1]:  # used_at or expired
-                    return Title(password_reset_translations.get("invalid_expired_title", "Invalid Reset Link")), Div(
-                        Div(
-                            H1(password_reset_translations.get("invalid_expired_title", "Invalid or Expired Reset Link"), cls="text-3xl font-bold text-red-600 mb-4"),
-                            P(password_reset_translations.get("invalid_expired_message", "This password reset link is invalid or has expired."), cls="text-gray-600 mb-4"),
-                            A(password_reset_translations.get("request_new_link", "Request New Reset Link"), href="/forgot-password", cls="text-[#3D2E7C] hover:underline"),
-                            cls="text-center"
-                        ),
-                        cls="min-h-screen flex items-center justify-center bg-gray-50"
-                    )
-                
-                reset_form = PasswordResetForm(password_reset_translations, reset_language)
-                return Html(
-                    Head(
-                        Title(password_reset_translations.get("title", "Reset Password")),
-                        Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
-                        Link(rel="stylesheet", href=self.versioned_url("/static/app.css"), type="text/css"),
-                        Link(rel="icon", href=self.versioned_url("/static/assets/Teambee icon.png"), type="image/png"),
-                        Script(src=self.versioned_url("/static/js/shared-utils.js")),
-                        Script(src=self.versioned_url("/static/js/form-handlers.js")),
-                    ),
-                    Body(
-                        Div(
-                            Div(
-                                reset_form.render_reset_form(),
-                                cls="w-full max-w-md"
-                            ),
-                            cls="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4"
-                        )
-                    )
-                )
-            
-            elif request.method == "POST":
-                # Handle password reset
-                self.request = request  # Store request for translation context
-                is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-                
-                form = await request.form()
-                password = form.get("password", "")
-                confirm_password = form.get("confirm_password", "")
-                
-                # Validate input
-                if not password or not confirm_password:
-                    error_message = self.get_message("both_passwords_required")
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url=f"/reset-password/{token}?error=missing_fields", status_code=302)
-                
-                if password != confirm_password:
-                    error_message = self.get_message("passwords_no_match")
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url=f"/reset-password/{token}?error=passwords_dont_match", status_code=302)
-                
-                if len(password) < 8:
-                    error_message = self.get_message("password_min_8_chars")
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url=f"/reset-password/{token}?error=password_too_short", status_code=302)
-                
-                # Try to reset password
-                success, message = self.auth.reset_password(token, password)
-                
-                if is_ajax:
-                    if success:
-                        return {"success": True, "message": self.get_message("password_reset_success"), "redirect": "/"}
-                    else:
-                        return {"success": False, "message": message}
-                else:
-                    if success:
-                        return RedirectResponse(url="/?success=password_reset", status_code=302)
-                    else:
-                        return RedirectResponse(url=f"/reset-password/{token}?error={message}", status_code=302)
-        
-        # Admin panel routes
-        @rt("/admin")
-        async def admin_redirect(request):
-            """Redirect to admin users page."""
-            if not self.require_admin(request):
-                return RedirectResponse(url="/", status_code=302)
-            
-            return RedirectResponse(url="/admin/users", status_code=302)
-        
-        @rt("/admin/users")
-        async def admin_users(request):
-            """Admin users page."""
-            if not self.require_admin(request):
-                return RedirectResponse(url="/", status_code=302)
-            
-            user_info = self.get_current_user(request)
-            admin_layout = AdminPanelLayout(self.versioned_url)
-            
-            # Get all users
-            users_df = self.auth.get_all_users()
-            
-            if users_df is None or users_df.empty:
-                user_rows = [Tr(Td("No users found", colspan="6", cls="text-center text-gray-500 py-4"))]
-            else:
-                user_rows = []
-                for _, user in users_df.iterrows():
-                    user_rows.append(
-                        Tr(
-                            Td(user['email'], cls="px-4 py-2 text-sm"),
-                            Td(user['user_type'], cls="px-4 py-2 text-sm"),
-                            Td(user['club_name'] if user['club_name'] else 'N/A', cls="px-4 py-2 text-sm"),
-                            Td(str(user['last_login']) if user['last_login'] else 'Never', cls="px-4 py-2 text-sm text-gray-500"),
-                            Td(str(user['created_at']), cls="px-4 py-2 text-sm text-gray-500"),
-                            Td(
-                                Form(
-                                    Button(
-                                        Img(
-                                            src=self.versioned_url("/static/assets/trash.svg"),
-                                            alt="Delete",
-                                            cls="w-4 h-4"
-                                        ),
-                                        type="submit",
-                                        cls="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors",
-                                        onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')"
-                                    ),
-                                    method="post",
-                                    action=f"/admin/delete-user/{user['user_id']}"
-                                ),
-                                cls="px-4 py-2 text-sm"
-                            ),
-                            cls="border-b hover:bg-gray-50 user-row"
-                        )
-                    )
-            
-            content = Div(
-                Div(
-                    H1("All Users", cls="text-3xl font-bold text-[#3D2E7C] mb-4"),
-                    
-                    # Search bar
-                    Div(
-                        Input(
-                            type="text",
-                            id="user-search",
-                            placeholder="Search by email...",
-                            cls="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:border-[#3D2E7C]"
-                        ),
-                        cls="mb-6"
-                    ),
-                    
-                    Div(
-                        Table(
-                            Thead(
-                                Tr(
-                                    Th("Email", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("Type", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("Club", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("Last Login", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("Created", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("Actions", cls="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    cls="bg-gray-50"
-                                )
-                            ),
-                            Tbody(*user_rows, id="users-tbody"),
-                            cls="min-w-full divide-y divide-gray-200"
-                        ),
-                        
-                        # No results message (initially hidden)
-                        Div(
-                            P("No users found matching your search.", cls="text-center text-gray-500 py-8"),
-                            id="no-users-found",
-                            cls="hidden bg-white shadow-sm rounded-lg p-4"
-                        ),
-                        
-                        # Pagination container
-                        Div(id="users-pagination-container"),
-                        
-                        cls="bg-white shadow-sm rounded-lg overflow-hidden"
-                    ),
 
-                    
-                    cls="container mx-auto px-4"
-                ),
-            )
-            
-            return admin_layout.render(user_info, content)
         
-        @rt("/admin/clubs")
-        async def admin_clubs(request):
-            """Admin clubs page."""
-            if not self.require_admin(request):
-                return RedirectResponse(url="/", status_code=302)
-            
-            user_info = self.get_current_user(request)
-            admin_layout = AdminPanelLayout(self.versioned_url)
-            
-            # Get all clubs
-            clubs_df = self.auth.get_clubs()
-            
-            if clubs_df is None or clubs_df.empty:
-                club_rows = [Tr(Td("No clubs found", colspan="5", cls="text-center text-gray-500 py-8"))]
-            else:
-                club_rows = []
-                for _, club in clubs_df.iterrows():
-                    club_rows.append(
-                        Tr(
-                            Td(club['name'], cls="px-4 py-3 text-sm font-medium"),
-                            Td(club['system_prefix'], cls="px-4 py-3 text-sm"),
-                            Td(club['language'].upper(), cls="px-4 py-3 text-sm"),
-                            Td(str(club['created_at']), cls="px-4 py-3 text-sm text-gray-500"),
-                            Td(
-                                Button(
-                                    "Send Invitation",
-                                    cls="text-[#3D2E7C] border border-[#3D2E7C] hover:bg-[#3D2E7C] hover:text-white transition-colors px-1 py-1 rounded text-sm admin-invite-trigger",
-                                    data_club_id=str(club['club_id']),
-                                    data_club_name=club['name']
-                                ),
-                                cls="px-4 py-3 text-sm"
-                            ),
-                            cls="border-b hover:bg-gray-50 club-row"
-                        )
-                    )
-            
-            content = Div(
-                Div(
-                    H1("All Clubs", cls="text-3xl font-bold text-[#3D2E7C] mb-4"),
-                    
-                    # Action bar with search and create button
-                    Div(
-                        Input(
-                            type="text",
-                            id="club-search",
-                            placeholder="Search by club name...",
-                            cls="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3D2E7C] focus:border-[#3D2E7C]"
-                        ),
-                        A("Create New Club", href="/admin/create-club", 
-                          cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90"),
-                        cls="flex justify-between items-center gap-4 mb-6"
-                    ),
-                    
-                    Div(
-                        Table(
-                            Thead(
-                                Tr(
-                                    Th("Name", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("System Prefix", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("Language", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("Created", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    Th("Actions", cls="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"),
-                                    cls="bg-gray-50"
-                                )
-                            ),
-                            Tbody(*club_rows, id="clubs-tbody"),
-                            cls="min-w-full divide-y divide-gray-200"
-                        ),
-                        
-                        # No results message (initially hidden)
-                        Div(
-                            P("No clubs found matching your search.", cls="text-center text-gray-500 py-8"),
-                            id="no-clubs-found",
-                            cls="hidden bg-white shadow-sm rounded-lg p-4"
-                        ),
-                        
-                        # Pagination container
-                        Div(id="clubs-pagination-container"),
-                        
-                        cls="bg-white shadow-sm rounded-lg overflow-hidden"
-                    ),
-
-                    
-                    cls="container mx-auto px-4"
-                ),
-                
-                # Admin invite popup
-                AdminInviteForm(self.versioned_url).render(),
-            )
-            
-            return admin_layout.render(user_info, content)
-        
-        @rt("/admin/create-club", methods=["GET", "POST"])
-        async def admin_create_club_handler(request):
-            """Handle both GET and POST for club creation."""
-            if not self.require_admin(request):
-                return RedirectResponse(url="/", status_code=302)
-            
-            if request.method == "GET":
-                # Show the form
-                user_info = self.get_current_user(request)
-                admin_layout = AdminPanelLayout(self.versioned_url)
-                club_form = ClubForm(self.versioned_url)
-                
-                content = Div(
-                    Div(
-                        club_form.render(),
-                        cls="container mx-auto px-4"
-                    ),
-                )
-                
-                return admin_layout.render(user_info, content)
-            
-            elif request.method == "POST":
-                # Handle form submission
-                if not self.auth:
-                    return RedirectResponse(url="/admin/create-club?error=auth_not_available", status_code=302)
-                
-                try:
-                    form = await request.form()
-                    name = form.get("name", "").strip()
-                    system_prefix = form.get("system_prefix", "").strip()
-                    language = form.get("language", "").strip()
-                    
-                    if not all([name, system_prefix, language]):
-                        return RedirectResponse(url="/admin/create-club?error=missing_fields", status_code=302)
-                    
-                    # Create club
-                    success, message, club_id = self.auth.create_club(name, system_prefix, language)
-                    
-                    if success and club_id:
-                        # Generate registration token for the new club
-                        token = self.auth.create_registration_token(club_id)
-                        
-                        if token:
-                            registration_link = f"{os.getenv('RAILWAY_PUBLIC_DOMAIN', 'http://localhost:8000')}/register/{token}"
-                            
-                            user_info = self.get_current_user(request)
-                            admin_layout = AdminPanelLayout(self.versioned_url)
-                            
-                            content = Div(
-                                Div(
-                                    H1("Club Created Successfully!", cls="text-3xl font-bold text-green-600 mb-6"),
-                                    
-                                    Div(
-                                        H3("Club Details:", cls="text-lg font-semibold mb-4"),
-                                        P(f"Name: {name}", cls="mb-2"),
-                                        P(f"System Prefix: {system_prefix}", cls="mb-2"),
-                                        P(f"Language: {language.upper()}", cls="mb-2"),
-                                        P(f"Club ID: {club_id}", cls="mb-6"),
-                                        
-                                        H3("Registration Link:", cls="text-lg font-semibold mb-4"),
-                                        Code(registration_link, cls="block p-4 bg-gray-100 rounded mb-4 break-all text-sm"),
-                                        P("Share this link with the club administrator to create their account.", cls="text-sm text-gray-600 mb-6"),
-                                        
-                                        Div(
-                                            A("Create Another Club", href="/admin/create-club", 
-                                              cls="inline-flex items-center px-4 py-2 bg-[#3D2E7C] text-white rounded-lg hover:bg-[#3D2E7C]/90 mr-4"),
-                                            A("View All Clubs", href="/admin/clubs", 
-                                              cls="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"),
-                                            cls="flex gap-4"
-                                        ),
-                                        
-                                        cls="bg-white p-6 rounded-lg shadow-sm border"
-                                    ),
-                                    
-                                    cls="container mx-auto px-4"
-                                ),
-                            )
-                            
-                            return admin_layout.render(user_info, content)
-                        else:
-                            return RedirectResponse(url="/admin/create-club?error=token_creation_failed", status_code=302)
-                    else:
-                        return RedirectResponse(url=f"/admin/create-club?error={message}", status_code=302)
-                    
-                except Exception as e:
-                    return RedirectResponse(url="/admin/create-club?error=unexpected_error", status_code=302)
-        
-        @rt("/admin/send-registration-link", methods=["POST"])
-        async def admin_send_registration_link(request):
-            """Send registration link via email to specified address."""
-            if not self.require_admin(request):
-                return {"success": False, "message": "Access denied"}
-            
-            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-            
-            if not self.auth:
-                error_message = "Authentication service is not available"
-                if is_ajax:
-                    return {"success": False, "message": error_message}
-                else:
-                    return RedirectResponse(url="/admin/clubs?error=auth_not_available", status_code=302)
-            
-            try:
-                form = await request.form()
-                club_id = int(form.get("club_id", 0))
-                email = form.get("email", "").strip()
-                
-                # Validate input
-                if not club_id:
-                    error_message = "Club ID is required"
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url="/admin/clubs?error=missing_club_id", status_code=302)
-                
-                if not email:
-                    error_message = "Email address is required"
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url="/admin/clubs?error=missing_email", status_code=302)
-                
-                if "@" not in email or "." not in email:
-                    error_message = "Please enter a valid email address"
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url="/admin/clubs?error=invalid_email", status_code=302)
-                
-                # Get club info
-                clubs_df = self.auth.get_clubs()
-                if clubs_df is None or clubs_df.empty:
-                    error_message = "No clubs found"
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url="/admin/clubs?error=no_clubs", status_code=302)
-                
-                club_row = clubs_df[clubs_df['club_id'] == club_id]
-                if club_row.empty:
-                    error_message = "Club not found"
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url="/admin/clubs?error=club_not_found", status_code=302)
-                
-                club_name = club_row.iloc[0]['name']
-                club_language = club_row.iloc[0].get('language', 'nl')
-                
-                # Create registration token
-                token = self.auth.create_registration_token(club_id)
-                
-                if not token:
-                    error_message = "Failed to create registration token"
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url="/admin/clubs?error=token_creation_failed", status_code=302)
-                
-                # Send registration email
-                registration_link = f"{os.getenv('RAILWAY_PUBLIC_DOMAIN', 'http://localhost:8000')}/register/{token}?email={email}"
-                success = self.auth.send_registration_email(email, registration_link, club_name, club_language)
-                
-                if success:
-                    success_message = f"Registration link sent to {email}"
-                    if is_ajax:
-                        return {"success": True, "message": success_message}
-                    else:
-                        return RedirectResponse(url="/admin/clubs?success=email_sent", status_code=302)
-                else:
-                    error_message = "Failed to send email. Please try again."
-                    if is_ajax:
-                        return {"success": False, "message": error_message}
-                    else:
-                        return RedirectResponse(url="/admin/clubs?error=email_send_failed", status_code=302)
-                
-            except ValueError:
-                error_message = "Invalid club ID"
-                if is_ajax:
-                    return {"success": False, "message": error_message}
-                else:
-                    return RedirectResponse(url="/admin/clubs?error=invalid_club_id", status_code=302)
-            except Exception as e:
-                print(f"Admin send registration link error: {e}")
-                error_message = "An unexpected error occurred. Please try again."
-                if is_ajax:
-                    return {"success": False, "message": error_message}
-                else:
-                    return RedirectResponse(url="/admin/clubs?error=unexpected_error", status_code=302)
-        
-        @rt("/admin/delete-user/{user_id}", methods=["POST"])
-        async def admin_delete_user(request):
-            """Delete a user."""
-            if not self.require_admin(request):
-                return RedirectResponse(url="/", status_code=302)
-            
-            user_id = int(request.path_params["user_id"])
-            
-            if not self.auth:
-                return RedirectResponse(url="/admin/users?error=auth_not_available", status_code=302)
-            
-            # Prevent admin from deleting themselves
-            current_user = self.get_current_user(request)
-            if current_user and current_user["user_id"] == user_id:
-                return RedirectResponse(url="/admin/users?error=cannot_delete_self", status_code=302)
-            
-            success, message = self.auth.delete_user(user_id)
-            
-            if success:
-                return RedirectResponse(url="/admin/users?success=user_deleted", status_code=302)
-            else:
-                return RedirectResponse(url=f"/admin/users?error={message}", status_code=302)
-        
-        # Contact form routes - shared handler
-        async def contact_form_handler(request):
-            """Handle contact form submissions."""
-            is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-            
-            # Get current language for translations
-            self.request = request
-            current_lang = request.state.language
-            
-            try:
-                form = await request.form()
-                first_name = form.get("first_name", "").strip()
-                last_name = form.get("last_name", "").strip()
-                club_name = form.get("club_name", "").strip()
-                email = form.get("email", "").strip()
-                phone = form.get("phone", "").strip()
-                form_type = form.get("form_type", "").strip()
-                
-                # Validate required fields
-                if not all([first_name, last_name, club_name, email, phone]):
-                    error_msg = self.get_text("contact", "all_fields_required") or "All fields are required"
-                    if is_ajax:
-                        return {"success": False, "message": error_msg}
-                    else:
-                        return RedirectResponse(url="/?error=missing_fields", status_code=302)
-                
-                # Validate email format
-                if "@" not in email or "." not in email:
-                    error_msg = self.get_text("contact", "invalid_email") or "Please enter a valid email address"
-                    if is_ajax:
-                        return {"success": False, "message": error_msg}
-                    else:
-                        return RedirectResponse(url="/?error=invalid_email", status_code=302)
-                
-                # Determine form type identifier
-                identifier = "CRM" if form_type == "services" else "Ongoing"
-                
-                # Send email
-                success, message = self.send_contact_email(
-                    first_name, last_name, club_name, email, phone, identifier
-                )
-                
-                if is_ajax:
-                    if success:
-                        success_msg = self.get_text("contact", "success_message") or "Thank you for your message! We'll get back to you soon."
-                        return {"success": True, "message": success_msg}
-                    else:
-                        error_msg = self.get_text("contact", "error_message") or "Sorry, there was an error sending your message. Please try again."
-                        return {"success": False, "message": error_msg}
-                else:
-                    if success:
-                        return RedirectResponse(url="/?success=contact_sent", status_code=302)
-                    else:
-                        return RedirectResponse(url="/?error=contact_failed", status_code=302)
-                
-            except Exception as e:
-                print(f"Contact form error: {e}")
-                error_msg = self.get_text("contact", "error_message") or "Sorry, there was an error sending your message. Please try again."
-                if is_ajax:
-                    return {"success": False, "message": error_msg}
-                else:
-                    return RedirectResponse(url="/?error=contact_failed", status_code=302)
-        
-        # Dutch contact route
-        @rt("/contact", methods=["POST"])
-        async def contact_nl(request):
-            """Handle contact form submissions for Dutch site."""
-            return await contact_form_handler(request)
-        
-        # English contact route
-        @rt("/en/contact", methods=["POST"])
-        async def contact_en(request):
-            """Handle contact form submissions for English site."""
-            return await contact_form_handler(request)
         
         # Success stories direct link routes
         @rt("/success-stories")
@@ -1253,48 +230,13 @@ class TeambeeApp:
             return Title("Teambee"), homepage_content
     
     def send_contact_email(self, first_name, last_name, club_name, email, phone, identifier):
-        """Send contact form email to info@teambee.fit."""
-        try:
-            # Use the same email configuration as auth system
-            email_user = os.getenv("EMAIL_USER")
-            email_password = os.getenv("EMAIL_PASSWORD")
-            from_email = os.getenv("FROM_EMAIL", email_user)
-            smtp_server = os.getenv("SMTP_SERVER")
-            smtp_port = int(os.getenv("SMTP_PORT"))
-            
-            # Create message
-            msg = MIMEMultipart()
-            msg['From'] = from_email
-            msg['To'] = "info@teambee.fit"
-            msg['Subject'] = f"New Contact Form Submission - {identifier}"
-            
-            # Email body
-            body = f"""
-                    New contact form submission:
-
-                    Name: {first_name} {last_name}
-                    Club: {club_name}
-                    Email: {email}
-                    Phone: {phone}
-                    Type: {identifier}
-
-                    ---
-                    This message was sent from the Teambee website contact form.
-                    """
-            
-            msg.attach(MIMEText(body, 'plain'))
-            
-            # Send email
-            with smtplib.SMTP(smtp_server, smtp_port) as server:
-                server.starttls()
-                server.login(email_user, email_password)
-                server.send_message(msg)
-            
-            return True, "Email sent successfully"
-            
-        except Exception as e:
-            print(f"Email sending error: {e}")
-            return False, f"Failed to send email: {str(e)}"
+        """Send contact form email using EmailService."""
+        if not self.email_service:
+            return False, "Email service not available"
+        
+        return self.email_service.send_contact_email(
+            first_name, last_name, club_name, email, phone, identifier
+        )
     
     def create_homepage(self, success_message=None, auto_open_success_stories=False, target_url=None):
         """Create the Teambee homepage."""
@@ -1356,7 +298,7 @@ class TeambeeApp:
             # Main content
             Main(
                 # Hero Section
-                self._create_hero_section(),
+                HeroSection(self.translations, self.versioned_url, self.request.state.language).render(),
                 
                 # Jumping arrow between hero and about sections
                 Div(
@@ -1369,19 +311,19 @@ class TeambeeApp:
                 ),
                 
                 # About Section
-                self._create_about_section(),
+                AboutSection(self.translations, self.versioned_url, self.request.state.language).render(),
                 
                 # Services Section
-                self._create_services_section(),
+                ServicesSection(self.translations, self.versioned_url, self.request.state.language).render(),
                 
                 # Benefits Section
-                self._create_benefits_section(),
+                BenefitsSection(self.translations, self.versioned_url, self.request.state.language).render(),
                 
                 # Reviews Section
-                self._create_reviews_section(),
+                ReviewsSection(self.translations, self.versioned_url, self.request.state.language).render(),
                 
                 # Login Section
-                self._create_login_section(),
+                LoginSection(self.translations, self.versioned_url, self.request.state.language).render(),
                 
                 cls="flex-1 relative z-0",
                 role="main",
@@ -1396,6 +338,12 @@ class TeambeeApp:
             
             # Contact popup modal
             self._create_contact_popup(),
+            
+            # Password reset popup modal
+            self._create_password_reset_popup(),
+            
+            # Registration popup modal
+            self._create_registration_popup(),
             
             **container_attrs
         )
@@ -1488,604 +436,9 @@ class TeambeeApp:
             role="banner"
         )
     
-    def _create_hero_section(self):
-        """Create the hero section."""
-        return Section(
-            Div(
-                Div(
-                    Div(
-                        H1(
-                            self.get_text("home", "hero_title"),
-                            cls="text-4xl md:text-5xl font-bold italic text-[#3D2E7C] leading-tight animate-section-title"
-                        ),
-                        P(
-                            self.get_text("home", "hero_subtitle"),
-                            cls="text-lg text-gray-600 max-w-md animate-section-subtitle"
-                        ),
-                        Div(
-                            Button(
-                                "Our services",
-                                Span("→", cls="ml-2"),
-                                cls="inline-flex h-10 items-center justify-center rounded-lg bg-[#3D2E7C] px-8 py-2 text-sm font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#3D2E7C]/90 hover:-translate-y-2 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 animate-card",
-                                id="hero-services-button"
-                            ),
-                            cls="flex flex-col sm:flex-row gap-4"
-                        ),
-                        cls="space-y-6"
-                    ),
-                    Div(
-                        Img(
-                            src=self.versioned_url("/static/assets/Teambee icon.png"),
-                            alt="Teambee Hero",
-                            cls="w-full h-full object-contain animate-card",
-                            loading="lazy"
-                        ),
-                        cls="relative h-[300px] md:h-[400px] hidden md:flex items-center justify-center"
-                    ),
-                    cls="grid gap-8 md:grid-cols-2 items-center"
-                ),
-                cls="container"
-            ),
-            cls="py-20 md:py-32"
-        )
+
     
-    def _create_about_section(self):
-        """Create the about section."""
-        return Section(
-            Div(
-                Div(
-                    H2(
-                        self.get_text("about", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4"
-                    ),
-                    P(
-                        self.get_text("about", "subtitle"),
-                        cls="text-lg text-gray-600 max-w-2xl mx-auto"
-                    ),
-                    cls="text-center mb-12"
-                ),
-                
-                Div(
-                    # Synergie card
-                    Div(
-                        Div(
-                            Img(
-                                src=self.versioned_url("/static/assets/users.svg"),
-                                alt="Synergie Icon",
-                                cls="w-6 h-6"
-                            ),
-                            cls="w-12 h-12 bg-[#E8973A]/20 rounded-full flex items-center justify-center mb-4"
-                        ),
-                        H3(
-                            self.get_text("about", "teamwork_title"),
-                            cls="text-xl font-semibold text-[#1B1947] mb-2"
-                        ),
-                        P(
-                            self.get_text("about", "teamwork_text"),
-                            cls="text-gray-600"
-                        ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300"
-                    ),
-                    
-                    # Resultaatgericht card
-                    Div(
-                        Div(
-                            Img(
-                                src=self.versioned_url("/static/assets/target.svg"),
-                                alt="Resultaatgericht Icon",
-                                cls="w-6 h-6"
-                            ),
-                            cls="w-12 h-12 bg-[#3D2E7C]/20 rounded-full flex items-center justify-center mb-4"
-                        ),
-                        H3(
-                            self.get_text("about", "results_title"),
-                            cls="text-xl font-semibold text-[#1B1947] mb-2"
-                        ),
-                        P(
-                            self.get_text("about", "results_text"),
-                            cls="text-gray-600"
-                        ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300"
-                    ),
-                    
-                    # Duurzaam card
-                    Div(
-                        Div(
-                            Img(
-                                src=self.versioned_url("/static/assets/sprout.svg"),
-                                alt="Duurzaam Icon",
-                                cls="w-6 h-6"
-                            ),
-                            cls="w-12 h-12 bg-[#94C46F]/20 rounded-full flex items-center justify-center mb-4"
-                        ),
-                        H3(
-                            self.get_text("about", "sustainable_title"),
-                            cls="text-xl font-semibold text-[#1B1947] mb-2"
-                        ),
-                        P(
-                            self.get_text("about", "sustainable_text"),
-                            cls="text-gray-600"
-                        ),
-                        cls="bg-white p-6 rounded-lg shadow-sm transform transition-shadow duration-300 hover:shadow-md hover:shadow-gray-300"
-                    ),
-                    
-                    cls="grid md:grid-cols-3 gap-8 animate-stagger-container"
-                ),
-                
-                cls="container"
-            ),
-            id="about",
-            cls="py-16 md:py-24"
-        )
     
-    def _create_services_section(self):
-        """Create the services section."""
-        return Section(
-            Div(
-                Div(
-                    H2(
-                        self.get_text("services", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic mb-4 animate-section-title"
-                    ),
-                    cls="text-center mb-12"
-                ),
-                
-                Div(
-                    # Implementation section
-                    Div(
-                        Div(
-                            # Header section
-                            Div(
-                                H3(
-                                    self.get_text("services", "implementation"),
-                                    cls="text-xl font-semibold text-[#ffffff] mb-2"
-                                ),
-                                P(
-                                    self.get_text("services", "subtitle"),
-                                    cls="text-sm text-white/80 animate-section-subtitle mb-4"
-                                ),
-                                # Separator line
-                                Div(
-                                    cls="w-50 h-0.5 bg-white/30 mb-6"
-                                ),
-                                cls=""
-                            ),
-                            
-                            # Content section
-                            Div(
-                                Ul(
-                                    self._create_check_list_item(self.get_text("services", "strategy")),
-                                    self._create_check_list_item(self.get_text("services", "design")),
-                                    self._create_check_list_item(self.get_text("services", "implementation_detail")),
-                                    self._create_check_list_item(self.get_text("services", "education")),
-                                    self._create_check_list_item(self.get_text("services", "data_support")),
-                                    cls="space-y-3"
-                                ),
-                                cls="flex-grow"
-                            ),
-                            
-                            # Button container
-                            Div(
-                                Button(
-                                    self.get_text("services", "cta"),
-                                    cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
-                                    id="services-cta-button",
-                                    data_form_type="services"
-                                ),
-                                cls="text-center mt-4"
-                            ),
-                            cls="bg-[#1B1947] p-6 rounded-lg min-h-[570px] animate-card flex flex-col justify-between"
-                        ),
-                        cls="flex flex-col"
-                    ),
-                    
-                    # Data Support section
-                    Div(
-                        Div(
-                            # Header section
-                            Div(
-                                H3(
-                                    self.get_text("services", "data_support_title"),
-                                    cls="text-xl font-semibold text-[#ffffff] mb-2"
-                                ),
-                                P(
-                                    self.get_text("services", "data_support_subtitle"),
-                                    cls="text-sm text-white/80 animate-section-subtitle mb-4"
-                                ),
-                                # Separator line
-                                Div(
-                                    cls="w-50 h-0.5 bg-white/30 mb-6"
-                                ),
-                                cls=""
-                            ),
-                            
-                            # Content section
-                            Div(
-                                Ul(
-                                    self._create_check_list_item(self.get_text("services", "data_support_inzicht")),
-                                    self._create_check_list_item(self.get_text("services", "data_support_actie")),
-                                    self._create_check_list_item(self.get_text("services", "data_support_retentie")),
-                                    self._create_check_list_item(self.get_text("services", "data_support_team")),
-                                    self._create_check_list_item(self.get_text("services", "data_support_groei")),
-                                    cls="space-y-3"
-                                ),
-                                cls="flex-grow"
-                            ),
-                            
-                            # Button container
-                            Div(
-                                Button(
-                                    self.get_text("services", "view_report"),
-                                    cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 animate-card",
-                                    data_form_type="services"
-                                ),
-                                cls="text-center mt-4"
-                            ),
-                            cls="bg-[#1B1947] p-6 rounded-lg min-h-[570px] animate-card flex flex-col justify-between"
-                        ),
-                        cls="flex flex-col"
-                    ),
-                    cls="grid md:grid-cols-2 gap-8 animate-stagger-container"
-                ),
-                
-                cls="container"
-            ),
-            id="services",
-            cls="py-8 md:py-16 bg-[#3D2E7C] text-white"
-        )
-    
-    def _create_check_list_item(self, text):
-        """Create a check list item with an orange check icon."""
-        return Li(
-            Img(
-                src=self.versioned_url("/static/assets/check.svg"),
-                alt="Check",
-                cls="h-6 w-6 mr-2 mt-0.5"
-            ),
-            Span(text),
-            cls="flex items-start animate-stagger-item"
-        )
-    
-    def _create_benefits_section(self):
-        """Create the benefits section."""
-        partners = [
-            {"name": "TechnoGym", "logo": "TechnoGym", "url": "https://www.technogym.com/"},
-            {"name": "Sportivity", "logo": "Sportivity", "url": "https://sportivity.nl/"},
-            {"name": "Clickables", "logo": "Clickables", "url": "https://clickables.nl/"},
-            {"name": "Unlock", "logo": "Unlock", "url": "https://unlock.nl/"}
-        ]
-        
-        return Section(
-            Div(
-                Div(
-                    H2(
-                        self.get_text("benefits", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4 animate-section-title"
-                    ),
-                    P(
-                        self.get_text("benefits", "subtitle"),
-                        cls="text-lg text-gray-600 max-w-2xl mx-auto animate-section-subtitle"
-                    ),
-                    cls="text-center mb-12"
-                ),
-                
-                Div(
-                    # Member Retention
-                    Div(
-                        Div(
-                            self.get_text("benefits", "retention_percent"),
-                            cls="text-4xl font-bold text-[#E8973A] mb-2"
-                        ),
-                        H3(
-                            self.get_text("benefits", "retention_title"),
-                            cls="text-xl font-semibold text-[#1B1947] mb-2"
-                        ),
-                        P(
-                            self.get_text("benefits", "retention_text"),
-                            cls="text-gray-600"
-                        ),
-                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 animate-card"
-                    ),
-                    
-                    # Member Referrals
-                    Div(
-                        Div(
-                            self.get_text("benefits", "referral_times"),
-                            cls="text-4xl font-bold text-[#E8973A] mb-2"
-                        ),
-                        H3(
-                            self.get_text("benefits", "referral_title"),
-                            cls="text-xl font-semibold text-[#1B1947] mb-2"
-                        ),
-                        P(
-                            self.get_text("benefits", "referral_text"),
-                            cls="text-gray-600"
-                        ),
-                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 animate-card"
-                    ),
-                    
-                    # Engagement Increase
-                    Div(
-                        Div(
-                            self.get_text("benefits", "engagement_percent"),
-                            cls="text-4xl font-bold text-[#E8973A] mb-2"
-                        ),
-                        H3(
-                            self.get_text("benefits", "engagement_title"),
-                            cls="text-xl font-semibold text-[#1B1947] mb-2"
-                        ),
-                        P(
-                            self.get_text("benefits", "engagement_text"),
-                            cls="text-gray-600"
-                        ),
-                        cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 animate-card"
-                    ),
-                    
-                    cls="grid md:grid-cols-3 gap-8 mb-16 animate-stagger-container"
-                ),
-                
-                # Subtle line separator
-                Div(
-                    cls="border-t border-gray-100 w-full mb-8"
-                ),
-                
-                # Partners section
-                Div(
-                    Div(
-                        H3(
-                            self.get_text("benefits", "partners"),
-                            cls="text-lg font-medium text-gray-500 mb-8 animate-section-title"
-                        ),
-                        cls="text-center"
-                    ),
-                    
-                    Div(
-                        *[
-                            Div(
-                                A(
-                                    Img(
-                                        src=self.versioned_url(f"/static/assets/{partner['logo']}.png"),
-                                        alt=partner["name"],
-                                        cls="h-10 md:h-8 w-auto object-contain transition-all duration-300 hover:scale-110 hover:opacity-90"
-                                    ),
-                                    href=partner["url"],
-                                    target="_blank",
-                                    rel="noopener noreferrer",
-                                    aria_label=f"Visit {partner['name']} website",
-                                    cls="flex items-center justify-center p-4"
-                                ),
-                                cls="flex items-center justify-center animate-stagger-item"
-                            )
-                            for partner in partners
-                        ],
-                        cls="grid grid-cols-2 md:flex md:flex-nowrap justify-center items-center gap-4 md:gap-12 max-w-4xl mx-auto animate-stagger-container"
-                    ),
-                    
-                    cls="container"
-                ),
-                
-                cls="container"
-            ),
-            id="benefits",
-            cls="pt-16 pb-8 bg-white/80 backdrop-blur-sm"
-        )
-    
-    def _create_reviews_section(self):
-        """Create the reviews section with client testimonials."""
-        # Load reviews from JSON file
-        reviews_path = os.path.join("public", "data", "reviews.json")
-        try:
-            with open(reviews_path, 'r') as f:
-                reviews = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            reviews = []
-        
-        # Map of author names to their corresponding image files
-        author_images = {
-            "Marco & Patricia Kalfshoven": "doit_foto.jpeg",
-            "Rick Sombroek": "rick_foto.jpg",
-            "Jochem van der Linden": "xfit_foto.jpg",
-            "Jasper Appeldoorn": "xfit_foto.jpg",
-            "Jelle Notkamp": "EV_jelle.jpg"
-        }
-        
-        # Get current language
-        current_lang = self.request.state.language
-        
-        # Generate review cards dynamically from the loaded data
-        review_cards = []
-        for i, review in enumerate(reviews):
-            # Get the appropriate image for the author
-            image_file = author_images.get(review["author"]["nl"], "profile-placeholder.svg")
-            
-            # Create the review card
-            review_card = Div(
-                Div(
-                    Div(
-                        Img(
-                            src=self.versioned_url("/static/assets/quote.svg"),
-                            alt="Quote",
-                            cls="w-8 h-8 text-[#E8973A]"
-                        ),
-                        # Add translation label for English
-                        Span(
-                            "Translated from Dutch",
-                            cls="text-xs text-gray-400 ml-2 italic" if current_lang == "en" else "hidden",
-                        ),
-                        cls="flex items-center mb-4"
-                    ),
-                    P(
-                        review["quote"][current_lang],
-                        cls="text-gray-600 mb-4 flex-grow"
-                    ),
-                    Div(
-                        Div(
-                            Img(
-                                src=self.versioned_url(f"/static/assets/{image_file}"),
-                                alt=review["author"][current_lang],
-                                cls="w-10 h-10 rounded-full bg-gray-200 mr-3 object-cover"
-                            ),
-                            Div(
-                                Div(
-                                    review["author"][current_lang],
-                                    cls="font-semibold text-[#1B1947]"
-                                ),
-                                Div(
-                                    review["title"][current_lang],
-                                    cls="text-sm text-gray-500"
-                                ),
-                            ),
-                        ),
-                        cls="flex items-center mt-3"
-                    ),
-                    cls="bg-white p-6 rounded-lg shadow-sm border border-gray-100 h-full flex flex-col justify-between w-full animate-card"
-                ),
-                cls="slide w-full flex-shrink-0 px-4",
-                id=f"review-{i}"  # Add unique ID for each review
-            )
-            review_cards.append(review_card)
-        
-        return Section(
-            Div(
-                Div(
-                    H2(
-                        self.get_text("reviews", "title"),
-                        cls="text-3xl md:text-4xl font-bold italic text-[#3D2E7C] mb-4 animate-section-title"
-                    ),
-                    P(
-                        self.get_text("reviews", "subtitle"),
-                        cls="text-lg text-gray-600 max-w-2xl mx-auto animate-section-subtitle"
-                    ),
-                    cls="text-center mb-6"
-                ),
-                
-                # Carousel implementation
-                Div(
-                    # Main slider container
-                    Div(
-                        # Wrapper for the slides
-                        Div(
-                            # Container for the slides
-                            Div(
-                                *review_cards,
-                                id="slides",
-                                cls="slides flex transition-transform duration-300 ease-out relative cursor-grab active:cursor-grabbing animate-stagger-container"
-                            ),
-                            cls="wrapper overflow-hidden relative w-full touch-pan-x"
-                        ),
-                        id="slider",
-                        cls="slider relative w-full max-w-4xl mx-auto"
-                    ),
-                    
-                    # Dots for navigation
-                    Div(
-                        id="review-dots",
-                        cls="flex justify-center gap-2 mt-8"
-                    ),
-                    
-                    # Success stories button
-                    Div(
-                        Button(
-                            self.get_text("reviews", "success_stories"),
-                            cls="inline-flex h-12 items-center justify-center rounded-lg bg-[#94C46F] px-8 py-2 text-base font-medium text-white shadow transition-all duration-300 ease-in-out hover:bg-[#94C46F]/90 hover:scale-105 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#94C46F] focus-visible:ring-offset-2 mt-8 animate-card",
-                            id="show-success-stories"
-                        ),
-                        cls="text-center"
-                    ),
-                    
-                    # Success stories panel (initially hidden)
-                    Div(
-                        Div(
-                            # Header with close button that sticks to the top
-                            Div(
-                                Div(
-                                    # Title on the left
-                                    H3(
-                                        self.get_text("reviews", "success_title"),
-                                        cls="text-3xl md:text-4xl font-bold italic text-[#ffffff] mb-0"
-                                    ),
-                                    # Close button on the right
-                                    Button(
-                                        Img(
-                                            src=self.versioned_url("/static/assets/close.svg"),
-                                            alt="Close",
-                                            cls="w-6 h-6"
-                                        ),
-                                        cls="text-white hover:text-gray-200 transition-colors",
-                                        id="close-success-stories"
-                                    ),
-                                    cls="flex justify-between items-center w-full container mx-auto"
-                                ),
-                                cls="sticky top-0 bg-[#3D2E7C] pt-4 pb-4 z-20 w-full flex justify-center"
-                            ),
-                            
-                            # Panel content
-                            Div(
-                                Div(
-                                    # Success stories container with vertical scrolling
-                                    cls="space-y-8"
-                                ),
-                                # Add extra padding at the bottom
-                                cls="container mx-auto pt-4 pb-24"
-                            ),
-                            cls="bg-[#3D2E7C] h-screen w-full fixed top-16 right-0 transform translate-x-full transition-transform duration-500 ease-in-out z-[100] overflow-y-auto"
-                        ),
-                        id="success-stories-panel"
-                    ),
-                    
-                    cls="relative"
-                ),
-                
-                cls="container"
-            ),
-            id="reviews",
-            cls="py-8 md:py-16 bg-gray-100"
-        )
-    
-    def _create_login_section(self):
-        """Create the login section."""
-        # Get login translations for the current language
-        login_translations = self.translations.get(self.request.state.language, {}).get("login", {})
-        login_form = LoginForm(login_translations, "main")
-        
-        return Section(
-            Div(
-                Div(
-                    Div(
-                        H2(
-                            self.get_text("login", "title"),
-                            id="login-heading",
-                            cls="text-3xl font-bold italic text-[#3D2E7C] mb-2"
-                        ),
-                        P(
-                            self.get_text("login", "subtitle"),
-                            cls="text-gray-600"
-                        ),
-                        cls="text-center mb-8"
-                    ),
-                    
-                    # Login form
-                    login_form.render(),
-                    
-                    cls="max-w-md mx-auto"
-                ),
-                cls="container relative z-10"
-            ),
-            
-            # Bottom honeycomb pattern
-            Div(
-                Img(
-                    src=self.versioned_url("/static/assets/honeycomb-cropped.svg"),
-                    alt="Honeycomb Pattern",
-                    cls="w-[200%] h-[40vh] object-cover opacity-15 dark:opacity-10 pointer-events-none [transform:scaleY(-1)]",
-                    loading="lazy"
-                ),
-                cls="absolute bottom-0 left-0 right-0 w-full h-[40vh] z-0"
-            ),
-            
-            id="login",
-            cls="pt-8 md:pt-12 pb-16 bg-white/90 backdrop-blur-sm relative"
-        )
     
     def _create_login_popup(self):
         """Create the login popup modal."""
@@ -2143,6 +496,22 @@ class TeambeeApp:
         contact_form = ContactForm(contact_translations, self.versioned_url)
         
         return contact_form.render()
+    
+    def _create_password_reset_popup(self):
+        """Create the password reset popup modal."""
+        # Get password reset translations for the current language
+        password_reset_translations = self.translations.get(self.request.state.language, {}).get("password_reset", {})
+        password_reset_popup = PasswordResetPopup(password_reset_translations, self.versioned_url)
+        
+        return password_reset_popup.render()
+    
+    def _create_registration_popup(self):
+        """Create the registration popup modal."""
+        # Get registration translations for the current language
+        registration_translations = self.translations.get(self.request.state.language, {}).get("registration", {})
+        registration_popup = RegistrationPopup(registration_translations, self.versioned_url, self.request.state.language)
+        
+        return registration_popup.render()
     
     def _create_footer(self):
         """Create the footer section."""

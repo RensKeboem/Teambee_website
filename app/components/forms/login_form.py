@@ -1,4 +1,11 @@
+"""
+Login Form Component
+
+Contains the login form component for the Teambee application.
+"""
+
 from fasthtml.common import *
+
 
 class LoginForm:
     """Login form component for the Teambee application."""
@@ -48,10 +55,10 @@ class LoginForm:
                         Button(self.get_text("forgot_password", "Forgot password?"), 
                                type="button", id=self.get_id("forgot-password-btn"), aria_label="Reset your password",
                                tabindex="-1",
-                               cls="text-sm text-[#3D2E7C] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded bg-transparent border-none p-0 cursor-pointer"),
-                        cls="flex items-center justify-between mb-1"
+                               cls="text-sm text-[#3D2E7C] hover:text-[#2A1F5C] transition-colors cursor-pointer bg-transparent border-none p-0 underline"),
+                        cls="flex justify-between items-center mb-1"
                     ),
-                    Input(type="password", id=self.get_id("password"), name="password", 
+                    Input(type="password", id=self.get_id("password"), name="password", placeholder=self.get_text("password_placeholder", "Enter your password"), 
                           required=True, aria_required="true", aria_describedby=self.get_id("password-hint"),
                           autocomplete="current-password",
                           cls="w-full px-3 py-2 bg-[#F8F7FB] border border-gray-300 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:border-[#3D2E7C]"),
@@ -59,34 +66,27 @@ class LoginForm:
                     cls="flex flex-col gap-2"
                 ),
                 
-                Div(
-                    Button(
-                        Span(self.get_text("login_button", "Login"), id=self.get_id("login-button-text")),
-                        Span(self.get_text("logging_in", "Logging in..."), id=self.get_id("login-button-loading"), cls="hidden"),
-                        type="submit",
-                        id=self.get_id("login-submit-btn"),
-                        aria_label="Log in to your account",
-                        cls="w-full bg-[#3D2E7C] hover:bg-[#3D2E7C]/90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2"
-                    ),
-                    
-                    Div(
-                        self.get_text("no_account", "Don't have an account?") + " ",
-                        Button(self.get_text("contact_us", "Contact us"), 
-                               type="button", 
-                               id=self.get_id("contact-us-button"),
-                               data_form_type="ongoing",
-                               aria_label="Contact us to create a new account",
-                               cls="text-[#3D2E7C] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 rounded bg-transparent border-none p-0 cursor-pointer underline"),
-                        cls="text-center text-sm text-gray-500 mt-3"
-                    ),
-                    cls="flex flex-col"
-                ),
-                
-                cls="flex flex-col gap-6"
+                cls="flex flex-col gap-4 mb-6"
             ),
+            
+            Button(
+                Div(
+                    Span(self.get_text("login_button", "Log In"), id=self.get_id("login-button-text")),
+                    Div(
+                        Div(cls="animate-spin rounded-full h-4 w-4 border-b-2 border-white"),
+                        id=self.get_id("login-button-loading"),
+                        cls="hidden"
+                    ),
+                    cls="flex items-center justify-center gap-2"
+                ),
+                type="submit", 
+                id=self.get_id("login-submit-btn"),
+                cls="w-full bg-[#3D2E7C] text-white py-2 px-4 rounded-lg hover:bg-[#2A1F5C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3D2E7C] focus-visible:ring-offset-2 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            ),
+            
             id=self.get_id("login-form"),
             method="post",
-            cls="flex flex-col gap-6",
-            aria_labelledby="login-heading",
-            role="form" 
+            action="/login",  # Will be updated by JavaScript based on language
+            cls="space-y-4",
+            novalidate=True
         ) 

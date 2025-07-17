@@ -34,8 +34,10 @@ env/
 
 # Misc
 .DS_Store
+.sesskey
 node_modules/
 .cache/
+*.log
 
 # Generated CSS
 public/app.css

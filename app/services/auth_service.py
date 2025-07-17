@@ -1,3 +1,9 @@
+"""
+Authentication Service
+
+Handles user authentication, registration, and password reset functionality.
+"""
+
 import hashlib
 import secrets
 import smtplib
@@ -11,13 +17,14 @@ import logging
 from urllib.parse import quote
 
 # Import local database manager
-from database_manager import DatabaseManager
+from app.models.base import DatabaseManager
 
-class AuthManager:
+
+class AuthService:
     """Handles user authentication, registration, and password reset functionality."""
     
     def __init__(self, db_manager: DatabaseManager = None, translations: dict = None):
-        """Initialize the AuthManager with database connection and translations."""
+        """Initialize the AuthService with database connection and translations."""
         self.db = db_manager or DatabaseManager()
         self.logger = logging.getLogger(__name__)
         self.translations = translations or {}
@@ -1020,4 +1027,8 @@ class AuthManager:
             
         except Exception as e:
             self.logger.error(f"Error sending invitation email: {e}")
-            return False 
+            return False
+
+
+# Backward compatibility alias
+AuthManager = AuthService 

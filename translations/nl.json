@@ -79,6 +79,7 @@
     "welcome": "Welkom,",
     "welcome_message": "Welkom bij je Teambee Dashboard",
     "welcome_subtitle": "Gebruik het gebruikersmenu rechtsboven om je wachtwoord bij te werken of nieuwe gebruikers uit te nodigen voor je club.",
+    "admin_viewing_subtitle": "Je bekijkt het dashboard van deze club als beheerder.",
     "update_password": "Wachtwoord Bijwerken",
     "invite_new_user": "Nieuwe Gebruiker Uitnodigen",
     "logout": "Uitloggen",
@@ -189,7 +190,15 @@
       "fallback_text": "Als de bovenstaande knop niet werkt, kun je deze link in je browser kopiëren en plakken:",
       "signature": "Met vriendelijke groet,",
       "team_name": "Het Teambee Team",
-      "plain_text": "Beste Gebruiker,\n\nJe bent uitgenodigd om een account aan te maken voor {club_name} op Teambee.\n\nKlik op de volgende link om je registratie te voltooien:\n{registration_link}\n\nDeze link verloopt over 24 uur.\n\nMet vriendelijke groet,\nHet Teambee Team"
+      "plain_text": "Beste Gebruiker,\n\nJe bent uitgenodigd om een account aan te maken voor {club_name} op Teambee.\n\nKlik op de volgende link om je registratie te voltooien:\n{registration_link}\n\nDeze link verloopt over 24 uur.\n\nMet vriendelijke groet,\nHet Teambee Team",
+      "create_account_title": "Maak Je Account Aan",
+      "email_label": "Email",
+      "password_label": "Wachtwoord",
+      "confirm_password_label": "Bevestig Wachtwoord",
+      "password_requirement": "Wachtwoord moet minimaal 8 tekens bevatten",
+      "passwords_mismatch": "Wachtwoorden komen niet overeen",
+      "create_account_button": "Account Aanmaken",
+      "creating_account": "Account aanmaken..."
     },
     "invitation": {
       "subject": "Teambee - Je bent uitgenodigd om lid te worden van {club_name}",

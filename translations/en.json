@@ -79,6 +79,7 @@
     "welcome": "Welcome,",
     "welcome_message": "Welcome to your Teambee Dashboard",
     "welcome_subtitle": "Use the user menu in the top right to update your password or invite new users to your club.",
+    "admin_viewing_subtitle": "You are viewing this club's dashboard as an administrator.",
     "update_password": "Update Password",
     "invite_new_user": "Invite New User",
     "logout": "Logout",
@@ -189,7 +190,15 @@
       "fallback_text": "If the button above doesn't work, you can copy and paste this link into your browser:",
       "signature": "Best regards,",
       "team_name": "The Teambee Team",
-      "plain_text": "Dear User,\n\nYou have been invited to create an account for {club_name} on Teambee.\n\nPlease click the following link to complete your registration:\n{registration_link}\n\nThis link will expire in 24 hours.\n\nBest regards,\nThe Teambee Team"
+      "plain_text": "Dear User,\n\nYou have been invited to create an account for {club_name} on Teambee.\n\nPlease click the following link to complete your registration:\n{registration_link}\n\nThis link will expire in 24 hours.\n\nBest regards,\nThe Teambee Team",
+      "create_account_title": "Create Your Account",
+      "email_label": "Email",
+      "password_label": "Password",
+      "confirm_password_label": "Confirm Password",
+      "password_requirement": "Password must be at least 8 characters long",
+      "passwords_mismatch": "Passwords do not match",
+      "create_account_button": "Create Account",
+      "creating_account": "Creating Account..."
     },
     "invitation": {
       "subject": "Teambee - You're invited to join {club_name}",

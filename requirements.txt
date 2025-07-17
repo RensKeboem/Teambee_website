@@ -1,7 +1,22 @@
-python_fasthtml
+# Core FastHTML and web framework dependencies
+python-fasthtml
 uvicorn
 starlette
+
+# Database and ORM
 sqlalchemy
 pandas
-python-dotenv
+
+# Security and authentication
 itsdangerous
+
+# Environment and configuration
+python-dotenv
+
+# Development and deployment
+gunicorn
+
+# Additional packages that may be useful for production
+psycopg2-binary  # PostgreSQL adapter (commonly used in production)
+pymysql  # MySQL adapter (alternative database option)
+cryptography  # Enhanced cryptographic operations

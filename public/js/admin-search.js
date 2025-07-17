@@ -25,7 +25,7 @@ class TablePagination {
         if (!container) return;
         
         container.innerHTML = `
-            <div class="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-center px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
                 <div class="flex justify-between flex-1 sm:hidden">
                     <button id="${this.tableType}-prev-mobile" class="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
@@ -438,4 +438,151 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initial validation
         validateAdminInviteForm();
     }
-}); 
+    
+    // Delete confirmation popup functionality
+    setupDeleteConfirmation();
+});
+
+// Delete confirmation popup functionality
+function setupDeleteConfirmation() {
+    const deletePopup = document.getElementById('delete-confirmation-popup');
+    const closeDeleteBtn = document.getElementById('close-delete-popup');
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    const deleteUserEmail = document.getElementById('delete-user-email');
+    
+    if (!deletePopup) return;
+    
+    let currentDeleteData = null;
+    
+    // Show delete confirmation popup
+    function showDeletePopup(userData) {
+        currentDeleteData = userData;
+        
+        // Update popup content
+        if (deleteUserEmail) {
+            deleteUserEmail.textContent = userData.email;
+        }
+        
+        // Show popup
+        TeambeeUtils.disableScroll();
+        deletePopup.classList.remove('hidden');
+        
+        setTimeout(() => {
+            const modalContent = deletePopup.querySelector('.bg-white');
+            if (modalContent) {
+                modalContent.style.transform = 'scale(1)';
+                modalContent.style.opacity = '1';
+            }
+        }, 10);
+        
+        // Focus the cancel button for accessibility
+        setTimeout(() => {
+            if (cancelDeleteBtn) cancelDeleteBtn.focus();
+        }, 100);
+    }
+    
+    // Hide delete confirmation popup
+    function hideDeletePopup() {
+        const modalContent = deletePopup.querySelector('.bg-white');
+        if (modalContent) {
+            modalContent.style.transform = 'scale(0.95)';
+            modalContent.style.opacity = '0';
+        }
+        
+        setTimeout(() => {
+            deletePopup.classList.add('hidden');
+            TeambeeUtils.enableScroll();
+            currentDeleteData = null;
+        }, 200);
+    }
+    
+    // Handle delete button clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-user-btn')) {
+            e.preventDefault();
+            
+            const userId = e.target.getAttribute('data-user-id');
+            const userEmail = e.target.getAttribute('data-user-email');
+            
+            if (userId && userEmail) {
+                showDeletePopup({
+                    id: userId,
+                    email: userEmail,
+                    button: e.target
+                });
+            }
+        }
+    });
+    
+    // Handle confirm delete
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', async function() {
+            if (!currentDeleteData) return;
+            
+            // Disable button and show loading state
+            confirmDeleteBtn.disabled = true;
+            confirmDeleteBtn.textContent = 'Deleting...';
+            
+            try {
+                const response = await fetch(`/admin/delete-user/${currentDeleteData.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'HX-Request': 'true'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.text();
+                    
+                    if (result.trim() === '') {
+                        // Success - remove the table row
+                        const tableRow = currentDeleteData.button.closest('tr');
+                        if (tableRow) {
+                            tableRow.remove();
+                        }
+                        hideDeletePopup();
+                    } else {
+                        // Error - show error message
+                        console.error('Delete failed:', result);
+                        alert('Failed to delete user. Please try again.');
+                    }
+                } else {
+                    console.error('Delete request failed:', response.statusText);
+                    alert('Failed to delete user. Please try again.');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Network error. Please try again.');
+            } finally {
+                // Reset button state
+                confirmDeleteBtn.disabled = false;
+                confirmDeleteBtn.textContent = 'Delete User';
+            }
+        });
+    }
+    
+    // Handle close/cancel buttons
+    [closeDeleteBtn, cancelDeleteBtn].forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                hideDeletePopup();
+            });
+        }
+    });
+    
+    // Close popup when clicking outside
+    deletePopup.addEventListener('click', function(e) {
+        if (e.target === deletePopup || e.target.classList.contains('backdrop-blur-sm')) {
+            hideDeletePopup();
+        }
+    });
+    
+    // Close popup when pressing Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && deletePopup && !deletePopup.classList.contains('hidden')) {
+            hideDeletePopup();
+        }
+    });
+} 

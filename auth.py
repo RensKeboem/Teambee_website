@@ -8,8 +8,6 @@ from email.mime.multipart import MIMEMultipart
 from typing import Optional, Tuple, Dict
 from sqlalchemy import text
 import logging
-import sys
-import pandas as pd
 from urllib.parse import quote
 
 # Import local database manager
